@@ -13,6 +13,15 @@ export interface PipelineNode {
   code?: string;
   inputs?: { name: string; type: string }[];
   outputs?: { name: string; type: string }[];
+  position?: { x: number; y: number };
+}
+
+export interface PipelineEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
 }
 
 export interface Pipeline {
@@ -23,6 +32,7 @@ export interface Pipeline {
   updatedTime: string;
   createdTime: string;
   nodes: PipelineNode[];
+  edges?: PipelineEdge[];
   description: string;
   accuracy?: number;
   loss?: number;

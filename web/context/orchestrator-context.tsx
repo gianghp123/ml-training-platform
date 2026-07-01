@@ -40,10 +40,15 @@ export function OrchestratorProvider({ children }: { children: ReactNode }) {
       createdTime: 'Created 3 days ago',
       description: 'Production pipeline to score real-time credit transactions against card counterfeiting trees.',
       nodes: [
-        { id: 'fn-1', name: 'Ingest_Fraud_Data', type: 'ingestion', status: 'success', duration: '12s', description: 'Loads raw transactional Parquet shards from GCS clusters.' },
-        { id: 'fn-2', name: 'Standardize_Scales', type: 'preprocessing', status: 'success', duration: '2.5s', description: 'Aligns numerical currencies and standardizes transaction weights.' },
-        { id: 'fn-3', name: 'XGBoost_Train', type: 'training', status: 'success', duration: '45s', description: 'Fits XGBoost decision trees over 200 epochs on GPU.' },
-        { id: 'fn-4', name: 'Register_Service', type: 'deploy', status: 'success', duration: '1.4s', description: 'Registers staging API predict endpoints.' }
+        { id: 'fn-1', name: 'Ingest_Fraud_Data', type: 'ingestion', status: 'success', duration: '12s', description: 'Loads raw transactional Parquet shards from GCS clusters.', position: { x: 50, y: 150 } },
+        { id: 'fn-2', name: 'Standardize_Scales', type: 'preprocessing', status: 'success', duration: '2.5s', description: 'Aligns numerical currencies and standardizes transaction weights.', position: { x: 280, y: 150 } },
+        { id: 'fn-3', name: 'XGBoost_Train', type: 'training', status: 'success', duration: '45s', description: 'Fits XGBoost decision trees over 200 epochs on GPU.', position: { x: 520, y: 150 } },
+        { id: 'fn-4', name: 'Register_Service', type: 'deploy', status: 'success', duration: '1.4s', description: 'Registers staging API predict endpoints.', position: { x: 800, y: 150 } }
+      ],
+      edges: [
+        { id: 'e-fn-1-fn-2', source: 'fn-1', target: 'fn-2', sourceHandle: 'data_out', targetHandle: 'data_in' },
+        { id: 'e-fn-2-fn-3', source: 'fn-2', target: 'fn-3', sourceHandle: 'data_out', targetHandle: 'training_data' },
+        { id: 'e-fn-3-fn-4', source: 'fn-3', target: 'fn-4', sourceHandle: 'save_model', targetHandle: 'save_in' }
       ]
     },
     {
@@ -55,11 +60,17 @@ export function OrchestratorProvider({ children }: { children: ReactNode }) {
       createdTime: 'Created 1 day ago',
       description: 'Fine-tuning NLP transformer encoder representations for support ticket triage categories.',
       nodes: [
-        { id: 'nn-1', name: 'Read_Text_Corpus', type: 'ingestion', status: 'success', duration: '15s', description: 'Queries text datasets from central BigQuery tables.' },
-        { id: 'nn-2', name: 'Tokenizer_Vocab', type: 'preprocessing', status: 'success', duration: '8.4s', description: 'Initializes WordPiece vocabulary maps and token splits.' },
-        { id: 'nn-3', name: 'FineTune_BERT', type: 'training', status: 'error', duration: '14.5s', description: 'Pre-trains deep BERT layer weights. Halted on NaN loss.' },
-        { id: 'nn-4', name: 'Validation_Eval', type: 'evaluation', status: 'idle', description: 'Computes F1 precision rates on dev splits.' },
-        { id: 'nn-5', name: 'Deploy_Cloud_Run', type: 'deploy', status: 'idle', description: 'Packages model weights to Docker images.' }
+        { id: 'nn-1', name: 'Read_Text_Corpus', type: 'ingestion', status: 'success', duration: '15s', description: 'Queries text datasets from central BigQuery tables.', position: { x: 50, y: 150 } },
+        { id: 'nn-2', name: 'Tokenizer_Vocab', type: 'preprocessing', status: 'success', duration: '8.4s', description: 'Initializes WordPiece vocabulary maps and token splits.', position: { x: 280, y: 150 } },
+        { id: 'nn-3', name: 'FineTune_BERT', type: 'training', status: 'error', duration: '14.5s', description: 'Pre-trains deep BERT layer weights. Halted on NaN loss.', position: { x: 520, y: 150 } },
+        { id: 'nn-4', name: 'Validation_Eval', type: 'evaluation', status: 'idle', description: 'Computes F1 precision rates on dev splits.', position: { x: 800, y: 50 } },
+        { id: 'nn-5', name: 'Deploy_Cloud_Run', type: 'deploy', status: 'idle', description: 'Packages model weights to Docker images.', position: { x: 800, y: 250 } }
+      ],
+      edges: [
+        { id: 'e-nn-1-nn-2', source: 'nn-1', target: 'nn-2', sourceHandle: 'data_out', targetHandle: 'data_in' },
+        { id: 'e-nn-2-nn-3', source: 'nn-2', target: 'nn-3', sourceHandle: 'data_out', targetHandle: 'training_data' },
+        { id: 'e-nn-3-nn-4', source: 'nn-3', target: 'nn-4', sourceHandle: 'compute_metric', targetHandle: 'eval_in' },
+        { id: 'e-nn-3-nn-5', source: 'nn-3', target: 'nn-5', sourceHandle: 'save_model', targetHandle: 'save_in' }
       ]
     },
     {
@@ -71,9 +82,13 @@ export function OrchestratorProvider({ children }: { children: ReactNode }) {
       createdTime: 'Created 2 days ago',
       description: 'Draft model to analyze churn factors from subscriber monthly rates and contract types.',
       nodes: [
-        { id: 'cn-1', name: 'Query_Churn_DB', type: 'ingestion', status: 'idle', description: 'Downloads customer subscription histories.' },
-        { id: 'cn-2', name: 'Handle_Nulls', type: 'preprocessing', status: 'idle', description: 'Resolves missing internet contracts and variables.' },
-        { id: 'cn-3', name: 'Logistic_Regression', type: 'training', status: 'idle', description: 'Fits light regression boundaries to model classification.' }
+        { id: 'cn-1', name: 'Query_Churn_DB', type: 'ingestion', status: 'idle', description: 'Downloads customer subscription histories.', position: { x: 50, y: 150 } },
+        { id: 'cn-2', name: 'Handle_Nulls', type: 'preprocessing', status: 'idle', description: 'Resolves missing internet contracts and variables.', position: { x: 280, y: 150 } },
+        { id: 'cn-3', name: 'Logistic_Regression', type: 'training', status: 'idle', description: 'Fits light regression boundaries to model classification.', position: { x: 520, y: 150 } }
+      ],
+      edges: [
+        { id: 'e-cn-1-cn-2', source: 'cn-1', target: 'cn-2', sourceHandle: 'data_out', targetHandle: 'data_in' },
+        { id: 'e-cn-2-cn-3', source: 'cn-2', target: 'cn-3', sourceHandle: 'data_out', targetHandle: 'training_data' }
       ]
     }
   ]);
@@ -115,9 +130,13 @@ export function OrchestratorProvider({ children }: { children: ReactNode }) {
       createdTime: 'Created just now',
       description: 'Autogenerated ML training template ready to design.',
       nodes: [
-        { id: `fn-${id}-1`, name: 'Ingest_Raw_Data', type: 'ingestion', status: 'idle', description: 'Reads training files.' },
-        { id: `fn-${id}-2`, name: 'Preprocess_Features', type: 'preprocessing', status: 'idle', description: 'Handles data scaling.' },
-        { id: `fn-${id}-3`, name: 'Train_Neural_Net', type: 'training', status: 'idle', description: 'Fits network weights on GPU.' }
+        { id: `fn-${id}-1`, name: 'Ingest_Raw_Data', type: 'ingestion', status: 'idle', description: 'Reads training files.', position: { x: 50, y: 150 } },
+        { id: `fn-${id}-2`, name: 'Preprocess_Features', type: 'preprocessing', status: 'idle', description: 'Handles data scaling.', position: { x: 280, y: 150 } },
+        { id: `fn-${id}-3`, name: 'Train_Neural_Net', type: 'training', status: 'idle', description: 'Fits network weights on GPU.', position: { x: 520, y: 150 } }
+      ],
+      edges: [
+        { id: `e-${id}-1-2`, source: `fn-${id}-1`, target: `fn-${id}-2`, sourceHandle: 'data_out', targetHandle: 'data_in' },
+        { id: `e-${id}-2-3`, source: `fn-${id}-2`, target: `fn-${id}-3`, sourceHandle: 'data_out', targetHandle: 'training_data' }
       ]
     };
 

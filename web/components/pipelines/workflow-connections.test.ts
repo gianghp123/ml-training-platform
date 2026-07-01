@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { buildWorkflowEdge, getDefaultTargetHandle } from './workflow-connections.ts';
+import {
+  buildWorkflowEdge,
+  canCreateWorkflowEdge,
+  findWorkflowNodeId,
+  getDefaultTargetHandle,
+} from './workflow-connections.ts';
 
 test('selects a target handle for every block type', () => {
   assert.equal(getDefaultTargetHandle('ingestion', 'Dataset'), 'input');
@@ -28,6 +33,22 @@ test('builds an edge for an arbitrary cross-type body drop', () => {
     sourceHandle: 'compute_metric',
     targetHandle: 'input',
     animated: true,
-    style: { stroke: 'hsl(var(--primary))', strokeWidth: 2 },
+    style: { stroke: 'var(--primary)', strokeWidth: 2 },
   });
+});
+
+test('blocks new edges while the pipeline is running', () => {
+  assert.equal(canCreateWorkflowEdge(true), false);
+  assert.equal(canCreateWorkflowEdge(false), true);
+});
+
+test('finds the block below a connection overlay at the drop point', () => {
+  const overlay = { closest: () => null };
+  const node = {
+    closest: (selector: string) => selector === '.react-flow__node'
+      ? { getAttribute: (name: string) => name === 'data-id' ? 'preprocessing-1' : null }
+      : null,
+  };
+
+  assert.equal(findWorkflowNodeId([overlay, node]), 'preprocessing-1');
 });

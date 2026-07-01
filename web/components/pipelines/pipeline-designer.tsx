@@ -53,20 +53,20 @@ const initialEdges = [
     source: '1',
     target: '2',
     animated: true,
-    style: { stroke: 'hsl(var(--primary))' },
+    style: { stroke: 'var(--primary)' },
   },
   {
     id: 'e2-3',
     source: '2',
     target: '3',
     animated: true,
-    style: { stroke: 'hsl(var(--primary))' },
+    style: { stroke: 'var(--primary)' },
   },
   {
     id: 'e3-4',
     source: '3',
     target: '4',
-    style: { stroke: 'hsl(var(--primary))' },
+    style: { stroke: 'var(--primary)' },
   },
 ];
 
@@ -75,7 +75,7 @@ export function PipelineDesigner() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: 'hsl(var(--primary))' } }, eds)),
+    (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: 'var(--primary)' } }, eds)),
     [setEdges]
   );
 
@@ -91,7 +91,7 @@ export function PipelineDesigner() {
       >
         <Controls className="fill-foreground stroke-foreground [&_button]:bg-card [&_button]:border-border [&_button]:hover:bg-accent" />
         <MiniMap
-          nodeColor={() => 'hsl(var(--primary))'}
+          nodeColor={() => 'var(--primary)'}
           maskColor="rgba(var(--background), 0.2)"
           className="bg-card border border-border rounded-lg"
         />
