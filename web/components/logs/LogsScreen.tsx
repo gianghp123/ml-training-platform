@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useOrchestrator } from '@/context/orchestrator-context';
 import { 
-  Terminal, 
+  Terminal as TerminalIcon, 
   Trash2, 
   Search, 
   Copy, 
@@ -14,6 +14,11 @@ import {
 import PageHeader from '../shared/PageHeader';
 import StatusBadge from '../shared/StatusBadge';
 import EmptyState from '../shared/EmptyState';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function LogsScreen() {
   const { logs, clearLogs, pipelines } = useOrchestrator();
@@ -72,82 +77,85 @@ export default function LogsScreen() {
 
         {/* Console Controls */}
         <div className="flex items-center space-x-2">
-          <button
+          <Button
+            variant="outline"
             onClick={() => setIsPaused(!isPaused)}
-            className={`px-3 py-1.5 rounded-lg border border-[#1F1F23] text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg border border-[#1F1F23] text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer h-9 ${
               isPaused 
-                ? 'bg-[#3192fc]/10 text-[#3192fc] border-[#3192fc]/30' 
-                : 'bg-[#131315] hover:bg-[#353437] text-[#e5e1e4]'
+                ? 'bg-[#3192fc]/10 text-[#3192fc] border-[#3192fc]/30 hover:bg-[#3192fc]/20 hover:text-[#3192fc]' 
+                : 'bg-[#131315] hover:bg-[#353437] text-[#e5e1e4] hover:text-[#e5e1e4]'
             }`}
           >
             {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
             <span>{isPaused ? 'Resume Sync' : 'Pause Stream'}</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
             onClick={clearLogs}
-            className="bg-[#131315] border border-[#1F1F23] hover:bg-[#353437] text-[#c0c7d5] hover:text-[#e5e1e4] px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer"
+            className="bg-[#131315] border border-[#1F1F23] hover:bg-[#353437] text-[#c0c7d5] hover:text-[#e5e1e4] px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer h-9"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Clear Terminal</span>
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-[#131315] border border-[#1F1F23] rounded-xl p-4 flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
+      <Card className="bg-[#131315] border border-[#1F1F23] rounded-xl p-4 flex flex-col lg:flex-row lg:items-center gap-4 justify-between shadow-none">
         
         {/* Severity Filters */}
         <div className="flex items-center space-x-2">
           <SlidersHorizontal className="w-4 h-4 text-[#c0c7d5]/60 mr-1" />
-          {['all', 'info', 'success', 'warning', 'error'].map((lvl) => (
-            <button
-              key={lvl}
-              onClick={() => setLevelFilter(lvl)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all duration-150 cursor-pointer ${
-                levelFilter === lvl
-                  ? 'bg-[#3f495d] text-[#e5e1e4]'
-                  : 'text-[#c0c7d5] hover:text-[#e5e1e4] hover:bg-[#353437]'
-              }`}
-            >
-              {lvl}
-            </button>
-          ))}
+          <Tabs value={levelFilter} onValueChange={setLevelFilter}>
+            <TabsList className="bg-transparent p-0 flex space-x-1">
+              {['all', 'info', 'success', 'warning', 'error'].map((lvl) => (
+                <TabsTrigger
+                  key={lvl}
+                  value={lvl}
+                  className="px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all duration-150 cursor-pointer data-[state=active]:bg-[#3f495d] data-[state=active]:text-[#e5e1e4] text-[#c0c7d5] hover:text-[#e5e1e4] hover:bg-[#353437] bg-transparent border-none shadow-none"
+                >
+                  {lvl}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* Pipeline Filter */}
         <div className="flex items-center space-x-2">
           <span className="text-xs text-[#c0c7d5]/60 font-semibold uppercase tracking-wider">Pipeline:</span>
-          <select
-            value={selectedPipelineFilter}
-            onChange={(e) => setSelectedPipelineFilter(e.target.value)}
-            className="bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] cursor-pointer"
-          >
-            <option value="all">All Logs</option>
-            <option value="system">System / Engine Logs</option>
-            {pipelines.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+          <Select value={selectedPipelineFilter} onValueChange={setSelectedPipelineFilter}>
+            <SelectTrigger className="bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] cursor-pointer h-9 w-44 focus:ring-0 focus:ring-offset-0">
+              <SelectValue placeholder="Select Pipeline" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#131315] border border-[#1F1F23] text-xs text-[#e5e1e4]">
+              <SelectItem value="all">All Logs</SelectItem>
+              <SelectItem value="system">System / Engine Logs</SelectItem>
+              {pipelines.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Console Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#c0c7d5]/60 w-3.5 h-3.5" />
-          <input
+          <Input
             type="text"
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
             placeholder="Search terminal log content..."
-            className="bg-[#050505] border border-[#1F1F23] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] w-64 placeholder:text-[#c0c7d5]/40"
+            className="bg-[#050505] border border-[#1F1F23] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] w-64 placeholder:text-[#c0c7d5]/40 h-9 focus-visible:ring-0 focus-visible:ring-offset-0"
           />
         </div>
-      </div>
+      </Card>
 
       {/* Terminal Block */}
-      <div className="bg-[#050505] border border-[#1F1F23] rounded-xl overflow-hidden flex flex-col flex-1 h-[450px]">
+      <Card className="bg-[#050505] border border-[#1F1F23] rounded-xl overflow-hidden flex flex-col flex-1 h-[450px] shadow-none">
         {/* Terminal Header */}
         <div className="bg-[#131315] px-4 py-2 border-b border-[#1F1F23] flex items-center space-x-2">
           <div className="flex space-x-1.5">
@@ -183,9 +191,10 @@ export default function LogsScreen() {
                     </div>
                   </div>
 
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => handleCopyLog(logString, index)}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded text-[#c0c7d5]/60 hover:text-white hover:bg-[#353437] transition-all ml-4 shrink-0 cursor-pointer"
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded text-[#c0c7d5]/60 hover:text-white hover:bg-[#353437] transition-all ml-4 shrink-0 cursor-pointer h-7 hover:text-white"
                     title="Copy full trace"
                   >
                     {copiedIndex === index ? (
@@ -193,7 +202,7 @@ export default function LogsScreen() {
                     ) : (
                       <Copy className="w-3.5 h-3.5" />
                     )}
-                  </button>
+                  </Button>
                 </div>
               );
             })
@@ -201,12 +210,12 @@ export default function LogsScreen() {
             <div className="h-full flex flex-col items-center justify-center text-[#c0c7d5]/30">
               <EmptyState 
                 message="Console is quiet. No matching log traces stream found."
-                icon={Terminal}
+                icon={TerminalIcon}
               />
             </div>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

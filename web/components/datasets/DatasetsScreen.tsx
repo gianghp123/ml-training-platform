@@ -15,6 +15,13 @@ import {
 import PageHeader from '../shared/PageHeader';
 import StatusBadge from '../shared/StatusBadge';
 import EmptyState from '../shared/EmptyState';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 export default function DatasetsScreen() {
   const { datasets, addDataset, deleteDataset } = useOrchestrator();
@@ -94,72 +101,74 @@ export default function DatasetsScreen() {
         
         {/* Datasets List (Left 2 Columns) */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-[#141416]/40 border border-[#1F1F23] rounded-xl overflow-hidden">
+          <Card className="bg-[#141416]/40 border border-[#1F1F23] rounded-xl overflow-hidden shadow-none">
             {datasets.length > 0 ? (
-              <table className="w-full text-left text-xs text-[#e5e1e4]">
-                <thead className="bg-[#131315] border-b border-[#1F1F23] text-[10px] font-mono text-[#c0c7d5]/60 uppercase tracking-wider">
-                  <tr>
-                    <th className="p-4">Name</th>
-                    <th className="p-4">Size</th>
-                    <th className="p-4">Format</th>
-                    <th className="p-4">Rows</th>
-                    <th className="p-4">Sync Status</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#1F1F23]/50">
+              <Table className="w-full text-left text-xs text-[#e5e1e4]">
+                <TableHeader className="bg-[#131315] border-b border-[#1F1F23] text-[10px] font-mono text-[#c0c7d5]/60 uppercase tracking-wider hover:bg-transparent">
+                  <TableRow className="border-b border-[#1F1F23]/60 hover:bg-transparent">
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">Name</TableHead>
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">Size</TableHead>
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">Format</TableHead>
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">Rows</TableHead>
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">Sync Status</TableHead>
+                    <TableHead className="p-4 text-right text-[#c0c7d5]/60 font-mono">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-[#1F1F23]/50">
                   {datasets.map((dataset) => {
                     const isSelected = selectedDatasetId === dataset.id;
                     return (
-                      <tr
+                      <TableRow
                         key={dataset.id}
                         onClick={() => setSelectedDatasetId(dataset.id)}
-                        className={`hover:bg-[#353437]/20 cursor-pointer transition-all ${
-                          isSelected ? 'bg-[#3f495d]/20 border-l-2 border-[#3192fc]' : ''
+                        className={`hover:bg-[#353437]/20 cursor-pointer transition-all border-b border-[#1F1F23]/50 ${
+                          isSelected ? 'bg-[#3f495d]/20 border-l-2 border-l-[#3192fc]' : ''
                         }`}
                       >
-                        <td className="p-4 font-semibold flex items-center space-x-2">
+                        <TableCell className="p-4 font-semibold flex items-center space-x-2">
                           <FileSpreadsheet className="w-4 h-4 text-[#a6c8ff]" />
                           <span>{dataset.name}</span>
-                        </td>
-                        <td className="p-4 font-mono text-[#c0c7d5]">{dataset.size}</td>
-                        <td className="p-4">
-                          <span className="font-mono text-[10px] bg-[#353437] text-[#c0c7d5] px-2 py-0.5 rounded">
+                        </TableCell>
+                        <TableCell className="p-4 font-mono text-[#c0c7d5]">{dataset.size}</TableCell>
+                        <TableCell className="p-4">
+                          <Badge variant="secondary" className="font-mono text-[10px] bg-[#353437] text-[#c0c7d5] px-2 py-0.5 rounded border border-none">
                             {dataset.format.toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="p-4 font-mono text-[#c0c7d5]/80">{dataset.rows}</td>
-                        <td className="p-4">
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="p-4 font-mono text-[#c0c7d5]/80">{dataset.rows}</TableCell>
+                        <TableCell className="p-4">
                           <StatusBadge status={dataset.status} />
-                        </td>
-                        <td className="p-4 text-right">
-                          <button
+                        </TableCell>
+                        <TableCell className="p-4 text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteDataset(dataset.id);
                               if (selectedDatasetId === dataset.id) setSelectedDatasetId(null);
                             }}
-                            className="text-[#c0c7d5] hover:text-[#F04438] p-1 rounded hover:bg-[#353437] transition-all cursor-pointer"
+                            className="text-[#c0c7d5] hover:text-[#F04438] p-1 rounded hover:bg-[#353437] hover:text-[#F04438] transition-all cursor-pointer w-7 h-7"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             ) : (
               <EmptyState 
                 message="No datasets registered in catalog matching filters."
                 icon={Database}
               />
             )}
-          </div>
+          </Card>
         </div>
 
         {/* Schema Column (Right Column) */}
-        <div className="bg-[#131315] border border-[#1F1F23] rounded-xl overflow-hidden flex flex-col h-full justify-between">
+        <Card className="bg-[#131315] border border-[#1F1F23] rounded-xl overflow-hidden flex flex-col h-full justify-between shadow-none">
           {selectedDataset ? (
             <div>
               <div className="p-4 border-b border-[#1F1F23] flex justify-between items-center bg-[#141416]">
@@ -214,101 +223,98 @@ export default function DatasetsScreen() {
               <p className="text-xs text-[#c0c7d5]">Select a data catalog row on the left to inspect detailed column profiles.</p>
             </div>
           )}
-        </div>
+        </Card>
       </div>
 
       {/* Add Dataset Modal Overlay */}
-      {showAddDatasetModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#131315] border border-[#1F1F23] rounded-xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="p-4 border-b border-[#1F1F23] flex justify-between items-center">
-              <h3 className="text-sm font-bold text-[#e5e1e4] flex items-center">
-                <Sparkles className="w-4 h-4 text-[#3192fc] mr-1.5" />
-                Register Dataset Asset
-              </h3>
-              <button
-                onClick={() => setShowAddDatasetModal(false)}
-                className="text-[#c0c7d5] hover:text-[#e5e1e4] cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <Dialog open={showAddDatasetModal} onOpenChange={setShowAddDatasetModal}>
+        <DialogContent className="bg-[#131315] border border-[#1F1F23] rounded-xl w-full max-w-md overflow-hidden shadow-2xl p-0 text-[#e5e1e4]">
+          <DialogHeader className="p-4 border-b border-[#1F1F23] flex justify-between items-center bg-[#141416] flex-row space-y-0">
+            <DialogTitle className="text-sm font-bold text-[#e5e1e4] flex items-center">
+              <Sparkles className="w-4 h-4 text-[#3192fc] mr-1.5" />
+              Register Dataset Asset
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="p-4 space-y-4">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
+                Dataset Name
+              </label>
+              <Input
+                type="text"
+                value={newDatasetName}
+                onChange={(e) => setNewDatasetName(e.target.value)}
+                placeholder="e.g. users_activity_log"
+                className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
-                  Dataset Name
+                  Disk Size
                 </label>
-                <input
+                <Input
                   type="text"
-                  value={newDatasetName}
-                  onChange={(e) => setNewDatasetName(e.target.value)}
-                  placeholder="e.g. users_activity_log"
-                  className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus:ring-2 focus:ring-[#3192fc]/20"
+                  value={newDatasetSize}
+                  onChange={(e) => setNewDatasetSize(e.target.value)}
+                  placeholder="e.g. 42.5 MB, 1.2 GB"
+                  className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
-                    Disk Size
-                  </label>
-                  <input
-                    type="text"
-                    value={newDatasetSize}
-                    onChange={(e) => setNewDatasetSize(e.target.value)}
-                    placeholder="e.g. 42.5 MB, 1.2 GB"
-                    className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus:ring-2 focus:ring-[#3192fc]/20"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
-                    Row Cardinality
-                  </label>
-                  <input
-                    type="text"
-                    value={newDatasetRows}
-                    onChange={(e) => setNewDatasetRows(e.target.value)}
-                    placeholder="e.g. 150,000 rows"
-                    className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus:ring-2 focus:ring-[#3192fc]/20"
-                  />
-                </div>
-              </div>
-
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
-                  File Format
+                  Row Cardinality
                 </label>
-                <select
-                  value={newDatasetFormat}
-                  onChange={(e) => setNewDatasetFormat(e.target.value as 'csv' | 'parquet' | 'json')}
-                  className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc]"
-                >
-                  <option value="parquet">Apache Parquet (Columnar - Recommended)</option>
-                  <option value="csv">Comma-Separated Values (CSV)</option>
-                  <option value="json">Structured JSON Records</option>
-                </select>
+                <Input
+                  type="text"
+                  value={newDatasetRows}
+                  onChange={(e) => setNewDatasetRows(e.target.value)}
+                  placeholder="e.g. 150,000 rows"
+                  className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
               </div>
             </div>
 
-            <div className="p-4 bg-[#141416] border-t border-[#1F1F23] flex justify-end space-x-2">
-              <button
-                onClick={() => setShowAddDatasetModal(false)}
-                className="bg-transparent hover:bg-[#353437] text-[#c0c7d5] px-3 py-1.5 rounded-lg text-xs cursor-pointer"
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
+                File Format
+              </label>
+              <Select
+                value={newDatasetFormat}
+                onValueChange={(val) => setNewDatasetFormat(val as 'csv' | 'parquet' | 'json')}
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddDataset}
-                disabled={!newDatasetName.trim()}
-                className="bg-[#3192fc] hover:brightness-110 disabled:opacity-50 text-white px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
-              >
-                Register Data Asset
-              </button>
+                <SelectTrigger className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] h-9 focus:ring-0 focus:ring-offset-0">
+                  <SelectValue placeholder="Format" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#131315] border border-[#1F1F23] text-xs text-[#e5e1e4]">
+                  <SelectItem value="parquet">Apache Parquet (Columnar - Recommended)</SelectItem>
+                  <SelectItem value="csv">Comma-Separated Values (CSV)</SelectItem>
+                  <SelectItem value="json">Structured JSON Records</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter className="p-4 bg-[#141416] border-t border-[#1F1F23] flex justify-end space-x-2 sm:space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowAddDatasetModal(false)}
+              className="bg-transparent hover:bg-[#353437] text-[#c0c7d5] hover:text-[#c0c7d5] hover:bg-[#353437] px-3 py-1.5 rounded-lg text-xs cursor-pointer border border-[#1f1f23] h-8"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddDataset}
+              disabled={!newDatasetName.trim()}
+              className="bg-[#3192fc] hover:bg-[#3192fc]/90 hover:brightness-110 disabled:opacity-50 text-white px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer h-8"
+            >
+              Register Data Asset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

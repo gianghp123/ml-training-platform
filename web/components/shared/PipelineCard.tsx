@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { Pipeline, PipelineStatus } from '../../types';
 import { 
@@ -10,6 +8,13 @@ import {
   SlidersHorizontal
 } from 'lucide-react';
 import StatusBadge from './StatusBadge';
+import { Card } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface PipelineCardProps {
   pipeline: Pipeline;
@@ -59,7 +64,7 @@ export default function PipelineCard({
   const iconName = getPipelineIcon(pipeline.name);
 
   return (
-    <div className="bg-[#141416] border border-[#1F1F23] rounded-xl p-4 hover:border-[#404753] transition-colors group relative overflow-hidden flex flex-col justify-between min-h-[160px]">
+    <Card className="bg-[#141416] border border-[#1F1F23] rounded-xl p-4 hover:border-[#404753] transition-colors group relative overflow-hidden flex flex-col justify-between min-h-[160px]">
       <div className={`absolute top-0 left-0 w-full h-[3px] ${getStatusIndicatorBar(pipeline.status)}`} />
 
       <div className="flex justify-between items-start mb-3">
@@ -98,51 +103,48 @@ export default function PipelineCard({
         </div>
 
         <div className="relative">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleMenu();
-            }}
-            className="text-[#c0c7d5] hover:text-[#e5e1e4] p-1 rounded hover:bg-[#353437] transition-colors"
-          >
-            <MoreVertical className="w-4 h-4" />
-          </button>
-
-          {isActiveMenu && (
-            <div className="absolute right-0 bottom-full mb-1 w-44 bg-[#131315] border border-[#1F1F23] rounded-lg shadow-xl py-1 z-40 text-xs">
+          <DropdownMenu open={isActiveMenu} onOpenChange={(open) => { if (open !== isActiveMenu) onToggleMenu(); }} modal={false}>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                className="text-[#c0c7d5] hover:text-[#e5e1e4] p-1 rounded hover:bg-[#353437] transition-colors cursor-pointer"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-44 bg-[#131315]/95 border border-[#1F1F23] rounded-lg shadow-xl text-xs text-[#e5e1e4] p-1 z-50 backdrop-blur-md"
+            >
               {pipeline.status === 'success' && (
-                <button
-                  onClick={() => {
-                    onViewResults();
-                  }}
-                  className="w-full text-left px-3 py-2 text-[#32D583] hover:bg-[#353437] flex items-center space-x-2 border-b border-[#1F1F23]/60 font-semibold cursor-pointer"
+                <DropdownMenuItem
+                  onClick={() => onViewResults()}
+                  className="px-3 py-2 text-[#32D583] hover:bg-[#353437] hover:text-[#32D583] flex items-center space-x-2 border-b border-[#1F1F23]/60 font-semibold cursor-pointer"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5 text-[#32D583]" />
                   <span>View Results</span>
-                </button>
+                </DropdownMenuItem>
               )}
-              <button
-                onClick={() => {
-                  onOpenStudio();
-                }}
-                className="w-full text-left px-3 py-2 text-[#e5e1e4] hover:bg-[#353437] flex items-center space-x-2 cursor-pointer"
+              <DropdownMenuItem
+                onClick={() => onOpenStudio()}
+                className="px-3 py-2 text-[#e5e1e4] hover:bg-[#353437] hover:text-white flex items-center space-x-2 cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5 text-[#a6c8ff]" />
                 <span>Open Studio</span>
-              </button>
-              <button
-                onClick={() => {
-                  onDelete();
-                }}
-                className="w-full text-left px-3 py-2 text-[#F04438] hover:bg-[#353437] flex items-center space-x-2 cursor-pointer"
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onDelete()}
+                className="px-3 py-2 text-[#F04438] hover:bg-[#353437] hover:text-[#F04438] flex items-center space-x-2 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Delete Pipeline</span>
-              </button>
-            </div>
-          )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

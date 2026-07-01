@@ -5,6 +5,19 @@ import { useRouter } from 'next/navigation';
 import { useOrchestrator } from '@/context/orchestrator-context';
 import { Pipeline, PipelineNode, NodeType } from '../../types';
 import StatusBadge from '../shared/StatusBadge';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
   ReactFlow, 
   ReactFlowProvider, 
@@ -374,7 +387,6 @@ function PipelineStudioScreenContent({ pipeline }: PipelineStudioScreenProps) {
   const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; flowX: number; flowY: number } | null>(null);
   const [handleMenu, setHandleMenu] = useState<{ nodeId: string; handleId: string; type: 'source' | 'target'; x: number; y: number } | null>(null);
-  const [showAddNodeDropdown, setShowAddNodeDropdown] = useState(false);
 
   // New Node Form state
   const [newNodeName, setNewNodeName] = useState('');
@@ -456,7 +468,6 @@ function PipelineStudioScreenContent({ pipeline }: PipelineStudioScreenProps) {
       }
       setContextMenu(null);
       setHandleMenu(null);
-      setShowAddNodeDropdown(false);
     };
     document.addEventListener('click', closeMenus);
     return () => {
@@ -499,7 +510,6 @@ function PipelineStudioScreenContent({ pipeline }: PipelineStudioScreenProps) {
   const onPaneClick = useCallback(() => {
     setContextMenu(null);
     setHandleMenu(null);
-    setShowAddNodeDropdown(false);
   }, []);
 
   // Handle click on node handles
@@ -1322,12 +1332,14 @@ def deploy_model_endpoint(model, stage="production"):
       {/* Header Panel */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => router.push('/')}
-            className="p-1.5 rounded-lg border border-[#1F1F23] bg-[#131315] hover:bg-[#353437] text-[#c0c7d5] hover:text-[#e5e1e4] transition-all"
+            className="p-1.5 rounded-lg border border-[#1F1F23] bg-[#131315] hover:bg-[#353437] text-[#c0c7d5] hover:text-[#e5e1e4] transition-all h-8 w-8"
           >
             <ArrowLeft className="w-4 h-4" />
-          </button>
+          </Button>
           <div>
             <div className="flex items-center space-x-3">
               <h2 className="text-xl font-bold text-[#e5e1e4] tracking-tight">{pipeline.name}</h2>
@@ -1340,110 +1352,103 @@ def deploy_model_endpoint(model, stage="production"):
         {/* Studio actions */}
         <div className="flex items-center space-x-2">
           {pipeline.status === 'success' && (
-            <button
+            <Button
               onClick={() => router.push(`/pipelines/${pipeline.id}/results`)}
-              className="bg-[#32D583] hover:brightness-110 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-1.5 transition-all shadow-md"
+              className="bg-[#32D583] hover:bg-[#32D583]/90 hover:brightness-110 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-1.5 transition-all shadow-md h-9"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               <span>View Results</span>
-            </button>
+            </Button>
           )}
 
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowAddNodeDropdown(!showAddNodeDropdown);
-              }}
-              disabled={isRunning}
-              className="add-node-btn bg-[#131315] border border-[#1F1F23] hover:bg-[#353437] text-[#e5e1e4] text-xs font-semibold px-3 py-2 rounded-lg flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Node</span>
-            </button>
-            {showAddNodeDropdown && (
-              <div 
-                className="add-node-dropdown absolute right-0 mt-2 bg-[#0c0c0e]/95 border border-[#1f1f23] rounded-xl shadow-2xl p-2.5 w-60 backdrop-blur-md transition-all divide-y divide-[#1f1f23]/60 z-50 max-h-96 overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                disabled={isRunning}
+                className="bg-[#131315] border border-[#1F1F23] hover:bg-[#353437] text-[#e5e1e4] hover:text-[#e5e1e4] text-xs font-semibold px-3 py-2 rounded-lg flex items-center space-x-1.5 transition-all disabled:opacity-50 cursor-pointer h-9"
               >
-                {NODE_TEMPLATES.map((cat, idx) => (
-                  <div key={idx} className="py-1.5 first:pt-0 last:pb-0">
-                    <div className="px-2.5 py-1 text-[9px] font-bold text-[#c0c7d5]/40 uppercase tracking-widest font-mono">
-                      {cat.category}
-                    </div>
-                    {cat.items.map((item, itemIdx) => (
-                      <button
-                        key={itemIdx}
-                        onClick={() => {
-                          const newId = `node-${Date.now()}`;
-                          const newNode: PipelineNode = {
-                            id: newId,
-                            name: item.name,
-                            type: item.type as NodeType,
-                            status: 'idle',
-                            description: item.description,
-                            duration: 'Pending',
-                            code: item.code,
-                            inputs: item.inputs,
-                            outputs: item.outputs,
-                            position: { x: nodes.length * 240 + 40, y: 150 }
-                          };
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Node</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-60 bg-[#0c0c0e]/95 border border-[#1f1f23] rounded-xl shadow-2xl p-2.5 backdrop-blur-md text-xs text-[#e5e1e4] z-50 max-h-96 overflow-y-auto"
+            >
+              {NODE_TEMPLATES.map((cat, idx) => (
+                <div key={idx} className="py-1.5 first:pt-0 last:pb-0 border-b border-[#1f1f23]/60 last:border-0">
+                  <DropdownMenuLabel className="px-2.5 py-1 text-[9px] font-bold text-[#c0c7d5]/40 uppercase tracking-widest font-mono">
+                    {cat.category}
+                  </DropdownMenuLabel>
+                  {cat.items.map((item, itemIdx) => (
+                    <DropdownMenuItem
+                      key={itemIdx}
+                      onClick={() => {
+                        const newId = `node-${Date.now()}`;
+                        const newNode: PipelineNode = {
+                          id: newId,
+                          name: item.name,
+                          type: item.type as NodeType,
+                          status: 'idle',
+                          description: item.description,
+                          duration: 'Pending',
+                          code: item.code,
+                          inputs: item.inputs,
+                          outputs: item.outputs,
+                          position: { x: nodes.length * 240 + 40, y: 150 }
+                        };
 
-                          const newRfNode = {
-                            id: newId,
-                            type: 'customNode',
-                            position: { x: nodes.length * 240 + 40, y: 150 },
-                            data: {
-                              node: newNode,
-                              isRunningNode: false,
-                              getNodeIcon,
-                              onHandleClick: (e: React.MouseEvent, handleId: string, type: 'source' | 'target') => {
-                                onHandleClick(e, newId, handleId, type);
-                              }
+                        const newRfNode = {
+                          id: newId,
+                          type: 'customNode',
+                          position: { x: nodes.length * 240 + 40, y: 150 },
+                          data: {
+                            node: newNode,
+                            isRunningNode: false,
+                            getNodeIcon,
+                            onHandleClick: (e: React.MouseEvent, handleId: string, type: 'source' | 'target') => {
+                              onHandleClick(e, newId, handleId, type);
                             }
-                          };
+                          }
+                        };
 
-                          const updatedNodes = [...nodes, newRfNode];
-                          setNodes(updatedNodes);
-                          syncPipelineData(updatedNodes, edges);
-                          setShowAddNodeDropdown(false);
+                        const updatedNodes = [...nodes, newRfNode];
+                        setNodes(updatedNodes);
+                        syncPipelineData(updatedNodes, edges);
 
-                          setTerminalLogs(prev => [
-                            ...prev,
-                            `[SYS] Added node [${item.name}] to canvas.`
-                          ]);
-                        }}
-                        className="w-full text-left px-2.5 py-1.5 text-xs text-[#c0c7d5] hover:bg-[#3192fc]/10 hover:text-white rounded-lg transition-colors flex items-center justify-between group cursor-pointer"
-                      >
-                        <span>{item.name}</span>
-                        <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-[#3192fc] transition-opacity" />
-                      </button>
-                    ))}
-                  </div>
-                ))}
-                <div className="pt-1.5 border-t border-[#1f1f23]/60">
-                  <button
-                    onClick={() => {
-                      setShowAddNodeModal(true);
-                      setShowAddNodeDropdown(false);
-                    }}
-                    className="w-full text-left px-2.5 py-1.5 text-xs text-[#3192fc] hover:bg-[#3192fc]/10 rounded-lg font-semibold flex items-center justify-between cursor-pointer"
-                  >
-                    <span>+ Create Custom Block...</span>
-                  </button>
+                        setTerminalLogs(prev => [
+                          ...prev,
+                          `[SYS] Added node [${item.name}] to canvas.`
+                        ]);
+                      }}
+                      className="w-full text-left px-2.5 py-1.5 text-xs text-[#c0c7d5] hover:bg-[#3192fc]/10 hover:text-white rounded-lg transition-colors flex items-center justify-between group cursor-pointer"
+                    >
+                      <span>{item.name}</span>
+                      <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-[#3192fc] transition-opacity" />
+                    </DropdownMenuItem>
+                  ))}
                 </div>
-              </div>
-            )}
-          </div>
+              ))}
+              <DropdownMenuSeparator className="bg-[#1f1f23]/60 my-1" />
+              <DropdownMenuItem
+                onClick={() => {
+                  setShowAddNodeModal(true);
+                }}
+                className="w-full text-left px-2.5 py-1.5 text-xs text-[#3192fc] hover:bg-[#3192fc]/10 rounded-lg font-semibold flex items-center justify-between cursor-pointer"
+              >
+                <span>+ Create Custom Block...</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          <button
+          <Button
             onClick={runPipelineSimulation}
             disabled={isRunning || nodes.length === 0}
-            className="bg-[#3192fc] hover:brightness-110 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-1.5 transition-all shadow-md cursor-pointer"
+            className="bg-[#3192fc] hover:bg-[#3192fc]/90 hover:brightness-110 disabled:opacity-50 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-1.5 transition-all shadow-md cursor-pointer h-9"
           >
             <Play className="w-3.5 h-3.5" />
             <span>Run Pipeline</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -1609,11 +1614,11 @@ def deploy_model_endpoint(model, stage="production"):
                           <label className="text-[11px] text-[#c0c7d5]/70 block mb-1">
                             {param.name} <span className="text-[10px] text-[#3192fc]/80 font-mono">({param.type})</span>
                           </label>
-                          <input
+                          <Input
                             type="text"
                             readOnly
                             value={`Mapped dynamically`}
-                            className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none opacity-80 cursor-default font-mono"
+                            className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] opacity-80 cursor-default font-mono focus-visible:ring-0 focus-visible:ring-offset-0 h-8"
                           />
                         </div>
                       ))
@@ -1623,11 +1628,11 @@ def deploy_model_endpoint(model, stage="production"):
                           <label className="text-[11px] text-[#c0c7d5]/70 block mb-1">
                             {param.name}
                           </label>
-                          <input
+                          <Input
                             type="text"
                             readOnly
                             value={param.value}
-                            className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none opacity-80 cursor-default"
+                            className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] opacity-80 cursor-default focus-visible:ring-0 focus-visible:ring-offset-0 h-8"
                           />
                         </div>
                       ))
@@ -1689,326 +1694,326 @@ def deploy_model_endpoint(model, stage="production"):
       </div>
 
       {/* Create Custom Block Modal Overlay */}
-      {showAddNodeModal && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#09090b] border border-[#1F1F23] rounded-xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col my-8">
-            {/* Header */}
-            <div className="p-5 border-b border-[#1F1F23] flex justify-between items-center bg-[#0d0d10]">
-              <h3 className="text-sm font-bold text-[#e5e1e4]">Create custom block</h3>
-              <button
-                onClick={() => setShowAddNodeModal(false)}
-                className="text-[#c0c7d5]/60 hover:text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      <Dialog open={showAddNodeModal} onOpenChange={setShowAddNodeModal}>
+        <DialogContent className="bg-[#09090b] border border-[#1F1F23] rounded-xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col p-0 text-[#e5e1e4] max-h-[90vh]">
+          {/* Header */}
+          <DialogHeader className="p-5 border-b border-[#1F1F23] flex justify-between items-center bg-[#0d0d10] flex-row space-y-0">
+            <DialogTitle className="text-sm font-bold text-[#e5e1e4]">Create custom block</DialogTitle>
+          </DialogHeader>
 
-            {/* Scrollable Form Body */}
-            <div className="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
-              {/* Row 1: Block Name & Description */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-[11px] font-semibold text-[#c0c7d5]/80 block mb-1.5">
-                    Block Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newNodeName}
-                    onChange={(e) => setNewNodeName(e.target.value)}
-                    placeholder="custom_transformer_01"
-                    className="w-full bg-[#050505] border border-[#1f1f23] rounded-lg px-3.5 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus:ring-1 focus:ring-[#3192fc] placeholder:text-[#c0c7d5]/30 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-semibold text-[#c0c7d5]/80 block mb-1.5">
-                    Description (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={newNodeDescription}
-                    onChange={(e) => setNewNodeDescription(e.target.value)}
-                    placeholder="Briefly describe this block's function"
-                    className="w-full bg-[#050505] border border-[#1f1f23] rounded-lg px-3.5 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus:ring-1 focus:ring-[#3192fc] placeholder:text-[#c0c7d5]/30"
-                  />
-                </div>
-              </div>
-
-              {/* Row 2: Input & Output Schemas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Input Schema Card */}
-                <div className="border border-[#1F1F23] bg-[#131315]/40 rounded-xl p-5 relative">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="text-xs font-bold text-[#e5e1e4] flex items-center space-x-1">
-                      <span>Input Schema</span>
-                    </h4>
-                    <span className="text-[10px] text-[#c0c7d5]/40 font-mono cursor-help" title="Define variables received by def execute(inputs)">
-                      [ℹ]
-                    </span>
-                  </div>
-
-                  <div className="space-y-3">
-                    {inputSchema.map((field, idx) => (
-                      <div key={idx} className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={field.name}
-                          onChange={(e) => {
-                            const updated = [...inputSchema];
-                            updated[idx].name = e.target.value;
-                            setInputSchema(updated);
-                          }}
-                          placeholder="variable_name"
-                          className="flex-1 bg-[#050505] border border-[#1f1f23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] font-mono"
-                        />
-                        <select
-                          value={field.type}
-                          onChange={(e) => {
-                            const updated = [...inputSchema];
-                            updated[idx].type = e.target.value;
-                            setInputSchema(updated);
-                          }}
-                          className="bg-[#050505] border border-[#1f1f23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] min-w-[100px]"
-                        >
-                          <option value="DataFrame">DataFrame</option>
-                          <option value="Scalar">Scalar</option>
-                          <option value="Tensor">Tensor</option>
-                          <option value="Model">Model</option>
-                          <option value="Dataset">Dataset</option>
-                        </select>
-                        <button
-                          onClick={() => setInputSchema(inputSchema.filter((_, i) => i !== idx))}
-                          className="p-1.5 text-[#c0c7d5]/60 hover:text-[#F04438] hover:bg-[#353437]/40 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => setInputSchema([...inputSchema, { name: '', type: 'DataFrame' }])}
-                    className="text-xs font-semibold text-[#3192fc] hover:underline cursor-pointer flex items-center space-x-1 mt-4"
-                  >
-                    <span>+ Add field</span>
-                  </button>
-                </div>
-
-                {/* Output Schema Card */}
-                <div className="border border-[#1F1F23] bg-[#131315]/40 rounded-xl p-5 relative">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="text-xs font-bold text-[#e5e1e4] flex items-center space-x-1">
-                      <span>Output Schema</span>
-                    </h4>
-                    <span className="text-[10px] text-[#c0c7d5]/40 font-mono cursor-help" title="Define variables outputted by return outputs">
-                      [ℹ]
-                    </span>
-                  </div>
-
-                  <div className="space-y-3">
-                    {outputSchema.map((field, idx) => (
-                      <div key={idx} className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={field.name}
-                          onChange={(e) => {
-                            const updated = [...outputSchema];
-                            updated[idx].name = e.target.value;
-                            setOutputSchema(updated);
-                          }}
-                          placeholder="variable_name"
-                          className="flex-1 bg-[#050505] border border-[#1f1f23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] font-mono"
-                        />
-                        <select
-                          value={field.type}
-                          onChange={(e) => {
-                            const updated = [...outputSchema];
-                            updated[idx].type = e.target.value;
-                            setOutputSchema(updated);
-                          }}
-                          className="bg-[#050505] border border-[#1f1f23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] min-w-[100px]"
-                        >
-                          <option value="Tensor">Tensor</option>
-                          <option value="DataFrame">DataFrame</option>
-                          <option value="Scalar">Scalar</option>
-                          <option value="Model">Model</option>
-                          <option value="Dataset">Dataset</option>
-                        </select>
-                        <button
-                          onClick={() => setOutputSchema(outputSchema.filter((_, i) => i !== idx))}
-                          className="p-1.5 text-[#c0c7d5]/60 hover:text-[#F04438] hover:bg-[#353437]/40 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => setOutputSchema([...outputSchema, { name: '', type: 'Tensor' }])}
-                    className="text-xs font-semibold text-[#3192fc] hover:underline cursor-pointer flex items-center space-x-1 mt-4"
-                  >
-                    <span>+ Add field</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Code Panel */}
-              <div className="space-y-2">
-                <div className="bg-[#131315] border border-[#1F1F23] rounded-xl overflow-hidden flex flex-col">
-                  {/* Code Banner Header */}
-                  <div className="bg-[#0d0d10] px-4 py-2 border-b border-[#1F1F23] flex justify-between items-center">
-                    <span className="text-[10px] font-mono font-bold text-[#c0c7d5]/60">Python 3.10 <span className="text-[#c0c7d5]/30">main.py</span></span>
-                    <div className="flex space-x-3 text-xs text-[#c0c7d5]/50">
-                      <span className="cursor-pointer hover:text-white" title="Format code">☰</span>
-                      <span className="cursor-pointer hover:text-white" title="Toggle Fullscreen">⛶</span>
-                    </div>
-                  </div>
-
-                  {/* Code Editor block */}
-                  <div className="flex bg-[#050505] overflow-hidden min-h-[160px] max-h-56">
-                    <div className="bg-[#09090b] text-[#c0c7d5]/30 font-mono text-[11px] py-3 text-right select-none border-r border-[#1F1F23]/60 w-10 flex flex-col shrink-0 leading-5">
-                      {Array.from({ length: Math.max(customBlockCode.split('\n').length, 7) }).map((_, i) => (
-                        <span key={i} className="pr-2">{i + 1}</span>
-                      ))}
-                    </div>
-                    <textarea
-                      value={customBlockCode}
-                      onChange={(e) => setCustomBlockCode(e.target.value)}
-                      className="flex-1 bg-transparent text-[#32D583]/90 font-mono text-[11px] p-3 focus:outline-none resize-none leading-5 overflow-y-auto selection:bg-[#3192fc]/30 w-full"
-                      spellCheck={false}
-                    />
-                  </div>
-                </div>
-
-                {validationSuccess !== null && (
-                  <div className={`p-3 rounded-lg text-xs font-semibold ${
-                    validationSuccess ? 'bg-[#32D583]/10 text-[#32D583] border border-[#32D583]/20' : 'bg-[#F04438]/10 text-[#F04438] border border-[#F04438]/20'
-                  }`}>
-                    {validationSuccess ? '✓ Syntax validation passed. Click Save Block to commit.' : '✗ Validation error: Please check your def execute and return statements.'}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-5 bg-[#0d0d10] border-t border-[#1F1F23] flex justify-end items-center space-x-3">
-              <button
-                onClick={handleValidateCode}
-                className="bg-transparent hover:bg-[#353437]/40 border border-[#1f1f23] text-[#e5e1e4] px-4 py-2 rounded-lg text-xs font-semibold"
-              >
-                Validate Code
-              </button>
-              <button
-                onClick={handleAddNode}
-                disabled={!newNodeName.trim()}
-                className="bg-[#3192fc] hover:brightness-110 disabled:opacity-50 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-md transition-all"
-              >
-                Save Block
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Code Editor Modal Overlay */}
-      {showCodeEditor && selectedNode && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#131315] border border-[#1F1F23] rounded-xl w-full max-w-5xl h-[85vh] overflow-hidden flex flex-col shadow-2xl">
-            {/* Header */}
-            <div className="p-4 border-b border-[#1F1F23] flex justify-between items-center bg-[#141416]">
+          {/* Scrollable Form Body */}
+          <div className="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
+            {/* Row 1: Block Name & Description */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-sm font-bold text-[#e5e1e4] flex items-center">
-                  <Sparkles className="w-4 h-4 text-[#3192fc] mr-1.5" />
-                  Python Executor Script Editor - {selectedNode.name}
-                </h3>
-                <p className="text-[10px] font-mono text-[#c0c7d5]/60 mt-0.5">
-                  Type: <span className="uppercase text-[#3192fc]">{selectedNode.type}</span> | Runtime: NVIDIA GPU A100 | Environment: Python 3.10
-                </p>
-              </div>
-              <button
-                onClick={() => setShowCodeEditor(false)}
-                className="text-[#c0c7d5] hover:text-[#e5e1e4]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Editor Body */}
-            <div className="flex-1 flex overflow-hidden">
-              {/* Instructions Sidebar */}
-              <div className="w-64 bg-[#141416] border-r border-[#1F1F23] p-4 hidden md:flex flex-col justify-between text-xs text-[#c0c7d5] overflow-y-auto">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-[10px] font-mono text-[#c0c7d5]/40 uppercase tracking-widest mb-1.5">Instructions</h4>
-                    <p className="leading-relaxed text-[11px]">
-                      This python script executes within a sandboxed Docker container inside the cluster during simulation runs.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[10px] font-mono text-[#c0c7d5]/40 uppercase tracking-widest mb-1.5">Context Variables</h4>
-                    <ul className="list-disc pl-4 space-y-1 text-[11px] text-[#c0c7d5]/80">
-                      <li><code>ctx.pipeline_id</code>: ID of the running pipeline.</li>
-                      <li><code>ctx.get_input()</code>: Fetch upstream dataset or artifacts.</li>
-                      <li><code>ctx.log(msg)</code>: Print trace logs to orchestrator console.</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[10px] font-mono text-[#c0c7d5]/40 uppercase tracking-widest mb-1.5">Available Libraries</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {['numpy', 'pandas', 'scikit-learn', 'xgboost', 'torch', 'requests'].map((lib) => (
-                        <span key={lib} className="font-mono text-[9px] bg-[#1F1F23] px-1.5 py-0.5 rounded text-[#a6c8ff]">
-                          {lib}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border-t border-[#1F1F23] pt-4 mt-4 text-[10px] font-mono text-[#c0c7d5]/40">
-                  Cluster: gpc-stage-node-0
-                </div>
+                <label className="text-[11px] font-semibold text-[#c0c7d5]/80 block mb-1.5">
+                  Block Name
+                </label>
+                <Input
+                  type="text"
+                  value={newNodeName}
+                  onChange={(e) => setNewNodeName(e.target.value)}
+                  placeholder="custom_transformer_01"
+                  className="w-full bg-[#050505] border border-[#1f1f23] rounded-lg px-3.5 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] placeholder:text-[#c0c7d5]/30 font-mono focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
               </div>
 
-              {/* Text Area Code Editor */}
-              <div className="flex-1 flex flex-col bg-[#050505] relative overflow-hidden">
-                {/* Code Editor Title Banner */}
-                <div className="bg-[#09090b] border-b border-[#1F1F23]/60 px-4 py-1.5 flex items-center justify-between text-[10px] font-mono text-[#c0c7d5]/50 select-none">
-                  <span>main.py</span>
-                  <span>UTF-8</span>
-                </div>
-
-                {/* Editor Textarea */}
-                <textarea
-                  value={editingCode}
-                  onChange={(e) => setEditingCode(e.target.value)}
-                  className="flex-1 bg-transparent text-[#32D583]/90 font-mono text-xs p-5 focus:outline-none resize-none leading-relaxed overflow-y-auto selection:bg-[#3192fc]/30 w-full"
-                  spellCheck={false}
-                  placeholder="# Write your python script execution code here..."
+              <div>
+                <label className="text-[11px] font-semibold text-[#c0c7d5]/80 block mb-1.5">
+                  Description (Optional)
+                </label>
+                <Input
+                  type="text"
+                  value={newNodeDescription}
+                  onChange={(e) => setNewNodeDescription(e.target.value)}
+                  placeholder="Briefly describe this block's function"
+                  className="w-full bg-[#050505] border border-[#1f1f23] rounded-lg px-3.5 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] placeholder:text-[#c0c7d5]/30 focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-4 bg-[#141416] border-t border-[#1F1F23] flex justify-end space-x-2">
-              <button
-                onClick={() => setShowCodeEditor(false)}
-                className="bg-transparent hover:bg-[#353437] text-[#c0c7d5] px-4 py-2 rounded-lg text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveCode}
-                className="bg-[#3192fc] hover:brightness-110 text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-md transition-all flex items-center space-x-1.5"
-              >
-                <span>Save Python Script</span>
-              </button>
+            {/* Row 2: Input & Output Schemas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Input Schema Card */}
+              <div className="border border-[#1F1F23] bg-[#131315]/40 rounded-xl p-5 relative">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-xs font-bold text-[#e5e1e4] flex items-center space-x-1">
+                    <span>Input Schema</span>
+                  </h4>
+                  <span className="text-[10px] text-[#c0c7d5]/40 font-mono cursor-help" title="Define variables received by def execute(inputs)">
+                    [ℹ]
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {inputSchema.map((field, idx) => (
+                    <div key={idx} className="flex items-center space-x-2">
+                      <Input
+                        type="text"
+                        value={field.name}
+                        onChange={(e) => {
+                          const updated = [...inputSchema];
+                          updated[idx].name = e.target.value;
+                          setInputSchema(updated);
+                        }}
+                        placeholder="variable_name"
+                        className="flex-1 bg-[#050505] border border-[#1f1f23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] font-mono h-8 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                      <Select
+                        value={field.type}
+                        onValueChange={(val) => {
+                          const updated = [...inputSchema];
+                          updated[idx].type = val;
+                          setInputSchema(updated);
+                        }}
+                      >
+                        <SelectTrigger className="bg-[#050505] border border-[#1f1f23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] min-w-[100px] h-8 focus:ring-0 focus:ring-offset-0">
+                          <SelectValue placeholder="Type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#131315] border border-[#1F1F23] text-xs text-[#e5e1e4]">
+                          <SelectItem value="DataFrame">DataFrame</SelectItem>
+                          <SelectItem value="Scalar">Scalar</SelectItem>
+                          <SelectItem value="Tensor">Tensor</SelectItem>
+                          <SelectItem value="Model">Model</SelectItem>
+                          <SelectItem value="Dataset">Dataset</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setInputSchema(inputSchema.filter((_, i) => i !== idx))}
+                        className="p-1.5 text-[#c0c7d5]/60 hover:text-[#F04438] hover:bg-[#353437]/40 rounded-lg transition-colors w-7 h-7"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                <Button
+                  variant="link"
+                  onClick={() => setInputSchema([...inputSchema, { name: '', type: 'DataFrame' }])}
+                  className="text-xs font-semibold text-[#3192fc] hover:underline cursor-pointer flex items-center space-x-1 mt-4 h-auto p-0"
+                >
+                  <span>+ Add field</span>
+                </Button>
+              </div>
+
+              {/* Output Schema Card */}
+              <div className="border border-[#1F1F23] bg-[#131315]/40 rounded-xl p-5 relative">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-xs font-bold text-[#e5e1e4] flex items-center space-x-1">
+                    <span>Output Schema</span>
+                  </h4>
+                  <span className="text-[10px] text-[#c0c7d5]/40 font-mono cursor-help" title="Define variables outputted by return outputs">
+                    [ℹ]
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {outputSchema.map((field, idx) => (
+                    <div key={idx} className="flex items-center space-x-2">
+                      <Input
+                        type="text"
+                        value={field.name}
+                        onChange={(e) => {
+                          const updated = [...outputSchema];
+                          updated[idx].name = e.target.value;
+                          setOutputSchema(updated);
+                        }}
+                        placeholder="variable_name"
+                        className="flex-1 bg-[#050505] border border-[#1f1f23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] font-mono h-8 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                      <Select
+                        value={field.type}
+                        onValueChange={(val) => {
+                          const updated = [...outputSchema];
+                          updated[idx].type = val;
+                          setOutputSchema(updated);
+                        }}
+                      >
+                        <SelectTrigger className="bg-[#050505] border border-[#1f1f23] rounded-lg px-3 py-1.5 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] min-w-[100px] h-8 focus:ring-0 focus:ring-offset-0">
+                          <SelectValue placeholder="Type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#131315] border border-[#1F1F23] text-xs text-[#e5e1e4]">
+                          <SelectItem value="Tensor">Tensor</SelectItem>
+                          <SelectItem value="DataFrame">DataFrame</SelectItem>
+                          <SelectItem value="Scalar">Scalar</SelectItem>
+                          <SelectItem value="Model">Model</SelectItem>
+                          <SelectItem value="Dataset">Dataset</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setOutputSchema(outputSchema.filter((_, i) => i !== idx))}
+                        className="p-1.5 text-[#c0c7d5]/60 hover:text-[#F04438] hover:bg-[#353437]/40 rounded-lg transition-colors w-7 h-7"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                <Button
+                  variant="link"
+                  onClick={() => setOutputSchema([...outputSchema, { name: '', type: 'Tensor' }])}
+                  className="text-xs font-semibold text-[#3192fc] hover:underline cursor-pointer flex items-center space-x-1 mt-4 h-auto p-0"
+                >
+                  <span>+ Add field</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Code Panel */}
+            <div className="space-y-2">
+              <div className="bg-[#131315] border border-[#1F1F23] rounded-xl overflow-hidden flex flex-col">
+                {/* Code Banner Header */}
+                <div className="bg-[#0d0d10] px-4 py-2 border-b border-[#1F1F23] flex justify-between items-center">
+                  <span className="text-[10px] font-mono font-bold text-[#c0c7d5]/60">Python 3.10 <span className="text-[#c0c7d5]/30">main.py</span></span>
+                  <div className="flex space-x-3 text-xs text-[#c0c7d5]/50">
+                    <span className="cursor-pointer hover:text-white" title="Format code">☰</span>
+                    <span className="cursor-pointer hover:text-white" title="Toggle Fullscreen">⛶</span>
+                  </div>
+                </div>
+
+                {/* Code Editor block */}
+                <div className="flex bg-[#050505] overflow-hidden min-h-[160px] max-h-56">
+                  <div className="bg-[#09090b] text-[#c0c7d5]/30 font-mono text-[11px] py-3 text-right select-none border-r border-[#1F1F23]/60 w-10 flex flex-col shrink-0 leading-5">
+                    {Array.from({ length: Math.max(customBlockCode.split('\n').length, 7) }).map((_, i) => (
+                      <span key={i} className="pr-2">{i + 1}</span>
+                    ))}
+                  </div>
+                  <textarea
+                    value={customBlockCode}
+                    onChange={(e) => setCustomBlockCode(e.target.value)}
+                    className="flex-1 bg-transparent text-[#32D583]/90 font-mono text-[11px] p-3 focus:outline-none resize-none leading-5 overflow-y-auto selection:bg-[#3192fc]/30 w-full"
+                    spellCheck={false}
+                  />
+                </div>
+              </div>
+
+              {validationSuccess !== null && (
+                <div className={`p-3 rounded-lg text-xs font-semibold ${
+                  validationSuccess ? 'bg-[#32D583]/10 text-[#32D583] border border-[#32D583]/20' : 'bg-[#F04438]/10 text-[#F04438] border border-[#F04438]/20'
+                }`}>
+                  {validationSuccess ? '✓ Syntax validation passed. Click Save Block to commit.' : '✗ Validation error: Please check your def execute and return statements.'}
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+
+          {/* Footer */}
+          <DialogFooter className="p-5 bg-[#0d0d10] border-t border-[#1F1F23] flex justify-end items-center space-x-3 sm:space-x-3">
+            <Button
+              variant="outline"
+              onClick={handleValidateCode}
+              className="bg-transparent hover:bg-[#353437]/40 border border-[#1f1f23] text-[#e5e1e4] hover:text-[#e5e1e4] px-4 py-2 rounded-lg text-xs font-semibold h-9"
+            >
+              Validate Code
+            </Button>
+            <Button
+              onClick={handleAddNode}
+              disabled={!newNodeName.trim()}
+              className="bg-[#3192fc] hover:bg-[#3192fc]/90 hover:brightness-110 disabled:opacity-50 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-md transition-all h-9"
+            >
+              Save Block
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Code Editor Modal Overlay */}
+      <Dialog open={showCodeEditor && !!selectedNode} onOpenChange={(open) => { if (!open) setShowCodeEditor(false); }}>
+        <DialogContent className="bg-[#131315] border border-[#1F1F23] rounded-xl w-full max-w-5xl h-[85vh] overflow-hidden flex flex-col shadow-2xl p-0 text-[#e5e1e4]">
+          {/* Header */}
+          <DialogHeader className="p-4 border-b border-[#1F1F23] flex justify-between items-center bg-[#141416] flex-row space-y-0">
+            <div>
+              <DialogTitle className="text-sm font-bold text-[#e5e1e4] flex items-center">
+                <Sparkles className="w-4 h-4 text-[#3192fc] mr-1.5" />
+                Python Executor Script Editor - {selectedNode?.name}
+              </DialogTitle>
+              <DialogDescription className="text-[10px] font-mono text-[#c0c7d5]/60 mt-0.5">
+                Type: <span className="uppercase text-[#3192fc]">{selectedNode?.type}</span> | Runtime: NVIDIA GPU A100 | Environment: Python 3.10
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+
+          {/* Editor Body */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Instructions Sidebar */}
+            <div className="w-64 bg-[#141416] border-r border-[#1F1F23] p-4 hidden md:flex flex-col justify-between text-xs text-[#c0c7d5] overflow-y-auto">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-[10px] font-mono text-[#c0c7d5]/40 uppercase tracking-widest mb-1.5">Instructions</h4>
+                  <p className="leading-relaxed text-[11px]">
+                    This python script executes within a sandboxed Docker container inside the cluster during simulation runs.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="text-[10px] font-mono text-[#c0c7d5]/40 uppercase tracking-widest mb-1.5">Context Variables</h4>
+                  <ul className="list-disc pl-4 space-y-1 text-[11px] text-[#c0c7d5]/80">
+                    <li><code>ctx.pipeline_id</code>: ID of the running pipeline.</li>
+                    <li><code>ctx.get_input()</code>: Fetch upstream dataset or artifacts.</li>
+                    <li><code>ctx.log(msg)</code>: Print trace logs to orchestrator console.</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="text-[10px] font-mono text-[#c0c7d5]/40 uppercase tracking-widest mb-1.5">Available Libraries</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {['numpy', 'pandas', 'scikit-learn', 'xgboost', 'torch', 'requests'].map((lib) => (
+                      <span key={lib} className="font-mono text-[9px] bg-[#1F1F23] px-1.5 py-0.5 rounded text-[#a6c8ff]">
+                        {lib}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-[#1F1F23] pt-4 mt-4 text-[10px] font-mono text-[#c0c7d5]/40">
+                Cluster: gpc-stage-node-0
+              </div>
+            </div>
+
+            {/* Text Area Code Editor */}
+            <div className="flex-1 flex flex-col bg-[#050505] relative overflow-hidden">
+              {/* Code Editor Title Banner */}
+              <div className="bg-[#09090b] border-b border-[#1F1F23]/60 px-4 py-1.5 flex items-center justify-between text-[10px] font-mono text-[#c0c7d5]/50 select-none">
+                <span>main.py</span>
+                <span>UTF-8</span>
+              </div>
+
+              {/* Editor Textarea */}
+              <textarea
+                value={editingCode}
+                onChange={(e) => setEditingCode(e.target.value)}
+                className="flex-1 bg-transparent text-[#32D583]/90 font-mono text-xs p-5 focus:outline-none resize-none leading-relaxed overflow-y-auto selection:bg-[#3192fc]/30 w-full"
+                spellCheck={false}
+                placeholder="# Write your python script execution code here..."
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <DialogFooter className="p-4 bg-[#141416] border-t border-[#1F1F23] flex justify-end space-x-2 sm:space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCodeEditor(false)}
+              className="bg-transparent hover:bg-[#353437] text-[#c0c7d5] hover:text-[#c0c7d5] hover:bg-[#353437] px-4 py-2 rounded-lg text-xs h-9 border border-[#1f1f23]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveCode}
+              className="bg-[#3192fc] hover:bg-[#3192fc]/90 hover:brightness-110 text-white px-5 py-2 rounded-lg text-xs font-semibold shadow-md transition-all flex items-center space-x-1.5 h-9"
+            >
+              <span>Save Python Script</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Pane Right-Click Context Menu */}
       {contextMenu && (

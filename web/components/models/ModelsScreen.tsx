@@ -15,6 +15,12 @@ import {
 import PageHeader from '../shared/PageHeader';
 import StatusBadge from '../shared/StatusBadge';
 import EmptyState from '../shared/EmptyState';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function ModelsScreen() {
   const { models, addModel, deleteModel } = useOrchestrator();
@@ -74,73 +80,75 @@ export default function ModelsScreen() {
         
         {/* Models List (Left 2 columns) */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-[#141416]/40 border border-[#1F1F23] rounded-xl overflow-hidden">
+          <Card className="bg-[#141416]/40 border border-[#1F1F23] rounded-xl overflow-hidden shadow-none">
             {models.length > 0 ? (
-              <table className="w-full text-left text-xs text-[#e5e1e4]">
-                <thead className="bg-[#131315] border-b border-[#1F1F23] text-[10px] font-mono text-[#c0c7d5]/60 uppercase tracking-wider">
-                  <tr>
-                    <th className="p-4">Model Name</th>
-                    <th className="p-4">Framework</th>
-                    <th className="p-4">Type</th>
-                    <th className="p-4">Accuracy</th>
-                    <th className="p-4">F1-Score</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#1F1F23]/50">
+              <Table className="w-full text-left text-xs text-[#e5e1e4]">
+                <TableHeader className="bg-[#131315] border-b border-[#1F1F23] text-[10px] font-mono text-[#c0c7d5]/60 uppercase tracking-wider hover:bg-transparent">
+                  <TableRow className="border-b border-[#1F1F23]/60 hover:bg-transparent">
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">Model Name</TableHead>
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">Framework</TableHead>
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">Type</TableHead>
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">Accuracy</TableHead>
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">F1-Score</TableHead>
+                    <TableHead className="p-4 text-[#c0c7d5]/60 font-mono">Status</TableHead>
+                    <TableHead className="p-4 text-right text-[#c0c7d5]/60 font-mono">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-[#1F1F23]/50">
                   {models.map((model) => {
                     const isSelected = selectedModelId === model.id;
                     return (
-                      <tr
+                      <TableRow
                         key={model.id}
                         onClick={() => setSelectedModelId(model.id)}
-                        className={`hover:bg-[#353437]/20 cursor-pointer transition-all ${
-                          isSelected ? 'bg-[#3f495d]/20 border-l-2 border-[#3192fc]' : ''
+                        className={`hover:bg-[#353437]/20 cursor-pointer transition-all border-b border-[#1F1F23]/50 ${
+                          isSelected ? 'bg-[#3f495d]/20 border-l-2 border-l-[#3192fc]' : ''
                         }`}
                       >
-                        <td className="p-4 font-semibold flex items-center space-x-2">
+                        <TableCell className="p-4 font-semibold flex items-center space-x-2">
                           <Brain className="w-4 h-4 text-[#7A5AF8]" />
                           <div>
                             <span className="block">{model.name}</span>
                             <span className="text-[10px] font-mono text-[#c0c7d5]/50">{model.version}</span>
                           </div>
-                        </td>
-                        <td className="p-4 font-mono text-[#c0c7d5]">{model.framework}</td>
-                        <td className="p-4 text-[#c0c7d5]/80">{model.type}</td>
-                        <td className="p-4 font-mono font-bold text-[#32D583]">{(model.accuracy * 100).toFixed(1)}%</td>
-                        <td className="p-4 font-mono text-[#a6c8ff]">{(model.f1Score * 100).toFixed(1)}%</td>
-                        <td className="p-4">
+                        </TableCell>
+                        <TableCell className="p-4 font-mono text-[#c0c7d5]">{model.framework}</TableCell>
+                        <TableCell className="p-4 text-[#c0c7d5]/80">{model.type}</TableCell>
+                        <TableCell className="p-4 font-mono font-bold text-[#32D583]">{(model.accuracy * 100).toFixed(1)}%</TableCell>
+                        <TableCell className="p-4 font-mono text-[#a6c8ff]">{(model.f1Score * 100).toFixed(1)}%</TableCell>
+                        <TableCell className="p-4">
                           <StatusBadge status="active" />
-                        </td>
-                        <td className="p-4 text-right">
-                          <button
+                        </TableCell>
+                        <TableCell className="p-4 text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteModel(model.id);
                               if (selectedModelId === model.id) setSelectedModelId(null);
                             }}
-                            className="text-[#c0c7d5] hover:text-[#F04438] p-1 rounded hover:bg-[#353437] transition-all cursor-pointer"
+                            className="text-[#c0c7d5] hover:text-[#F04438] p-1 rounded hover:bg-[#353437] hover:text-[#F04438] transition-all cursor-pointer w-7 h-7"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             ) : (
               <EmptyState 
                 message="No registered models found matching search queries."
                 icon={Brain}
               />
             )}
-          </div>
+          </Card>
         </div>
 
         {/* Selected Model Details & Visual ROC Curves (Right column) */}
-        <div className="bg-[#131315] border border-[#1F1F23] rounded-xl overflow-hidden flex flex-col h-full justify-between">
+        <Card className="bg-[#131315] border border-[#1F1F23] rounded-xl overflow-hidden flex flex-col h-full justify-between shadow-none">
           {selectedModel ? (
             <div>
               <div className="p-4 border-b border-[#1F1F23] flex justify-between items-center bg-[#141416]">
@@ -230,108 +238,109 @@ export default function ModelsScreen() {
               <p className="text-xs text-[#c0c7d5]">Select an ML model from the left column registry to audit mathematical profiles.</p>
             </div>
           )}
-        </div>
+        </Card>
       </div>
 
       {/* Add Model Modal Overlay */}
-      {showAddModelModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#131315] border border-[#1F1F23] rounded-xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="p-4 border-b border-[#1F1F23] flex justify-between items-center">
-              <h3 className="text-sm font-bold text-[#e5e1e4] flex items-center">
-                <Sparkles className="w-4 h-4 text-[#7A5AF8] mr-1.5" />
-                Register Production Model
-              </h3>
-              <button
-                onClick={() => setShowAddModelModal(false)}
-                className="text-[#c0c7d5] hover:text-[#e5e1e4] cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <Dialog open={showAddModelModal} onOpenChange={setShowAddModelModal}>
+        <DialogContent className="bg-[#131315] border border-[#1F1F23] rounded-xl w-full max-w-md overflow-hidden shadow-2xl p-0 text-[#e5e1e4]">
+          <DialogHeader className="p-4 border-b border-[#1F1F23] flex justify-between items-center bg-[#141416] flex-row space-y-0">
+            <DialogTitle className="text-sm font-bold text-[#e5e1e4] flex items-center">
+              <Sparkles className="w-4 h-4 text-[#7A5AF8] mr-1.5" />
+              Register Production Model
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="p-4 space-y-4">
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
+                Model Name
+              </label>
+              <Input
+                type="text"
+                value={newModelName}
+                onChange={(e) => setNewModelName(e.target.value)}
+                placeholder="e.g. ResNet_Classifier_V2"
+                className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
-                  Model Name
+                  ML Framework
                 </label>
-                <input
-                  type="text"
-                  value={newModelName}
-                  onChange={(e) => setNewModelName(e.target.value)}
-                  placeholder="e.g. ResNet_Classifier_V2"
-                  className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus:ring-2 focus:ring-[#3192fc]/20"
-                />
+                <Select
+                  value={newModelFramework}
+                  onValueChange={setNewModelFramework}
+                >
+                  <SelectTrigger className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] h-9 focus:ring-0 focus:ring-offset-0">
+                    <SelectValue placeholder="Framework" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#131315] border border-[#1F1F23] text-xs text-[#e5e1e4]">
+                    <SelectItem value="PyTorch">PyTorch</SelectItem>
+                    <SelectItem value="TensorFlow">TensorFlow</SelectItem>
+                    <SelectItem value="XGBoost">XGBoost</SelectItem>
+                    <SelectItem value="Scikit-Learn">Scikit-Learn</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
-                    ML Framework
-                  </label>
-                  <select
-                    value={newModelFramework}
-                    onChange={(e) => setNewModelFramework(e.target.value)}
-                    className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc]"
-                  >
-                    <option value="PyTorch">PyTorch</option>
-                    <option value="TensorFlow">TensorFlow</option>
-                    <option value="XGBoost">XGBoost</option>
-                    <option value="Scikit-Learn">Scikit-Learn</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
-                    Model Task
-                  </label>
-                  <select
-                    value={newModelType}
-                    onChange={(e) => setNewModelType(e.target.value)}
-                    className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc]"
-                  >
-                    <option value="Binary Classifier">Binary Classifier</option>
-                    <option value="NLP Transformer">NLP Transformer</option>
-                    <option value="Regression Engine">Regression Engine</option>
-                    <option value="Computer Vision">Computer Vision</option>
-                  </select>
-                </div>
-              </div>
-
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
-                  Expected Accuracy (%)
+                  Model Task
                 </label>
-                <input
-                  type="number"
-                  value={newModelAccuracy}
-                  onChange={(e) => setNewModelAccuracy(e.target.value)}
-                  placeholder="e.g. 94.2"
-                  min="50"
-                  max="100"
-                  step="0.1"
-                  className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus:ring-2 focus:ring-[#3192fc]/20"
-                />
+                <Select
+                  value={newModelType}
+                  onValueChange={setNewModelType}
+                >
+                  <SelectTrigger className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] h-9 focus:ring-0 focus:ring-offset-0">
+                    <SelectValue placeholder="Task" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#131315] border border-[#1F1F23] text-xs text-[#e5e1e4]">
+                    <SelectItem value="Binary Classifier">Binary Classifier</SelectItem>
+                    <SelectItem value="NLP Transformer">NLP Transformer</SelectItem>
+                    <SelectItem value="Regression Engine">Regression Engine</SelectItem>
+                    <SelectItem value="Computer Vision">Computer Vision</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <div className="p-4 bg-[#141416] border-t border-[#1F1F23] flex justify-end space-x-2">
-              <button
-                onClick={() => setShowAddModelModal(false)}
-                className="bg-transparent hover:bg-[#353437] text-[#c0c7d5] px-3 py-1.5 rounded-lg text-xs cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddModel}
-                disabled={!newModelName.trim()}
-                className="bg-[#3192fc] hover:brightness-110 disabled:opacity-50 text-white px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
-              >
-                Register Model
-              </button>
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wider text-[#c0c7d5]/70 block mb-1">
+                Expected Accuracy (%)
+              </label>
+              <Input
+                type="number"
+                value={newModelAccuracy}
+                onChange={(e) => setNewModelAccuracy(e.target.value)}
+                placeholder="e.g. 94.2"
+                min="50"
+                max="100"
+                step="0.1"
+                className="w-full bg-[#050505] border border-[#1F1F23] rounded-lg px-3 py-2 text-xs text-[#e5e1e4] focus:outline-none focus:border-[#3192fc] focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
             </div>
           </div>
-        </div>
-      )}
+
+          <DialogFooter className="p-4 bg-[#141416] border-t border-[#1F1F23] flex justify-end space-x-2 sm:space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowAddModelModal(false)}
+              className="bg-transparent hover:bg-[#353437] text-[#c0c7d5] hover:text-[#c0c7d5] hover:bg-[#353437] px-3 py-1.5 rounded-lg text-xs cursor-pointer border border-[#1f1f23] h-8"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddModel}
+              disabled={!newModelName.trim()}
+              className="bg-[#3192fc] hover:bg-[#3192fc]/90 hover:brightness-110 disabled:opacity-50 text-white px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer h-8"
+            >
+              Register Model
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

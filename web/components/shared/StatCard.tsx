@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Card } from '@/components/ui/card';
 
 interface StatCardProps {
   label: string;
@@ -56,7 +57,7 @@ export default function StatCard({ label, value, accentColor = 'blue', icon: Ico
   }
 
   return (
-    <div className="bg-[#141416] border border-[#1F1F23] rounded-xl p-4 flex items-center justify-between relative overflow-hidden">
+    <Card className="bg-[#141416] border border-[#1F1F23] rounded-xl p-4 flex items-center justify-between relative overflow-hidden">
       <div className={`absolute top-0 left-0 w-full h-[3px] ${borderAccentClass}`} />
       
       <div className="flex-1 min-w-0">
@@ -78,6 +79,6 @@ export default function StatCard({ label, value, accentColor = 'blue', icon: Ico
           <Icon className="w-8 h-8 text-[#c0c7d5]/20" />
         </div>
       )}
-    </div>
+    </Card>
   );
 }

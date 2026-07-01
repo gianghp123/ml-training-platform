@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
 
 interface PageHeaderProps {
   title: string;
@@ -23,13 +24,13 @@ export default function PageHeader({ title, description, action }: PageHeaderPro
       </div>
 
       {action && (
-        <button
+        <Button
           onClick={action.onClick}
-          className="bg-[#3192fc] hover:brightness-110 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-1.5 transition-all shadow-md self-start md:self-auto cursor-pointer"
+          className="bg-[#3192fc] hover:bg-[#3192fc]/90 hover:brightness-110 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-1.5 transition-all shadow-md self-start md:self-auto cursor-pointer h-9"
         >
           {ActionIcon && <ActionIcon className="w-4 h-4" />}
           <span>{action.label}</span>
-        </button>
+        </Button>
       )}
     </div>
   );

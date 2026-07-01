@@ -2,6 +2,7 @@
 
 import { Code, Sparkles } from 'lucide-react';
 import PageHeader from '../shared/PageHeader';
+import { Card } from '@/components/ui/card';
 
 export default function DocumentationScreen() {
   return (
@@ -16,7 +17,7 @@ export default function DocumentationScreen() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Getting started card */}
-        <div className="bg-[#131315] border border-[#1F1F23] rounded-xl p-5 space-y-3">
+        <Card className="bg-[#131315] border border-[#1F1F23] rounded-xl p-5 space-y-3 shadow-none">
           <div className="p-2 bg-[#3192fc]/10 rounded-lg border border-[#3192fc]/20 text-[#3192fc] w-fit">
             <Sparkles className="w-5 h-5" />
           </div>
@@ -29,10 +30,10 @@ export default function DocumentationScreen() {
             <li><strong>Preprocessing:</strong> Resolves feature weights and standard scales.</li>
             <li><strong>Training:</strong> Leverages GPU nodes to fit mathematical weights.</li>
           </ul>
-        </div>
+        </Card>
 
         {/* Scripting API card */}
-        <div className="bg-[#131315] border border-[#1F1F23] rounded-xl p-5 space-y-3">
+        <Card className="bg-[#131315] border border-[#1F1F23] rounded-xl p-5 space-y-3 shadow-none">
           <div className="p-2 bg-[#7A5AF8]/10 rounded-lg border border-[#7A5AF8]/20 text-[#7A5AF8] w-fit">
             <Code className="w-5 h-5" />
           </div>
@@ -49,7 +50,7 @@ def step_exec(ctx):
     print("Normalizing features...")
     return raw_df.values * np.pi`}
           </pre>
-        </div>
+        </Card>
       </div>
     </div>
   );

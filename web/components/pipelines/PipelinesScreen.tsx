@@ -10,6 +10,8 @@ import {
 import PageHeader from '../shared/PageHeader';
 import PipelineCard from '../shared/PipelineCard';
 import EmptyState from '../shared/EmptyState';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function PipelinesScreen() {
   const router = useRouter();
@@ -47,29 +49,27 @@ export default function PipelinesScreen() {
 
         <div className="flex items-center space-x-2">
           {/* Status Filters */}
-          <div className="flex items-center space-x-2 bg-[#131315] border border-[#1F1F23] p-1 rounded-lg">
-            {['all', 'success', 'error', 'running', 'never_run'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setStatusFilter(f)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all duration-150 cursor-pointer ${
-                  statusFilter === f
-                    ? 'bg-[#3f495d] text-[#e5e1e4]'
-                    : 'text-[#c0c7d5] hover:text-[#e5e1e4] hover:bg-[#353437]'
-                }`}
-              >
-                {f.replace('_', ' ')}
-              </button>
-            ))}
-          </div>
+          <Tabs value={statusFilter} onValueChange={setStatusFilter}>
+            <TabsList className="bg-[#131315] border border-[#1F1F23] p-1 rounded-lg h-auto space-x-1">
+              {['all', 'success', 'error', 'running', 'never_run'].map((f) => (
+                <TabsTrigger
+                  key={f}
+                  value={f}
+                  className="px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all duration-150 cursor-pointer data-[state=active]:bg-[#3f495d] data-[state=active]:text-[#e5e1e4] text-[#c0c7d5] hover:text-[#e5e1e4] hover:bg-[#353437] bg-transparent border-none shadow-none"
+                >
+                  {f.replace('_', ' ')}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
 
-          <button
+          <Button
             onClick={handleCreatePipeline}
-            className="bg-[#3192fc] hover:brightness-110 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-1.5 transition-all shadow-md cursor-pointer"
+            className="bg-[#3192fc] hover:bg-[#3192fc]/90 hover:brightness-110 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center space-x-1.5 transition-all shadow-md cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Create Pipeline</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -110,13 +110,14 @@ export default function PipelinesScreen() {
             message="No matching pipelines found in directory."
             icon={Workflow}
           />
-          <button
+          <Button
+            variant="outline"
             onClick={handleCreatePipeline}
-            className="mt-4 bg-[#3f495d] text-[#e5e1e4] border border-[#1F1F23] px-4 py-2 rounded-lg text-xs font-semibold hover:bg-[#353437] transition-all flex items-center space-x-2 cursor-pointer"
+            className="mt-4 bg-[#3f495d] text-[#e5e1e4] border border-[#1F1F23] hover:bg-[#353437] hover:text-[#e5e1e4] px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center space-x-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Create First Pipeline</span>
-          </button>
+          </Button>
         </div>
       )}
     </div>
