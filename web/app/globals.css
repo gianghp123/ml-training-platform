@@ -127,3 +127,39 @@
     @apply font-sans;
     }
 }
+
+/* Custom styles for ML-Orchestrator */
+.bg-dot-pattern {
+  background-image: radial-gradient(circle at 1px 1px, #1F1F23 1px, transparent 0);
+  background-size: 8px 8px;
+}
+
+/* Custom scrollbars for high tech look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F1F23;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #353437;
+}
+
+/* Fullscreen mode for workflow graph */
+#workflow-graph-container:fullscreen {
+  background-color: #0c0c0e !important;
+  padding: 2.5rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  height: 100% !important;
+}
