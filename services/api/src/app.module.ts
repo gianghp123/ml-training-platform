@@ -11,6 +11,9 @@ import { WorkerModule } from './modules/worker/worker.module';
 import { ModelRegistryModule } from './modules/model-registry/model-registry.module';
 import { WorkflowModule } from './modules/workflow/workflow.module';
 import { ExecutionModule } from './modules/execution/execution.module';
+import { APP_GUARD } from '@nestjs/core';
+import { ClerkAuthGuard } from './modules/auth/guards/clerk-auth.guard';
+import { RolesGuard } from './modules/auth/guards/role.guard';
 
 @Module({
   imports: [
@@ -44,6 +47,16 @@ import { ExecutionModule } from './modules/execution/execution.module';
     ExecutionModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ClerkAuthGuard
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard
+    }
+  ],
 })
 export class AppModule { }

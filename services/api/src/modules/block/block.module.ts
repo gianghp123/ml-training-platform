@@ -4,12 +4,19 @@ import { BlockCategory } from "src/database/entities/block-category.entity";
 import { BlockDefinition } from "src/database/entities/block-definition.entity";
 import { BlockCategoryController } from "./controllers/block-category.controller";
 import { BlockDefinitionController } from "./controllers/block-definition.controller";
+import { BlockCategoryAdminController } from "./controllers/admin/block-category.admin.controller";
+import { BlockDefinitionAdminController } from "./controllers/admin/block-definition.admin.controller";
 import { BlockCategoryService } from "./services/block-category.service";
 import { BlockDefinitionService } from "./services/block-definition.service";
 
 @Module({
   imports: [TypeOrmModule.forFeature([BlockCategory, BlockDefinition])],
   providers: [BlockCategoryService, BlockDefinitionService],
-  controllers: [BlockCategoryController, BlockDefinitionController],
+  controllers: [
+    BlockCategoryController,
+    BlockDefinitionController,
+    BlockCategoryAdminController,
+    BlockDefinitionAdminController,
+  ],
 })
 export class BlockModule { }

@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import { json, urlencoded } from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { clerkMiddleware } from '@clerk/express'
 import expressBasicAuth from 'express-basic-auth';
 
 async function bootstrap() {
@@ -34,6 +35,7 @@ async function bootstrap() {
     defaultVersion: '1',
     prefix: 'v',
   });
+  app.use(clerkMiddleware())
 
   if (process.env.NODE_ENV !== 'production') {
     const swaggerUser = configService.get<string>('SWAGGER_USER');

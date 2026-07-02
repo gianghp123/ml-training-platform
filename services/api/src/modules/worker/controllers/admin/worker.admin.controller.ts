@@ -1,14 +1,36 @@
-import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, SerializeOptions, UseInterceptors } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse } from '@nestjs/swagger';
-import { WorkerService } from '../services/worker.service';
-import { WorkerDTO } from '../dtos/responses/worker.response';
-import { CreateWorkerDto } from '../dtos/requests/create-worker.dto';
-import { UpdateWorkerDto } from '../dtos/requests/update-worker.dto';
+import {
+  Body,
+  ClassSerializerInterceptor,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  SerializeOptions,
+  UseInterceptors,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { WorkerService } from '../../services/worker.service';
+import { WorkerDTO } from '../../dtos/responses/worker.response';
+import { CreateWorkerDto } from '../../dtos/requests/create-worker.dto';
+import { UpdateWorkerDto } from '../../dtos/requests/update-worker.dto';
+import { Roles } from 'src/modules/auth/decorators/role.decorator';
+import { UserRole } from 'src/libs/enums/user-role.enum';
 
+@ApiTags('Admin-Workers')
 @ApiBearerAuth()
-@Controller('workers')
+@Roles(UserRole.Admin)
+@Controller('admin/workers')
 @UseInterceptors(ClassSerializerInterceptor)
-export class WorkerController {
+export class WorkerAdminController {
   constructor(
     private readonly workerService: WorkerService,
   ) {}
@@ -37,7 +59,10 @@ export class WorkerController {
   @Patch(':id')
   @SerializeOptions({ type: WorkerDTO })
   @ApiOkResponse({ type: WorkerDTO })
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateWorkerDto) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateWorkerDto,
+  ) {
     return this.workerService.update(id, dto);
   }
 
