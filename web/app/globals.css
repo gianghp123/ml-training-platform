@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import '@xyflow/react/dist/style.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -148,12 +149,6 @@
   }
 }
 
-/* Custom styles for ML-Orchestrator */
-.bg-dot-pattern {
-  background-image: radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0);
-  background-size: 8px 8px;
-}
-
 /* Custom scrollbars for high tech look */
 ::-webkit-scrollbar {
   width: 6px;
@@ -173,12 +168,6 @@
   background: var(--muted);
 }
 
-/* Login and SVG Pipeline animations */
-@keyframes dash {
-  to {
-    stroke-dashoffset: -40;
-  }
-}
 
 .animate-dash {
   animation: dash 3s linear infinite;
