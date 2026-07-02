@@ -1,44 +1,41 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+import { NodeExecutionStatus } from 'src/libs/enums';
 
-export class BlockDefinitionDTO {
+export class NodeExecutionDTO {
   @ApiProperty()
   @Expose()
   id: string;
 
   @ApiProperty()
   @Expose()
-  code: string;
+  workflowRunId: string;
 
   @ApiProperty()
   @Expose()
-  name: string;
+  nodeId: string;
 
   @ApiProperty()
   @Expose()
-  categoryId: string;
+  nodeType: string;
+
+  @ApiProperty({ enum: NodeExecutionStatus })
+  @Expose()
+  status: NodeExecutionStatus;
 
   @ApiPropertyOptional()
   @Expose()
-  description: string;
+  workerId: string;
+
+  @ApiProperty()
+  @Expose()
+  retryCount: number;
 
   @ApiPropertyOptional()
   @Expose()
-  configSchema: Record<string, unknown>;
+  startedAt: Date;
 
   @ApiPropertyOptional()
   @Expose()
-  inputSchema: Record<string, unknown>;
-
-  @ApiPropertyOptional()
-  @Expose()
-  outputSchema: Record<string, unknown>;
-
-  @ApiPropertyOptional()
-  @Expose()
-  dockerImage: string;
-
-  @ApiPropertyOptional()
-  @Expose()
-  version: string;
+  finishedAt: Date;
 }

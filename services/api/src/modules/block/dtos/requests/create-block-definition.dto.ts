@@ -24,17 +24,17 @@ export class CreateBlockDefinitionDto {
   @ApiPropertyOptional()
   @IsObject()
   @IsOptional()
-  configSchema?: Record<string, any>;
+  configSchema?: Record<string, unknown>;
 
   @ApiPropertyOptional()
   @IsObject()
   @IsOptional()
-  inputSchema?: Record<string, any>;
+  inputSchema?: Record<string, unknown>;
 
   @ApiPropertyOptional()
   @IsObject()
   @IsOptional()
-  outputSchema?: Record<string, any>;
+  outputSchema?: Record<string, unknown>;
 
   @ApiPropertyOptional()
   @IsString()

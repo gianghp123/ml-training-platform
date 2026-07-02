@@ -26,13 +26,13 @@ export class BlockDefinition {
   description: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  configSchema: Record<string, any>;
+  configSchema: Record<string, unknown>;
 
   @Column({ type: 'jsonb', nullable: true })
-  inputSchema: Record<string, any>;
+  inputSchema: Record<string, unknown>;
 
   @Column({ type: 'jsonb', nullable: true })
-  outputSchema: Record<string, any>;
+  outputSchema: Record<string, unknown>;
 
   @Column({ type: 'varchar', nullable: true })
   dockerImage: string;

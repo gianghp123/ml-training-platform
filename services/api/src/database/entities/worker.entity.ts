@@ -24,7 +24,7 @@ export class Worker {
   lastHeartbeat: Date;
 
   @Column({ type: 'jsonb', nullable: true })
-  capability: Record<string, any>;
+  capability: Record<string, unknown>;
 
   @OneToMany(() => NodeExecution, (execution) => execution.worker)
   nodeExecutions: NodeExecution[];

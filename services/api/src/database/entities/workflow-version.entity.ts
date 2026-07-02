@@ -24,7 +24,7 @@ export class WorkflowVersion {
   version: number;
 
   @Column({ type: 'jsonb' })
-  graphJson: Record<string, any>;
+  graphJson: Record<string, unknown>;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
