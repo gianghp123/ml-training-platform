@@ -1,9 +1,8 @@
 'use client';
 
+import type { Edge, Node } from '@xyflow/react';
 import { useCallback } from 'react';
-import type { Edge } from '@xyflow/react';
-import type { PipelineNode } from '../utils/node-factory';
-import { serializeGraph, deserializeGraph, type SerializedGraph } from '../utils/graph-serializer';
+import { deserializeGraph, serializeGraph, type SerializedGraph } from '../utils/graph-serializer';
 
 const STORAGE_KEY = 'pipeline-builder-workflow';
 
@@ -26,18 +25,14 @@ function createEdge(
 }
 
 interface UseWorkflowPersistenceReturn {
-  saveWorkflow: (name: string, nodes: PipelineNode[], edges: Edge[]) => void;
-  loadWorkflow: () => {
-    name: string;
-    nodes: PipelineNode[];
-    edges: Edge[];
-  } | null;
+  saveWorkflow: (name: string, nodes: Node[], edges: Edge[]) => void;
+  loadWorkflow: () => { name: string; nodes: Node[]; edges: Edge[] } | null;
   hasSavedWorkflow: () => boolean;
 }
 
 export function useWorkflowPersistence(): UseWorkflowPersistenceReturn {
   const saveWorkflow = useCallback(
-    (name: string, nodes: PipelineNode[], edges: Edge[]) => {
+    (name: string, nodes: Node[], edges: Edge[]) => {
       const graph = serializeGraph(nodes, edges);
       const data = { name, graph, savedAt: new Date().toISOString() };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));

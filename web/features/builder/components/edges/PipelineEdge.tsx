@@ -11,6 +11,7 @@ import { memo } from 'react';
 interface PipelineEdgeData {
   color?: string;
   edgeStyle?: 'smoothstep' | 'bezier' | 'straight';
+  suspended?: boolean;
 }
 
 function PipelineEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd, style, data }: EdgeProps) {
@@ -31,6 +32,8 @@ function PipelineEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, 
       break;
   }
 
+  const isSuspended = edgeData?.suspended === true;
+
   return (
     <path
       id={id}
@@ -38,7 +41,11 @@ function PipelineEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, 
       fill="none"
       stroke={edgeColor}
       markerEnd={markerEnd}
-      style={style}
+      className={isSuspended ? "animated-dash" : ""}
+      style={{
+        ...style,
+        strokeWidth: isSuspended ? 1 : 6,
+      }}
     />
   );
 }

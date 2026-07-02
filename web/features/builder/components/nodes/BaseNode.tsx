@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { Handle, Position, useReactFlow, type NodeProps } from '@xyflow/react';
 import { memo, useCallback, useMemo } from 'react';
 import { CATEGORY_COLORS } from '../../blocks';
 import type { BlockConfigField } from '../../blocks/socket-types';
@@ -26,9 +26,19 @@ function getStatusVariant(status: PipelineNodeData['status']) {
   }
 }
 
-function BaseNode({ id, data, selected }: NodeProps<PipelineNode>) {
+function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
   const dotColor = CATEGORY_COLORS[data.categoryId] ?? 'bg-gray-500';
   const builder = useBuilderContext();
+  const rf = useReactFlow();
+
+  const isParentSuspended = useMemo(() => {
+    if (!parentId) return false;
+    const parentNode = rf.getNode(parentId);
+    if (!parentNode) return false;
+    const pd = parentNode.data as Record<string, unknown>;
+    if (pd._group !== true) return false;
+    return pd.suspended === true;
+  }, [parentId, rf]);
 
   const configSchema = useMemo(() => {
     const block = findBlockById(data.blockId);
@@ -51,7 +61,7 @@ function BaseNode({ id, data, selected }: NodeProps<PipelineNode>) {
   return (
     <div
       className={`min-w-50 rounded-lg border bg-card text-card-foreground shadow-sm transition-shadow ${selected ? 'ring-2 ring-ring' : 'ring-1 ring-foreground/10'
-        }`}
+        } ${isParentSuspended ? 'opacity-50 grayscale' : ''}`}
     >
       <div
         className={`flex items-center gap-2 rounded-t-lg px-3 py-2 ${dotColor} text-white`}

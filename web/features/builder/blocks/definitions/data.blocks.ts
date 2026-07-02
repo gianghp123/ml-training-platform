@@ -12,7 +12,11 @@ export const LoadDatasetBlock: BlockDefinition = {
       type: 'select',
       label: 'Dataset',
       validation: { required: true },
-      options: [],
+      options: [{
+        value: 'animal',
+        label: 'Animal',
+      }],
+      default: 'animal',
     } satisfies BlockConfigField,
   } as Record<string, unknown>,
   inputSchema: { entries: [] } as Record<string, unknown>,

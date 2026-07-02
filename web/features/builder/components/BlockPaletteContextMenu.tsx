@@ -4,9 +4,10 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { BlockCategory, BlockDefinition } from '@/lib/models';
-import { GripVertical, Search } from 'lucide-react';
+import { GripVertical, Group, Search } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CATEGORY_COLORS } from '../blocks';
+import { Separator } from '@/components/ui/separator';
 
 interface BlockPaletteContextMenuProps {
   position: { x: number; y: number };
@@ -18,6 +19,8 @@ interface BlockPaletteContextMenuProps {
   }>;
   onSelectBlock: (blockId: string) => void;
   onClose: () => void;
+  groupableCount?: number;
+  onGroupSelection?: () => void;
 }
 
 function clamp(val: number, min: number, max: number): number {
@@ -31,6 +34,8 @@ export function BlockPaletteContextMenu({
   blocksByCategory,
   onSelectBlock,
   onClose,
+  groupableCount = 0,
+  onGroupSelection,
 }: BlockPaletteContextMenuProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState(position);
@@ -97,6 +102,18 @@ export function BlockPaletteContextMenu({
         </div>
         <ScrollArea className="h-100">
           <div className="p-1">
+            {groupableCount >= 2 && onGroupSelection && (
+              <>
+                <button
+                  onClick={onGroupSelection}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  <Group className="size-3.5" />
+                  Group Selection ({groupableCount})
+                </button>
+                <Separator className="my-1" />
+              </>
+            )}
             {blocksByCategory.map((group) => (
               <div key={group.category.id}>
                 <div className="flex items-center gap-1.5 px-2 py-1">

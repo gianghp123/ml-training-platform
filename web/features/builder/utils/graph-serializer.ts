@@ -1,13 +1,18 @@
-import type { Edge } from '@xyflow/react';
+import type { Edge, Node } from '@xyflow/react';
 import type { PipelineNode } from './node-factory';
 
+export interface SerializedNode {
+  id: string;
+  type: string;
+  position: { x: number; y: number };
+  data: Record<string, unknown>;
+  parentId?: string;
+  width?: number;
+  height?: number;
+}
+
 export interface SerializedGraph {
-  nodes: Array<{
-    id: string;
-    type: string;
-    position: { x: number; y: number };
-    data: Record<string, unknown>;
-  }>;
+  nodes: SerializedNode[];
   edges: Array<{
     id: string;
     source: string;
@@ -20,15 +25,18 @@ export interface SerializedGraph {
 }
 
 export function serializeGraph(
-  nodes: PipelineNode[],
+  nodes: (Node)[],
   edges: Edge[]
 ): SerializedGraph {
   return {
     nodes: nodes.map((n) => ({
       id: n.id,
-      type: n.type ?? 'data',
+      type: n.type ?? 'block',
       position: n.position,
       data: n.data as unknown as Record<string, unknown>,
+      parentId: (n as Node).parentId ?? undefined,
+      width: (n as Node).width ?? undefined,
+      height: (n as Node).height ?? undefined,
     })),
     edges: edges.map((e) => ({
       id: e.id,
@@ -44,14 +52,23 @@ export function serializeGraph(
 
 export function deserializeGraph(
   graph: SerializedGraph,
-  edgeFactory: (source: string, target: string, sourceHandle: string, targetHandle: string, edgeData?: Record<string, unknown>) => Edge
-): { nodes: PipelineNode[]; edges: Edge[] } {
+  edgeFactory: (
+    source: string,
+    target: string,
+    sourceHandle: string,
+    targetHandle: string,
+    edgeData?: Record<string, unknown>
+  ) => Edge
+): { nodes: (PipelineNode | Node)[]; edges: Edge[] } {
   const nodes = graph.nodes.map((n) => ({
     id: n.id,
-    type: n.type as PipelineNode['type'],
+    type: n.type,
     position: n.position,
-    data: n.data as unknown as PipelineNode['data'],
-  })) as PipelineNode[];
+    data: n.data as unknown as Record<string, unknown>,
+    parentId: n.parentId,
+    width: n.width,
+    height: n.height,
+  })) as (PipelineNode | Node)[];
 
   const edges = graph.edges.map((e) =>
     edgeFactory(e.source, e.target, e.sourceHandle, e.targetHandle, e.data)
