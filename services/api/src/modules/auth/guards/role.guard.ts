@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/express";
-import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ROLES_KEY } from "../decorators/role.decorator";
 import { UserRole } from "src/libs/enums/user-role.enum";
@@ -28,8 +28,12 @@ export class RolesGuard implements CanActivate {
 
     const { sessionClaims } = getAuth(req);
 
-    return requiredRoles.includes(
+    if (!requiredRoles.includes(
       sessionClaims.role || UserRole.User,
-    );
+    )) {
+      throw new ForbiddenException();
+    }
+
+    return true;
   }
 }
