@@ -23,7 +23,7 @@ export class WorkflowRun {
   @Column({ type: 'uuid' })
   datasetId: string;
 
-  @Column({ type: 'enum', enum: WorkflowRunStatus, default: WorkflowRunStatus.PENDING })
+  @Column({ type: 'varchar', enum: WorkflowRunStatus, default: WorkflowRunStatus.PENDING })
   status: WorkflowRunStatus;
 
   @Column({ type: 'timestamptz', nullable: true })

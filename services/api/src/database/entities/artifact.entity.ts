@@ -26,7 +26,7 @@ export class Artifact {
   @Column({ type: 'varchar' })
   name: string;
 
-  @Column({ type: 'enum', enum: ArtifactType })
+  @Column({ type: 'varchar', enum: ArtifactType })
   artifactType: ArtifactType;
 
   @Column({ type: 'varchar' })
@@ -36,7 +36,7 @@ export class Artifact {
   storageUri: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

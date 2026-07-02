@@ -5,11 +5,18 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import typeormConfig from './configs/typeorm.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NamingStrategyInterface } from 'typeorm';
+import { BlockModule } from './modules/block/block.module';
+import { DatasetModule } from './modules/dataset/dataset.module';
+import { WorkerModule } from './modules/worker/worker.module';
+import { ModelRegistryModule } from './modules/model-registry/model-registry.module';
+import { WorkflowModule } from './modules/workflow/workflow.module';
+import { ExecutionModule } from './modules/execution/execution.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       load: [typeormConfig],
+      isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -29,6 +36,12 @@ import { NamingStrategyInterface } from 'typeorm';
         ),
       }),
     }),
+    BlockModule,
+    DatasetModule,
+    WorkerModule,
+    ModelRegistryModule,
+    WorkflowModule,
+    ExecutionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

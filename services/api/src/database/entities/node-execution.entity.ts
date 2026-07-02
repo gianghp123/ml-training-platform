@@ -27,7 +27,7 @@ export class NodeExecution {
   @Column({ type: 'varchar' })
   nodeType: string;
 
-  @Column({ type: 'enum', enum: NodeExecutionStatus, default: NodeExecutionStatus.PENDING })
+  @Column({ type: 'varchar', enum: NodeExecutionStatus, default: NodeExecutionStatus.PENDING })
   status: NodeExecutionStatus;
 
   @Column({ type: 'uuid', nullable: true })

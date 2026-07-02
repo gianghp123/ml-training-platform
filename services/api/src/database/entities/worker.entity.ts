@@ -17,14 +17,14 @@ export class Worker {
   @Column({ type: 'varchar' })
   hostname: string;
 
-  @Column({ type: 'enum', enum: WorkerStatus, default: WorkerStatus.IDLE })
+  @Column({ type: 'varchar', enum: WorkerStatus, default: WorkerStatus.IDLE })
   status: WorkerStatus;
 
   @Column({ type: 'timestamptz', nullable: true })
   lastHeartbeat: Date;
 
   @Column({ type: 'jsonb', nullable: true })
-  capability: Record<string, any>;
+  capability: Record<string, unknown>;
 
   @OneToMany(() => NodeExecution, (execution) => execution.worker)
   nodeExecutions: NodeExecution[];
