@@ -5,11 +5,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import typeormConfig from './configs/typeorm.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NamingStrategyInterface } from 'typeorm';
+import { BlockModule } from './modules/block/block.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       load: [typeormConfig],
+      isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -29,6 +31,7 @@ import { NamingStrategyInterface } from 'typeorm';
         ),
       }),
     }),
+    BlockModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -24,7 +24,7 @@ export class Dataset {
   @Column({ type: 'varchar' })
   storageUri: string;
 
-  @Column({ type: 'enum', enum: DatasetFormat })
+  @Column({ type: 'varchar', enum: DatasetFormat })
   format: DatasetFormat;
 
   @Column({ type: 'bigint' })

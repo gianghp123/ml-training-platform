@@ -26,7 +26,7 @@ export class Artifact {
   @Column({ type: 'varchar' })
   name: string;
 
-  @Column({ type: 'enum', enum: ArtifactType })
+  @Column({ type: 'varchar', enum: ArtifactType })
   artifactType: ArtifactType;
 
   @Column({ type: 'varchar' })

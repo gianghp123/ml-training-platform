@@ -4,6 +4,7 @@ import {
   ClassSerializerInterceptor,
   ConsoleLogger,
   Logger,
+  ValidationPipe,
   VersioningType,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -14,6 +15,7 @@ import expressBasicAuth from 'express-basic-auth';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+  const port = process.env.PORT ?? 3000;
   const app = await NestFactory.create(AppModule, {
     logger: new ConsoleLogger({
       json: process.env.NODE_ENV === 'production',
@@ -23,6 +25,7 @@ async function bootstrap() {
   app.use(helmet());
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   app.use(json({ limit: '100mb' }));
   app.use(urlencoded({ extended: true, limit: '100mb' }));
@@ -62,11 +65,11 @@ async function bootstrap() {
     });
 
     logger.log('Swagger UI enabled (non-production)');
+    logger.log(`Swagger UI available at: http://localhost:${port}/api`)
   } else {
     logger.log('Swagger UI disabled (production)');
   }
 
-  const port = process.env.PORT ?? 3000;
   await app.listen(port);
   logger.log(`Application is running on: http://localhost:${port}`);
 }
