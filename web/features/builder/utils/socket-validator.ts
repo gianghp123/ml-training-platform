@@ -1,6 +1,6 @@
+import type { Edge } from '@xyflow/react';
 import type { SocketType } from '../blocks/socket-types';
 import type { PipelineNodeData } from './node-factory';
-import type { Edge } from '@xyflow/react';
 
 export function canConnect(sourceType: SocketType, targetType: SocketType): boolean {
   return sourceType === targetType;
@@ -18,7 +18,7 @@ export interface ConnectionValidationParams {
 export function isValidNodeConnection(
   params: ConnectionValidationParams
 ): boolean {
-  const { sourceNodeId, targetNodeId, sourceHandle, targetHandle, nodes } = params;
+  const { sourceNodeId, targetNodeId, sourceHandle, targetHandle, nodes, edges } = params;
 
   if (sourceNodeId === targetNodeId) return false;
   if (!sourceHandle || !targetHandle) return false;
@@ -32,6 +32,11 @@ export function isValidNodeConnection(
   if (!sourceSocket || !targetSocket) return false;
 
   if (!canConnect(sourceSocket.type, targetSocket.type)) return false;
+
+  const alreadyConnected = edges.some(
+    (e) => e.target === targetNodeId && e.targetHandle === targetHandle
+  );
+  if (alreadyConnected) return false;
 
   return true;
 }
