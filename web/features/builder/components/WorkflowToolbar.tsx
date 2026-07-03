@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link'
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -9,7 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ROUTES } from '@/lib/route';
 import {
+  ChevronLeft,
   Download,
   Play,
   Save,
@@ -39,6 +43,12 @@ export function WorkflowToolbar({
 }: WorkflowToolbarProps) {
   return (
     <div className="flex items-center gap-3 px-4 py-2 border-b bg-background">
+      <Button variant="ghost" size="icon-sm" asChild>
+        <Link href={ROUTES.WORKFLOW.LIST}>
+          <ChevronLeft className="size-4" />
+        </Link>
+      </Button>
+
       <Input
         value={workflowName}
         onChange={(e) => onWorkflowNameChange(e.target.value)}
