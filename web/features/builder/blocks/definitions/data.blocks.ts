@@ -21,12 +21,12 @@ export const LoadCsvExcel: BlockDefinition = {
     } satisfies BlockConfigField,
     quote_char: {
       type: 'text',
-      label: 'Ký tự bao chuỗi (quote)',
+      label: 'Ký tự bao chuỗi',
       default: '"',
     } satisfies BlockConfigField,
     has_header: {
       type: "switch",
-      label: "Dòng đầu (sau skip_rows) là tên cột",
+      label: "Dòng đầu là tên cột",
       default: true,
     } satisfies BlockConfigField,
     skip_rows: {
@@ -42,7 +42,7 @@ export const LoadCsvExcel: BlockDefinition = {
       options: [
         { label: "UTF-8", value: "utf-8" },
         { label: "ASCII", value: "ascii" },
-        { label: "ISO-8859-1 (Latin-1)", value: "iso-8859-1" },
+        { label: "ISO-8859-1", value: "iso-8859-1" },
         { label: "UTF-16", value: "utf-16" },
         { label: "Windows-1252", value: "windows-1252" },
       ],
@@ -77,7 +77,7 @@ export const LoadJsonBlock: BlockDefinition = {
   name: "Load JSON",
   categoryId: "load_data",
   description:
-    "Đọc dữ liệu từ file .json. Output type phụ thuộc vào tham số flatten_nested (dynamic).",
+    "Đọc dữ liệu từ file .json. Output type phụ thuộc vào tham số flatten_nested.",
   configSchema: {
     file_path: {
       type: "text",
@@ -90,7 +90,7 @@ export const LoadJsonBlock: BlockDefinition = {
     } satisfies BlockConfigField,
     flatten_nested: {
       type: "switch",
-      label: "Tự động làm phẳng (flatten) các trường lồng nhau",
+      label: "Tự động làm phẳng các trường lồng nhau",
       default: true,
     } satisfies BlockConfigField,
     max_nesting_depth: {
@@ -104,9 +104,9 @@ export const LoadJsonBlock: BlockDefinition = {
       label: "Cách xử lý khi 1 field là mảng con",
       default: "flatten_index",
       options: [
-        { label: "Tách thành nhiều cột field_0, field_1... (flatten_index)", value: "flatten_index" },
-        { label: "Nối thành 1 chuỗi cách nhau dấu phẩy (join_string)", value: "join_string" },
-        { label: "Từ chối, báo lỗi (reject)", value: "reject" },
+        { label: "Tách thành nhiều cột", value: "flatten_index" },
+        { label: "Nối thành 1 chuỗi", value: "join_string" },
+        { label: "Từ chối và báo lỗi", value: "reject" },
       ],
     } satisfies BlockConfigField,
     encoding: {
@@ -116,14 +116,14 @@ export const LoadJsonBlock: BlockDefinition = {
       options: [
         { label: "UTF-8", value: "utf-8" },
         { label: "ASCII", value: "ascii" },
-        { label: "ISO-8859-1 (Latin-1)", value: "iso-8859-1" },
+        { label: "ISO-8859-1", value: "iso-8859-1" },
         { label: "UTF-16", value: "utf-16" },
         { label: "Windows-1252", value: "windows-1252" },
       ],
     } satisfies BlockConfigField,
     skip_cols: {
       type: "textarea",
-      label: "Danh sách cột (sau khi flatten) cần loại bỏ khỏi dataset, cách nhau dấu phẩy",
+      label: "Danh sách cột cần loại bỏ khỏi dataset",
     } satisfies BlockConfigField,
   } as Record<string, unknown>,
   inputSchema: {
@@ -171,14 +171,14 @@ export const LoadXmlBlock: BlockDefinition = {
       options: [
         { label: "UTF-8", value: "utf-8" },
         { label: "ASCII", value: "ascii" },
-        { label: "ISO-8859-1 (Latin-1)", value: "iso-8859-1" },
+        { label: "ISO-8859-1", value: "iso-8859-1" },
         { label: "UTF-16", value: "utf-16" },
         { label: "Windows-1252", value: "windows-1252" },
       ],
     } satisfies BlockConfigField,
     skip_cols: {
       type: "textarea",
-      label: "Danh sách cột (sau khi flatten) cần loại bỏ khỏi dataset, cách nhau dấu phẩy",
+      label: "Danh sách cột cần loại bỏ khỏi dataset",
     } satisfies BlockConfigField,
   } as Record<string, unknown>,
   inputSchema: {

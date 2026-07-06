@@ -15,7 +15,7 @@ export const TrainTestSplitBlock: BlockDefinition = {
         } satisfies BlockConfigField,
         random_state: {
             type: "number",
-            label: "Random State (Seed)",
+            label: "Random State",
             default: 42,
             validation: { min: 0 },
         } satisfies BlockConfigField,
@@ -41,17 +41,17 @@ export const KFoldSplitBlock: BlockDefinition = {
     code: "k_fold_split",
     name: "K-Fold Split",
     categoryId: "split_data",
-    description: "Chia dataset thành K phần (folds) để phục vụ cho việc đánh giá Cross Validation.",
+    description: "Chia dataset thành K phần để phục vụ cho việc đánh giá Cross Validation.",
     configSchema: {
         n_splits: {
             type: "number",
-            label: "Số fold (K)",
+            label: "Số fold",
             default: 5,
             validation: { required: true, min: 2, max: 50 },
         } satisfies BlockConfigField,
         random_state: {
             type: "number",
-            label: "Random State (Seed)",
+            label: "Random State",
             default: 42,
             validation: { min: 0 },
         } satisfies BlockConfigField,

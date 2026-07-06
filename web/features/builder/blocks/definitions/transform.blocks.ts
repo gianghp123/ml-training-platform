@@ -13,21 +13,21 @@ export const FeatureSelectionBlock: BlockDefinition = {
             label: "Phương pháp lựa chọn",
             default: "select_k_best",
             options: [
-                { label: "Select K Best (Thống kê)", value: "select_k_best" },
-                { label: "Recursive Feature Elimination (RFE)", value: "rfe" },
-                { label: "Variance Threshold (Loại bỏ cột ít biến thiên)", value: "variance_threshold" },
+                { label: "Select K Best", value: "select_k_best" },
+                { label: "Recursive Feature Elimination", value: "rfe" },
+                { label: "Variance Threshold", value: "variance_threshold" },
             ],
             validation: { required: true },
         } satisfies BlockConfigField,
         k_features: {
             type: "number",
-            label: "Số lượng đặc trưng cần giữ lại (K)",
+            label: "Số lượng đặc trưng cần giữ lại",
             default: 10,
             validation: { min: 1 },
         } satisfies BlockConfigField,
         threshold: {
             type: "number",
-            label: "Ngưỡng phương sai tối thiểu (chỉ dùng cho Variance Threshold)",
+            label: "Ngưỡng phương sai tối thiểu",
             default: 0.0,
             validation: { min: 0 },
         } satisfies BlockConfigField,
@@ -45,17 +45,17 @@ export const PCABlock: BlockDefinition = {
     code: "pca_dimension_reduction",
     name: "PCA / Giảm chiều dữ liệu",
     categoryId: "transform",
-    description: "Sử dụng Principal Component Analysis (PCA) để giảm số chiều của dataset nhưng vẫn giữ tối đa lượng thông tin.",
+    description: "Sử dụng Principal Component Analysis để giảm số chiều của dataset nhưng vẫn giữ tối đa lượng thông tin.",
     configSchema: {
         n_components: {
             type: "number",
-            label: "Số lượng chiều đầu ra (hoặc tỉ lệ phương sai được giữ lại)",
+            label: "Số lượng chiều đầu ra",
             default: 2,
             validation: { required: true, min: 0.01 },
         } satisfies BlockConfigField,
         whiten: {
             type: "switch",
-            label: "Làm trắng dữ liệu (Whiten)",
+            label: "Làm trắng dữ liệu",
             default: false,
         } satisfies BlockConfigField,
         svd_solver: {
@@ -63,9 +63,9 @@ export const PCABlock: BlockDefinition = {
             label: "Bộ giải SVD",
             default: "auto",
             options: [
-                { label: "Tự động (auto)", value: "auto" },
-                { label: "Toàn bộ SVD (full)", value: "full" },
-                { label: "Ngẫu nhiên (randomized)", value: "randomized" },
+                { label: "Tự động", value: "auto" },
+                { label: "Toàn bộ SVD", value: "full" },
+                { label: "Ngẫu nhiên", value: "randomized" },
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
@@ -91,7 +91,7 @@ export const CreateNewFeatureBlock: BlockDefinition = {
         } satisfies BlockConfigField,
         formula: {
             type: "textarea",
-            label: "Biểu thức tính toán (Ví dụ: colA + colB * 2 hoặc concat(colA, '_', colB))",
+            label: "Biểu thức tính toán",
             validation: { required: true },
         } satisfies BlockConfigField,
         result_type: {
@@ -99,9 +99,9 @@ export const CreateNewFeatureBlock: BlockDefinition = {
             label: "Kiểu dữ liệu cột mới",
             default: "numeric",
             options: [
-                { label: "Số (Numeric)", value: "numeric" },
-                { label: "Chuỗi (Categorical/String)", value: "categorical" },
-                { label: "Boolean (True/False)", value: "boolean" },
+                { label: "Số", value: "numeric" },
+                { label: "Chuỗi", value: "categorical" },
+                { label: "Boolean", value: "boolean" },
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,

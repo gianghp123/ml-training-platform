@@ -5,7 +5,7 @@ import { TrainTestSplitBlock, KFoldSplitBlock, StratifiedSplitBlock } from './de
 import { FeatureSelectionBlock, PCABlock, CreateNewFeatureBlock } from './definitions/transform.blocks';
 import { HyperparametersBlock, LossFunctionBlock, EarlyStoppingBlock } from './definitions/configuration.blocks';
 import { LogisticRegressionBlock, DecisionTreeBlock, RandomForestBlock, SVMBlock, LinearRegressionBlock, RidgeRegressionBlock, KMeansBlock, ANNBlock, CNNBlock } from './definitions/model.blocks';
-import { EvaluateBlock, CrossValidateBlock } from './definitions/evaluate.blocks';
+import { ClassificationMetricsBlock, ConfusionMatrixBlock, RocAucCurveBlock } from './definitions/evaluate.blocks';
 import { SaveModelBlock, ExportDatasetBlock, LogMetricsBlock } from './definitions/export.blocks';
 
 export { SocketTypes } from './socket-types';
@@ -39,8 +39,9 @@ export const ALL_BLOCKS: BlockDefinition[] = [
   KMeansBlock,
   ANNBlock,
   CNNBlock,
-  EvaluateBlock,
-  CrossValidateBlock,
+  ClassificationMetricsBlock,
+  ConfusionMatrixBlock,
+  RocAucCurveBlock,
   SaveModelBlock,
   ExportDatasetBlock,
   LogMetricsBlock,

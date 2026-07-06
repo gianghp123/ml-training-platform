@@ -6,7 +6,7 @@ export const HyperparametersBlock: BlockDefinition = {
     code: "hyperparameters",
     name: "Set Hyperparameters",
     categoryId: "config",
-    description: "Thiết lập các siêu tham số cho quá trình huấn luyện (Learning rate, Epochs, Batch size, Optimizer...).",
+    description: "Thiết lập các siêu tham số cho quá trình huấn luyện.",
     configSchema: {
         learning_rate: {
             type: "number",
@@ -28,7 +28,7 @@ export const HyperparametersBlock: BlockDefinition = {
         } satisfies BlockConfigField,
         optimizer: {
             type: "select",
-            label: "Optimizer (Thuật toán tối ưu)",
+            label: "Thuật toán tối ưu",
             default: "adam",
             options: [
                 { label: "Adam", value: "adam" },
@@ -39,7 +39,7 @@ export const HyperparametersBlock: BlockDefinition = {
         } satisfies BlockConfigField,
         weight_decay: {
             type: "number",
-            label: "Weight Decay (L2)",
+            label: "Weight Decay",
             default: 0.0001,
             validation: { min: 0 },
         } satisfies BlockConfigField,
@@ -59,15 +59,15 @@ export const LossFunctionBlock: BlockDefinition = {
     code: "loss_function",
     name: "Loss Function Selection",
     categoryId: "config",
-    description: "Lựa chọn hàm mất mát (Loss function) phù hợp với loại bài toán.",
+    description: "Lựa chọn hàm mất mát phù hợp với loại bài toán.",
     configSchema: {
         task_type: {
             type: "select",
             label: "Loại bài toán",
             default: "classification",
             options: [
-                { label: "Phân loại (Classification)", value: "classification" },
-                { label: "Hồi quy (Regression)", value: "regression" },
+                { label: "Phân loại", value: "classification" },
+                { label: "Hồi quy", value: "regression" },
             ],
             validation: { required: true },
         } satisfies BlockConfigField,
@@ -86,8 +86,8 @@ export const LossFunctionBlock: BlockDefinition = {
             label: "Hàm loss cho Hồi quy",
             default: "mse",
             options: [
-                { label: "Mean Squared Error (MSE)", value: "mse" },
-                { label: "Mean Absolute Error (MAE)", value: "mae" },
+                { label: "Mean Squared Error", value: "mse" },
+                { label: "Mean Absolute Error", value: "mae" },
                 { label: "Huber Loss", value: "huber" },
             ],
         } satisfies BlockConfigField,
@@ -111,7 +111,7 @@ export const EarlyStoppingBlock: BlockDefinition = {
     configSchema: {
         monitor: {
             type: "select",
-            label: "Chỉ số theo dõi (Monitor)",
+            label: "Chỉ số theo dõi",
             default: "val_loss",
             options: [
                 { label: "Validation Loss", value: "val_loss" },
@@ -122,13 +122,13 @@ export const EarlyStoppingBlock: BlockDefinition = {
         } satisfies BlockConfigField,
         patience: {
             type: "number",
-            label: "Patience (Số epoch chờ)",
+            label: "Số epoch chờ",
             default: 5,
             validation: { required: true, min: 1 },
         } satisfies BlockConfigField,
         min_delta: {
             type: "number",
-            label: "Mức cải thiện tối thiểu (Min Delta)",
+            label: "Mức cải thiện tối thiểu",
             default: 0.0001,
             validation: { min: 0 },
         } satisfies BlockConfigField,

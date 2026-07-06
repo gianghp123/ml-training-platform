@@ -6,7 +6,7 @@ export const HandleMissingValues: BlockDefinition = {
     code: "handle_missing_values",
     name: "Handle Missing Values",
     categoryId: "preprocess_data",
-    description: "Xử lý các giá trị thiếu trong dataset bằng cách điền (impute) hoặc xoá bỏ.",
+    description: "Xử lý các giá trị thiếu trong dataset bằng cách điền hoặc xoá bỏ.",
     configSchema: {
         strategy: {
             type: "select",
@@ -24,15 +24,15 @@ export const HandleMissingValues: BlockDefinition = {
         } satisfies BlockConfigField,
         fill_value: {
             type: "text",
-            label: "Giá trị điền cố định (chỉ dùng khi strategy = fill_constant)",
+            label: "Giá trị điền cố định",
         } satisfies BlockConfigField,
         target_columns: {
             type: "textarea",
-            label: "Danh sách cột áp dụng (để trống = áp dụng toàn bộ cột)",
+            label: "Danh sách cột áp dụng",
         } satisfies BlockConfigField,
         missing_threshold: {
             type: "number",
-            label: "Ngưỡng tỉ lệ thiếu để tự động drop cột trước khi xử lý (0–1)",
+            label: "Ngưỡng tỉ lệ thiếu để tự động drop cột",
             default: 0.5,
             validation: { min: 0, max: 1 },
         } satisfies BlockConfigField,
@@ -62,11 +62,11 @@ export const RemoveDuplicates: BlockDefinition = {
     code: "remove_duplicates",
     name: "Remove Duplicates",
     categoryId: "preprocess_data",
-    description: "Xoá các dòng dữ liệu bị trùng lặp hoàn toàn (hoặc trùng theo một số cột chỉ định).",
+    description: "Xoá các dòng dữ liệu bị trùng lặp hoàn toàn.",
     configSchema: {
         subset_columns: {
             type: "textarea",
-            label: "Chỉ xét trùng lặp theo các cột này (để trống = xét toàn bộ cột)",
+            label: "Chỉ xét trùng lặp theo các cột này",
         } satisfies BlockConfigField,
         keep: {
             type: "select",
@@ -133,7 +133,7 @@ export const Encoding: BlockDefinition = {
         } satisfies BlockConfigField,
         max_categories: {
             type: "number",
-            label: "Số lượng category tối đa cho phép (chỉ áp dụng One-Hot)",
+            label: "Số lượng category tối đa cho phép",
             default: 20,
             validation: { min: 2 },
         } satisfies BlockConfigField,
@@ -170,8 +170,8 @@ export const Normalization: BlockDefinition = {
             label: "Phương pháp chuẩn hoá",
             default: "min_max",
             options: [
-                { label: "MinMax Scaling — đưa về [min, max]", value: "min_max" },
-                { label: "Z-score Standardization — mean=0, std=1", value: "z_score" },
+                { label: "MinMax Scaling", value: "min_max" },
+                { label: "Z-score Standardization", value: "z_score" },
             ],
             validation: { required: true },
         } satisfies BlockConfigField,
@@ -231,19 +231,19 @@ export const ResizeCropImage: BlockDefinition = {
         } satisfies BlockConfigField,
         target_width: {
             type: "number",
-            label: "Chiều rộng đích (px)",
+            label: "Chiều rộng đích",
             default: 224,
             validation: { required: true, min: 1 },
         } satisfies BlockConfigField,
         target_height: {
             type: "number",
-            label: "Chiều cao đích (px)",
+            label: "Chiều cao đích",
             default: 224,
             validation: { required: true, min: 1 },
         } satisfies BlockConfigField,
         crop_mode: {
             type: "select",
-            label: "Vị trí crop (chỉ dùng khi operation có crop)",
+            label: "Vị trí crop",
             default: "center",
             options: [
                 { label: "Ở giữa", value: "center" },
@@ -282,7 +282,6 @@ export const ResizeCropImage: BlockDefinition = {
     } as Record<string, unknown>,
 }
 
-
 export const DataAugmentation: BlockDefinition = {
     id: "data_augmentation",
     code: "data_augmentation",
@@ -294,7 +293,7 @@ export const DataAugmentation: BlockDefinition = {
         enable_rotation: { type: "switch", label: "Bật xoay ảnh ngẫu nhiên", default: false } satisfies BlockConfigField,
         rotation_range: {
             type: "number",
-            label: "Góc xoay tối đa (độ, chỉ dùng khi enable_rotation = true)",
+            label: "Góc xoay tối đa",
             default: 15,
             validation: { min: 0, max: 180 },
         } satisfies BlockConfigField,
@@ -303,14 +302,14 @@ export const DataAugmentation: BlockDefinition = {
         enable_zoom: { type: "switch", label: "Bật phóng to/thu nhỏ ngẫu nhiên", default: false } satisfies BlockConfigField,
         zoom_range: {
             type: "number",
-            label: "Biên độ zoom (ví dụ 0.1 = ±10%, chỉ dùng khi enable_zoom = true)",
+            label: "Biên độ zoom",
             default: 0.1,
             validation: { min: 0, max: 1 },
         } satisfies BlockConfigField,
         enable_brightness: { type: "switch", label: "Bật thay đổi độ sáng ngẫu nhiên", default: false } satisfies BlockConfigField,
         brightness_range: {
             type: "number",
-            label: "Biên độ thay đổi độ sáng (chỉ dùng khi enable_brightness = true)",
+            label: "Biên độ thay đổi độ sáng",
             default: 0.2,
             validation: { min: 0, max: 1 },
         } satisfies BlockConfigField,

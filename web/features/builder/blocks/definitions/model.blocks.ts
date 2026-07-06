@@ -28,24 +28,24 @@ export const LogisticRegressionBlock: BlockDefinition = {
   configSchema: {
     penalty: {
       type: "select",
-      label: "Phạt Regularization (Penalty)",
+      label: "Phạt Regularization",
       default: "l2",
       options: [
-        { label: "L1 (Lasso)", value: "l1" },
-        { label: "L2 (Ridge)", value: "l2" },
+        { label: "L1", value: "l1" },
+        { label: "L2", value: "l2" },
         { label: "ElasticNet", value: "elasticnet" },
-        { label: "Không phạt (None)", value: "none" },
+        { label: "Không phạt", value: "none" },
       ],
     } satisfies BlockConfigField,
     C: {
       type: "number",
-      label: "Hệ số C (Nghịch đảo độ mạnh Regularization)",
+      label: "Hệ số C",
       default: 1.0,
       validation: { min: 0.0001 },
     } satisfies BlockConfigField,
     solver: {
       type: "select",
-      label: "Thuật toán tối ưu (Solver)",
+      label: "Thuật toán tối ưu",
       default: "lbfgs",
       options: [
         { label: "Lbfgs", value: "lbfgs" },
@@ -56,7 +56,7 @@ export const LogisticRegressionBlock: BlockDefinition = {
     } satisfies BlockConfigField,
     max_iter: {
       type: "number",
-      label: "Số vòng lặp tối đa (Max Iterations)",
+      label: "Số vòng lặp tối đa",
       default: 100,
       validation: { min: 1 },
     } satisfies BlockConfigField,
@@ -74,7 +74,7 @@ export const DecisionTreeBlock: BlockDefinition = {
   configSchema: {
     criterion: {
       type: "select",
-      label: "Tiêu chí phân tách (Criterion)",
+      label: "Tiêu chí phân tách",
       default: "gini",
       options: [
         { label: "Gini Impurity", value: "gini" },
@@ -114,13 +114,13 @@ export const RandomForestBlock: BlockDefinition = {
   configSchema: {
     n_estimators: {
       type: "number",
-      label: "Số lượng cây quyết định (Estimators)",
+      label: "Số lượng cây quyết định",
       default: 100,
       validation: { min: 1 },
     } satisfies BlockConfigField,
     criterion: {
       type: "select",
-      label: "Tiêu chí phân tách (Criterion)",
+      label: "Tiêu chí phân tách",
       default: "gini",
       options: [
         { label: "Gini Impurity", value: "gini" },
@@ -139,9 +139,9 @@ export const RandomForestBlock: BlockDefinition = {
       label: "Số lượng đặc trưng tối đa khi rẽ nhánh",
       default: "sqrt",
       options: [
-        { label: "Căn bậc 2 (Sqrt)", value: "sqrt" },
-        { label: "Logarit cơ số 2 (Log2)", value: "log2" },
-        { label: "Toàn bộ (None)", value: "none" },
+        { label: "Căn bậc 2", value: "sqrt" },
+        { label: "Logarit cơ số 2", value: "log2" },
+        { label: "Toàn bộ", value: "none" },
       ],
     } satisfies BlockConfigField,
   } as Record<string, unknown>,
@@ -152,7 +152,7 @@ export const RandomForestBlock: BlockDefinition = {
 export const SVMBlock: BlockDefinition = {
   id: "svm",
   code: "svm",
-  name: "SVM (Support Vector Machine)",
+  name: "SVM",
   categoryId: "model",
   description: "Mô hình tìm kiếm siêu phẳng tối ưu để phân tách dữ liệu trong không gian nhiều chiều.",
   configSchema: {
@@ -164,24 +164,24 @@ export const SVMBlock: BlockDefinition = {
     } satisfies BlockConfigField,
     kernel: {
       type: "select",
-      label: "Hàm nhân (Kernel)",
+      label: "Hàm nhân",
       default: "rbf",
       options: [
-        { label: "Tuyến tính (Linear)", value: "linear" },
-        { label: "Đa thức (Poly)", value: "poly" },
-        { label: "RBF (Radial Basis Function)", value: "rbf" },
+        { label: "Tuyến tính", value: "linear" },
+        { label: "Đa thức", value: "poly" },
+        { label: "RBF", value: "rbf" },
         { label: "Sigmoid", value: "sigmoid" },
       ],
     } satisfies BlockConfigField,
     degree: {
       type: "number",
-      label: "Bậc của đa thức (chỉ dùng cho Poly)",
+      label: "Bậc của đa thức",
       default: 3,
       validation: { min: 1 },
     } satisfies BlockConfigField,
     gamma: {
       type: "select",
-      label: "Hệ số Gamma (Cho RBF, Poly, Sigmoid)",
+      label: "Hệ số Gamma",
       default: "scale",
       options: [
         { label: "Scale", value: "scale" },
@@ -206,7 +206,7 @@ export const LinearRegressionBlock: BlockDefinition = {
   configSchema: {
     fit_intercept: {
       type: "switch",
-      label: "Tính toán Bias/Intercept hệ số tự do",
+      label: "Tính toán Bias hoặc Intercept",
       default: true,
     } satisfies BlockConfigField,
     copy_X: {
@@ -228,13 +228,13 @@ export const RidgeRegressionBlock: BlockDefinition = {
   configSchema: {
     alpha: {
       type: "number",
-      label: "Hệ số phạt Alpha (Lực lượng phạt L2)",
+      label: "Hệ số phạt Alpha",
       default: 1.0,
       validation: { min: 0 },
     } satisfies BlockConfigField,
     fit_intercept: {
       type: "switch",
-      label: "Tính toán Bias/Intercept hệ số tự do",
+      label: "Tính toán Bias hoặc Intercept",
       default: true,
     } satisfies BlockConfigField,
     solver: {
@@ -242,11 +242,11 @@ export const RidgeRegressionBlock: BlockDefinition = {
       label: "Thuật toán giải bài toán tối ưu",
       default: "auto",
       options: [
-        { label: "Tự động (Auto)", value: "auto" },
+        { label: "Tự động", value: "auto" },
         { label: "SVD decomposition", value: "svd" },
         { label: "Cholesky solver", value: "cholesky" },
         { label: "Lsqr", value: "lsqr" },
-        { label: "Sag (Stochastic Average Gradient)", value: "sag" },
+        { label: "Sag", value: "sag" },
         { label: "Saga", value: "saga" },
       ],
     } satisfies BlockConfigField,
@@ -268,7 +268,7 @@ export const KMeansBlock: BlockDefinition = {
   configSchema: {
     n_clusters: {
       type: "number",
-      label: "Số lượng cụm phân chia (K)",
+      label: "Số lượng cụm phân chia",
       default: 8,
       validation: { required: true, min: 2 },
     } satisfies BlockConfigField,
@@ -277,8 +277,8 @@ export const KMeansBlock: BlockDefinition = {
       label: "Cách khởi tạo tâm cụm",
       default: "k-means++",
       options: [
-        { label: "K-Means++ (Khuyên dùng)", value: "k-means++" },
-        { label: "Khởi tạo ngẫu nhiên (Random)", value: "random" },
+        { label: "K-Means++", value: "k-means++" },
+        { label: "Khởi tạo ngẫu nhiên", value: "random" },
       ],
     } satisfies BlockConfigField,
     max_iter: {
@@ -289,7 +289,7 @@ export const KMeansBlock: BlockDefinition = {
     } satisfies BlockConfigField,
     random_state: {
       type: "number",
-      label: "Random State (Seed)",
+      label: "Random State",
       default: 42,
       validation: { min: 0 },
     } satisfies BlockConfigField,
@@ -305,19 +305,19 @@ export const KMeansBlock: BlockDefinition = {
 export const ANNBlock: BlockDefinition = {
   id: "ann_model",
   code: "ann_model",
-  name: "Mạng Nơ-ron Nhân tạo (ANN)",
+  name: "Mạng Nơ-ron Nhân tạo",
   categoryId: "model",
-  description: "Mô hình Deep Learning cơ bản gồm các lớp Dense liên kết đầy đủ (Fully Connected) học các biểu diễn phi tuyến.",
+  description: "Mô hình Deep Learning cơ bản gồm các lớp Dense liên kết đầy đủ học các biểu diễn phi tuyến.",
   configSchema: {
     hidden_layers: {
       type: "textarea",
-      label: "Số lượng nơ-ron tại các lớp ẩn (ví dụ: 64, 32)",
+      label: "Số lượng nơ-ron tại các lớp ẩn",
       default: "64, 32",
       validation: { required: true },
     } satisfies BlockConfigField,
     activation: {
       type: "select",
-      label: "Hàm kích hoạt (Activation)",
+      label: "Hàm kích hoạt",
       default: "relu",
       options: [
         { label: "ReLU", value: "relu" },
@@ -334,7 +334,7 @@ export const ANNBlock: BlockDefinition = {
     } satisfies BlockConfigField,
     learning_rate: {
       type: "number",
-      label: "Tốc độ học (Learning Rate)",
+      label: "Tốc độ học",
       default: 0.001,
       validation: { required: true, min: 0.00001 },
     } satisfies BlockConfigField,
@@ -346,19 +346,19 @@ export const ANNBlock: BlockDefinition = {
 export const CNNBlock: BlockDefinition = {
   id: "cnn_model",
   code: "cnn_model",
-  name: "Mạng Nơ-ron Tích chập (CNN)",
+  name: "Mạng Nơ-ron Tích chập",
   categoryId: "model",
-  description: "Mô hình học sâu sử dụng tích chập để tự động trích xuất các đặc trưng không gian (Computer Vision).",
+  description: "Mô hình học sâu sử dụng tích chập để tự động trích xuất các đặc trưng không gian.",
   configSchema: {
     conv_layers: {
       type: "textarea",
-      label: "Số filter trong các lớp Conv (ví dụ: 32, 64)",
+      label: "Số filter trong các lớp Conv",
       default: "32, 64",
       validation: { required: true },
     } satisfies BlockConfigField,
     kernel_size: {
       type: "number",
-      label: "Kích thước ô tích chập (Kernel Size)",
+      label: "Kích thước ô tích chập",
       default: 3,
       validation: { required: true, min: 1 },
     } satisfies BlockConfigField,
