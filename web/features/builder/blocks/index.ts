@@ -3,7 +3,8 @@ import { LoadCsvExcel, LoadJsonBlock, LoadXmlBlock } from './definitions/data.bl
 import { HandleMissingValues, RemoveDuplicates, Encoding, Normalization, ResizeCropImage, DataAugmentation } from './definitions/preprocessing.block';
 import { TrainTestSplitBlock, KFoldSplitBlock, StratifiedSplitBlock } from './definitions/splitting.blocks';
 import { FeatureSelectionBlock, PCABlock, CreateNewFeatureBlock } from './definitions/transform.blocks';
-import { TrainModelBlock, FineTuneBlock } from './definitions/model.blocks';
+import { HyperparametersBlock, LossFunctionBlock, EarlyStoppingBlock } from './definitions/configuration.blocks';
+import { LogisticRegressionBlock, DecisionTreeBlock, RandomForestBlock, SVMBlock, LinearRegressionBlock, RidgeRegressionBlock, KMeansBlock, ANNBlock, CNNBlock } from './definitions/model.blocks';
 import { EvaluateBlock, CrossValidateBlock } from './definitions/evaluate.blocks';
 import { SaveModelBlock, ExportDatasetBlock, LogMetricsBlock } from './definitions/export.blocks';
 
@@ -26,8 +27,18 @@ export const ALL_BLOCKS: BlockDefinition[] = [
   FeatureSelectionBlock,
   PCABlock,
   CreateNewFeatureBlock,
-  TrainModelBlock,
-  FineTuneBlock,
+  HyperparametersBlock,
+  LossFunctionBlock,
+  EarlyStoppingBlock,
+  LogisticRegressionBlock,
+  DecisionTreeBlock,
+  RandomForestBlock,
+  SVMBlock,
+  LinearRegressionBlock,
+  RidgeRegressionBlock,
+  KMeansBlock,
+  ANNBlock,
+  CNNBlock,
   EvaluateBlock,
   CrossValidateBlock,
   SaveModelBlock,
@@ -45,6 +56,7 @@ export const BLOCK_CATEGORIES: BlockCategory[] = [
   { id: 'preprocess_data', name: 'Preprocess' },
   { id: 'split_data', name: 'Split Data' },
   { id: 'transform', name: 'Transform' },
+  { id: 'config', name: 'Configuration' },
   { id: 'model', name: 'Model' },
   { id: 'evaluate', name: 'Evaluate' },
   { id: 'export', name: 'Export' },
@@ -55,6 +67,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   preprocess_data: 'bg-teal-500',
   split_data: 'bg-orange-500',
   transform: 'bg-amber-500',
+  config: 'bg-indigo-500',
   model: 'bg-green-500',
   evaluate: 'bg-purple-500',
   export: 'bg-rose-500',
