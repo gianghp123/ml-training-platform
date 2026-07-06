@@ -6,7 +6,7 @@ export const LoadCsvExcel: BlockDefinition = {
   id: "load_csv_excel",
   code: "load_csv_excel",
   name: "Load CSV/Excel",
-  categoryId: "data",
+  categoryId: "load_data",
   description: "Đọc dữ liệu dạng bảng từ file .csv hoặc .xlsx và trả về dữ liệu dạng Tabular.",
   configSchema: {
     file_path: {
@@ -75,7 +75,7 @@ export const LoadJsonBlock: BlockDefinition = {
   id: "load_json",
   code: "load_json",
   name: "Load JSON",
-  categoryId: "data",
+  categoryId: "load_data",
   description:
     "Đọc dữ liệu từ file .json. Output type phụ thuộc vào tham số flatten_nested (dynamic).",
   configSchema: {
@@ -139,7 +139,7 @@ export const LoadXmlBlock: BlockDefinition = {
   id: "load_xml",
   code: "load_xml",
   name: "Load XML",
-  categoryId: "data",
+  categoryId: "load_data",
   description:
     "Đọc dữ liệu từ file .xml do người dùng upload. Vì cấu trúc XML rất đa dạng, người dùng bắt buộc phải khai báo record_xpath để hệ thống biết đâu là 1 'dòng dữ liệu'.",
   configSchema: {
