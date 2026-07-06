@@ -29,3 +29,9 @@ export interface BlockConfigField {
   options?: InputOption[];
   validation?: BlockConfigValidation;
 }
+
+export interface PortDefinition {
+  dataType: "tabular" | "none";
+  label: string;
+  schema?: Record<string, string>;
+}

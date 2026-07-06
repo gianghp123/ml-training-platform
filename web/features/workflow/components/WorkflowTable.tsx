@@ -10,9 +10,12 @@ import { Workflow } from "@/lib/models/workflow.interface"
 import { ROUTES } from "@/lib/route"
 
 const MOCK_WORKFLOWS: Workflow[] = Array.from({ length: 42 }, (_, i) => {
-  const daysAgo = Math.floor(Math.random() * 60)
-  const created = new Date(Date.now() - daysAgo * 86_400_000)
-  const updated = new Date(created.getTime() + Math.floor(Math.random() * daysAgo) * 86_400_000)
+  // Deterministic values to prevent SSR/CSR mismatch
+  const daysAgo = (i * 7 + 3) % 60
+  const baseTime = new Date("2026-07-01T00:00:00Z").getTime()
+  const created = new Date(baseTime - daysAgo * 86_400_000)
+  const updatedDays = (i * 3 + 1) % (daysAgo || 1)
+  const updated = new Date(created.getTime() + updatedDays * 86_400_000)
 
   return {
     id: `wf_${String(i + 1).padStart(4, "0")}`,
@@ -52,11 +55,17 @@ export function WorkflowTable() {
     },
     {
       header: "Created",
-      cell: (row) => row.createdAt.toLocaleDateString(),
+      cell: (row) => {
+        const d = row.createdAt
+        return `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`
+      },
     },
     {
       header: "Updated",
-      cell: (row) => row.updatedAt.toLocaleDateString(),
+      cell: (row) => {
+        const d = row.updatedAt
+        return `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`
+      },
     },
     {
       header: "Actions",

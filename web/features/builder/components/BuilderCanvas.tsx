@@ -27,15 +27,6 @@ import PipelineEdge from './edges/PipelineEdge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Ungroup, Pause, Play } from 'lucide-react';
 
-const nodeTypes = {
-  block: BaseNode,
-  group: GroupNode,
-};
-
-const edgeTypes: EdgeTypes = {
-  pipeline: PipelineEdge,
-};
-
 function isGroupNode(node: Node): boolean {
   return (node.data as Record<string, unknown>)._group === true;
 }
@@ -49,6 +40,15 @@ export function BuilderCanvas() {
   const builder = useBuilder();
   const palette = useBlockPalette();
   const [groupContextMenu, setGroupContextMenu] = useState<GroupContextMenuState | null>(null);
+
+  const nodeTypes = useMemo(() => ({
+    block: BaseNode,
+    group: GroupNode,
+  }), []);
+
+  const edgeTypes: EdgeTypes = useMemo(() => ({
+    pipeline: PipelineEdge,
+  }), []);
 
   const handlePaneContextMenu = useCallback(
     (event: React.MouseEvent | globalThis.MouseEvent) => {

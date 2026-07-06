@@ -1,46 +1,386 @@
 import type { BlockDefinition } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
 
-export const TrainModelBlock: BlockDefinition = {
-  id: 'train_model',
-  code: 'train_model',
-  name: 'Train Model',
-  categoryId: 'model',
-  description: 'Train a model on a dataset',
-  configSchema: {
-    epochs: { type: 'number', label: 'Epochs', default: 10, validation: { min: 1, max: 1000, required: true } } satisfies BlockConfigField,
-    learningRate: { type: 'number', label: 'Learning Rate', default: 0.001, validation: { min: 0.0001, max: 1, step: 0.0001 } } satisfies BlockConfigField,
-    batchSize: { type: 'number', label: 'Batch Size', default: 32, validation: { min: 1, max: 512 } } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: {
-    entries: [
-      { id: 'train_dataset', type: 'dataset', label: 'Train Dataset' },
-      { id: 'val_dataset', type: 'dataset', label: 'Val Dataset', optional: true },
-    ],
-  } as Record<string, unknown>,
-  outputSchema: {
-    entries: [{ id: 'model', type: 'model', label: 'Model' }],
-  } as Record<string, unknown>,
-};
+const commonInputSchema = {
+  entries: [
+    { id: 'train_dataset', type: 'dataset', label: 'Train Dataset' },
+    { id: 'val_dataset', type: 'dataset', label: 'Validation Dataset', optional: true },
+    { id: 'config', type: 'config', label: 'Optional Config', optional: true },
+  ],
+} as Record<string, unknown>;
 
-export const FineTuneBlock: BlockDefinition = {
-  id: 'fine_tune',
-  code: 'fine_tune',
-  name: 'Fine Tune',
-  categoryId: 'model',
-  description: 'Fine-tune a pre-trained model',
+const commonOutputSchema = {
+  entries: [
+    { id: 'model', type: 'model', label: 'Trained Model' },
+  ],
+} as Record<string, unknown>;
+
+// ==========================================
+// CLASSIFICATION
+// ==========================================
+
+export const LogisticRegressionBlock: BlockDefinition = {
+  id: "logistic_regression",
+  code: "logistic_regression",
+  name: "Logistic Regression",
+  categoryId: "model",
+  description: "Mô hình phân loại tuyến tính dùng hàm sigmoid để dự báo xác suất các lớp.",
   configSchema: {
-    epochs: { type: 'number', label: 'Epochs', default: 5, validation: { min: 1, max: 100 } } satisfies BlockConfigField,
-    learningRate: { type: 'number', label: 'Learning Rate', default: 0.0001, validation: { min: 0.00001, max: 0.1, step: 0.00001 } } satisfies BlockConfigField,
-    freezeLayers: { type: 'number', label: 'Freeze Layers', default: 0, validation: { min: 0 } } satisfies BlockConfigField,
+    penalty: {
+      type: "select",
+      label: "Phạt Regularization",
+      default: "l2",
+      options: [
+        { label: "L1", value: "l1" },
+        { label: "L2", value: "l2" },
+        { label: "ElasticNet", value: "elasticnet" },
+        { label: "Không phạt", value: "none" },
+      ],
+    } satisfies BlockConfigField,
+    C: {
+      type: "number",
+      label: "Hệ số C",
+      default: 1.0,
+      validation: { min: 0.0001 },
+    } satisfies BlockConfigField,
+    solver: {
+      type: "select",
+      label: "Thuật toán tối ưu",
+      default: "lbfgs",
+      options: [
+        { label: "Lbfgs", value: "lbfgs" },
+        { label: "Liblinear", value: "liblinear" },
+        { label: "Sag", value: "sag" },
+        { label: "Saga", value: "saga" },
+      ],
+    } satisfies BlockConfigField,
+    max_iter: {
+      type: "number",
+      label: "Số vòng lặp tối đa",
+      default: 100,
+      validation: { min: 1 },
+    } satisfies BlockConfigField,
   } as Record<string, unknown>,
-  inputSchema: {
-    entries: [
-      { id: 'model', type: 'model', label: 'Base Model' },
-      { id: 'dataset', type: 'dataset', label: 'Dataset' },
-    ],
+  inputSchema: commonInputSchema,
+  outputSchema: commonOutputSchema,
+}
+
+export const DecisionTreeBlock: BlockDefinition = {
+  id: "decision_tree",
+  code: "decision_tree",
+  name: "Decision Tree",
+  categoryId: "model",
+  description: "Mô hình cây quyết định học các quy tắc phân rẽ đặc trưng để phân loại hoặc hồi quy.",
+  configSchema: {
+    criterion: {
+      type: "select",
+      label: "Tiêu chí phân tách",
+      default: "gini",
+      options: [
+        { label: "Gini Impurity", value: "gini" },
+        { label: "Entropy", value: "entropy" },
+        { label: "Log Loss", value: "log_loss" },
+      ],
+    } satisfies BlockConfigField,
+    max_depth: {
+      type: "number",
+      label: "Chiều sâu tối đa của cây",
+      default: 10,
+      validation: { min: 1 },
+    } satisfies BlockConfigField,
+    min_samples_split: {
+      type: "number",
+      label: "Số mẫu tối thiểu để phân tách một nút",
+      default: 2,
+      validation: { min: 2 },
+    } satisfies BlockConfigField,
+    min_samples_leaf: {
+      type: "number",
+      label: "Số mẫu tối thiểu tại một nút lá",
+      default: 1,
+      validation: { min: 1 },
+    } satisfies BlockConfigField,
   } as Record<string, unknown>,
-  outputSchema: {
-    entries: [{ id: 'model', type: 'model', label: 'Fine-tuned Model' }],
+  inputSchema: commonInputSchema,
+  outputSchema: commonOutputSchema,
+}
+
+export const RandomForestBlock: BlockDefinition = {
+  id: "random_forest",
+  code: "random_forest",
+  name: "Random Forest",
+  categoryId: "model",
+  description: "Mô hình Ensemble kết hợp nhiều cây quyết định để tăng độ chính xác và kháng overfitting.",
+  configSchema: {
+    n_estimators: {
+      type: "number",
+      label: "Số lượng cây quyết định",
+      default: 100,
+      validation: { min: 1 },
+    } satisfies BlockConfigField,
+    criterion: {
+      type: "select",
+      label: "Tiêu chí phân tách",
+      default: "gini",
+      options: [
+        { label: "Gini Impurity", value: "gini" },
+        { label: "Entropy", value: "entropy" },
+        { label: "Log Loss", value: "log_loss" },
+      ],
+    } satisfies BlockConfigField,
+    max_depth: {
+      type: "number",
+      label: "Chiều sâu tối đa của cây",
+      default: 15,
+      validation: { min: 1 },
+    } satisfies BlockConfigField,
+    max_features: {
+      type: "select",
+      label: "Số lượng đặc trưng tối đa khi rẽ nhánh",
+      default: "sqrt",
+      options: [
+        { label: "Căn bậc 2", value: "sqrt" },
+        { label: "Logarit cơ số 2", value: "log2" },
+        { label: "Toàn bộ", value: "none" },
+      ],
+    } satisfies BlockConfigField,
   } as Record<string, unknown>,
-};
+  inputSchema: commonInputSchema,
+  outputSchema: commonOutputSchema,
+}
+
+export const SVMBlock: BlockDefinition = {
+  id: "svm",
+  code: "svm",
+  name: "SVM",
+  categoryId: "model",
+  description: "Mô hình tìm kiếm siêu phẳng tối ưu để phân tách dữ liệu trong không gian nhiều chiều.",
+  configSchema: {
+    C: {
+      type: "number",
+      label: "Hệ số phạt lỗi C",
+      default: 1.0,
+      validation: { min: 0.0001 },
+    } satisfies BlockConfigField,
+    kernel: {
+      type: "select",
+      label: "Hàm nhân",
+      default: "rbf",
+      options: [
+        { label: "Tuyến tính", value: "linear" },
+        { label: "Đa thức", value: "poly" },
+        { label: "RBF", value: "rbf" },
+        { label: "Sigmoid", value: "sigmoid" },
+      ],
+    } satisfies BlockConfigField,
+    degree: {
+      type: "number",
+      label: "Bậc của đa thức",
+      default: 3,
+      validation: { min: 1 },
+    } satisfies BlockConfigField,
+    gamma: {
+      type: "select",
+      label: "Hệ số Gamma",
+      default: "scale",
+      options: [
+        { label: "Scale", value: "scale" },
+        { label: "Auto", value: "auto" },
+      ],
+    } satisfies BlockConfigField,
+  } as Record<string, unknown>,
+  inputSchema: commonInputSchema,
+  outputSchema: commonOutputSchema,
+}
+
+// ==========================================
+// REGRESSION
+// ==========================================
+
+export const LinearRegressionBlock: BlockDefinition = {
+  id: "linear_regression",
+  code: "linear_regression",
+  name: "Linear Regression",
+  categoryId: "model",
+  description: "Mô hình tìm kiếm mối quan hệ tuyến tính giữa các biến độc lập và biến mục tiêu liên tục.",
+  configSchema: {
+    fit_intercept: {
+      type: "switch",
+      label: "Tính toán Bias hoặc Intercept",
+      default: true,
+    } satisfies BlockConfigField,
+    copy_X: {
+      type: "switch",
+      label: "Copy thuộc tính X để tránh ghi đè",
+      default: true,
+    } satisfies BlockConfigField,
+  } as Record<string, unknown>,
+  inputSchema: commonInputSchema,
+  outputSchema: commonOutputSchema,
+}
+
+export const RidgeRegressionBlock: BlockDefinition = {
+  id: "ridge_regression",
+  code: "ridge_regression",
+  name: "Ridge Regression",
+  categoryId: "model",
+  description: "Hồi quy tuyến tính bổ sung hình phạt L2 vào hàm tối ưu để chống đa cộng tuyến.",
+  configSchema: {
+    alpha: {
+      type: "number",
+      label: "Hệ số phạt Alpha",
+      default: 1.0,
+      validation: { min: 0 },
+    } satisfies BlockConfigField,
+    fit_intercept: {
+      type: "switch",
+      label: "Tính toán Bias hoặc Intercept",
+      default: true,
+    } satisfies BlockConfigField,
+    solver: {
+      type: "select",
+      label: "Thuật toán giải bài toán tối ưu",
+      default: "auto",
+      options: [
+        { label: "Tự động", value: "auto" },
+        { label: "SVD decomposition", value: "svd" },
+        { label: "Cholesky solver", value: "cholesky" },
+        { label: "Lsqr", value: "lsqr" },
+        { label: "Sag", value: "sag" },
+        { label: "Saga", value: "saga" },
+      ],
+    } satisfies BlockConfigField,
+  } as Record<string, unknown>,
+  inputSchema: commonInputSchema,
+  outputSchema: commonOutputSchema,
+}
+
+// ==========================================
+// CLUSTERING
+// ==========================================
+
+export const KMeansBlock: BlockDefinition = {
+  id: "k_means",
+  code: "k_means",
+  name: "K-Means Clustering",
+  categoryId: "model",
+  description: "Thuật toán phân cụm không giám sát chia các quan sát thành K cụm dựa trên khoảng cách Euclid.",
+  configSchema: {
+    n_clusters: {
+      type: "number",
+      label: "Số lượng cụm phân chia",
+      default: 8,
+      validation: { required: true, min: 2 },
+    } satisfies BlockConfigField,
+    init: {
+      type: "select",
+      label: "Cách khởi tạo tâm cụm",
+      default: "k-means++",
+      options: [
+        { label: "K-Means++", value: "k-means++" },
+        { label: "Khởi tạo ngẫu nhiên", value: "random" },
+      ],
+    } satisfies BlockConfigField,
+    max_iter: {
+      type: "number",
+      label: "Số vòng lặp tối đa",
+      default: 300,
+      validation: { min: 1 },
+    } satisfies BlockConfigField,
+    random_state: {
+      type: "number",
+      label: "Random State",
+      default: 42,
+      validation: { min: 0 },
+    } satisfies BlockConfigField,
+  } as Record<string, unknown>,
+  inputSchema: commonInputSchema,
+  outputSchema: commonOutputSchema,
+}
+
+// ==========================================
+// DEEP LEARNING
+// ==========================================
+
+export const ANNBlock: BlockDefinition = {
+  id: "ann_model",
+  code: "ann_model",
+  name: "Mạng Nơ-ron Nhân tạo",
+  categoryId: "model",
+  description: "Mô hình Deep Learning cơ bản gồm các lớp Dense liên kết đầy đủ học các biểu diễn phi tuyến.",
+  configSchema: {
+    hidden_layers: {
+      type: "textarea",
+      label: "Số lượng nơ-ron tại các lớp ẩn",
+      default: "64, 32",
+      validation: { required: true },
+    } satisfies BlockConfigField,
+    activation: {
+      type: "select",
+      label: "Hàm kích hoạt",
+      default: "relu",
+      options: [
+        { label: "ReLU", value: "relu" },
+        { label: "Tanh", value: "tanh" },
+        { label: "Sigmoid", value: "sigmoid" },
+        { label: "GeLU", value: "gelu" },
+      ],
+    } satisfies BlockConfigField,
+    dropout_rate: {
+      type: "number",
+      label: "Tỉ lệ Dropout chống Overfitting",
+      default: 0.0,
+      validation: { min: 0.0, max: 0.9, step: 0.05 },
+    } satisfies BlockConfigField,
+    learning_rate: {
+      type: "number",
+      label: "Tốc độ học",
+      default: 0.001,
+      validation: { required: true, min: 0.00001 },
+    } satisfies BlockConfigField,
+  } as Record<string, unknown>,
+  inputSchema: commonInputSchema,
+  outputSchema: commonOutputSchema,
+}
+
+export const CNNBlock: BlockDefinition = {
+  id: "cnn_model",
+  code: "cnn_model",
+  name: "Mạng Nơ-ron Tích chập",
+  categoryId: "model",
+  description: "Mô hình học sâu sử dụng tích chập để tự động trích xuất các đặc trưng không gian.",
+  configSchema: {
+    conv_layers: {
+      type: "textarea",
+      label: "Số filter trong các lớp Conv",
+      default: "32, 64",
+      validation: { required: true },
+    } satisfies BlockConfigField,
+    kernel_size: {
+      type: "number",
+      label: "Kích thước ô tích chập",
+      default: 3,
+      validation: { required: true, min: 1 },
+    } satisfies BlockConfigField,
+    pool_size: {
+      type: "number",
+      label: "Kích thước Pooling để giảm số chiều",
+      default: 2,
+      validation: { required: true, min: 1 },
+    } satisfies BlockConfigField,
+    dense_units: {
+      type: "number",
+      label: "Số nơ-ron lớp ẩn Dense đầy đủ",
+      default: 128,
+      validation: { required: true, min: 1 },
+    } satisfies BlockConfigField,
+    dropout_rate: {
+      type: "number",
+      label: "Tỉ lệ Dropout",
+      default: 0.25,
+      validation: { min: 0.0, max: 0.9 },
+    } satisfies BlockConfigField,
+  } as Record<string, unknown>,
+  inputSchema: commonInputSchema,
+  outputSchema: commonOutputSchema,
+}

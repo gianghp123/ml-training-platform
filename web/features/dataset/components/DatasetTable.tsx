@@ -14,30 +14,37 @@ import { formatBytes } from "@/lib/utils/storage.utils"
 
 import { DatasetFileViewer } from "@/features/dataset/components/DatasetFileViewer"
 
-const MOCK_DATASETS: Dataset[] = Array.from({ length: 42 }, (_, i) => ({
-  id: `ds_${String(i + 1).padStart(4, "0")}`,
-  name: [
-    "Customer Churn Prediction",
-    "Fraud Detection Training",
-    "ImageNet Subset v2",
-    "Sentiment Analysis Corpus",
-    "Medical Records Anonymized",
-    "Stock Market Historical",
-    "Weather Forecast Data",
-    "E-Commerce Reviews",
-    "Real Estate Listings",
-    "Social Media Posts",
-    "Traffic Flow Analysis",
-    "Loan Default Prediction",
-  ][i % 12] + (i >= 12 ? ` (${Math.floor(i / 12) + 1})` : ""),
-  description: "Sample dataset for model training and evaluation purposes.",
-  storageUri: `s3://datasets/ds_${String(i + 1).padStart(4, "0")}`,
-  format: [DatasetFormat.CSV, DatasetFormat.JSON, DatasetFormat.PARQUET, DatasetFormat.AVRO][i % 4],
-  size: Math.round(Math.random() * 10_000_000_000) + 100_000,
-  checksum: `sha256:${Math.random().toString(36).slice(2, 34)}`,
-  version: Math.ceil(Math.random() * 10),
-  userId: "user_0001",
-}))
+const MOCK_DATASETS: Dataset[] = Array.from({ length: 42 }, (_, i) => {
+  // Deterministic mock values to avoid Math.random() SSR/CSR mismatches
+  const size = ((i * 1234567891) % 9900000000) + 100000
+  const version = (i % 5) + 1
+  const checksum = `sha256:mockchecksum${String(i).padStart(4, "0")}abcdef`
+
+  return {
+    id: `ds_${String(i + 1).padStart(4, "0")}`,
+    name: [
+      "Customer Churn Prediction",
+      "Fraud Detection Training",
+      "ImageNet Subset v2",
+      "Sentiment Analysis Corpus",
+      "Medical Records Anonymized",
+      "Stock Market Historical",
+      "Weather Forecast Data",
+      "E-Commerce Reviews",
+      "Real Estate Listings",
+      "Social Media Posts",
+      "Traffic Flow Analysis",
+      "Loan Default Prediction",
+    ][i % 12] + (i >= 12 ? ` (${Math.floor(i / 12) + 1})` : ""),
+    description: "Sample dataset for model training and evaluation purposes.",
+    storageUri: `s3://datasets/ds_${String(i + 1).padStart(4, "0")}`,
+    format: [DatasetFormat.CSV, DatasetFormat.JSON, DatasetFormat.PARQUET, DatasetFormat.AVRO][i % 4],
+    size,
+    checksum,
+    version,
+    userId: "user_0001",
+  }
+})
 
 export function DatasetTable() {
   const searchParams = useSearchParams()
