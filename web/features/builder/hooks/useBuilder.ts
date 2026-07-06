@@ -80,9 +80,17 @@ export function useBuilder(): UseBuilderReturn {
   const [workflowName, setWorkflowName] = useState('Untitled Workflow');
   const [palettePosition, setPalettePosition] = useState<XYPosition | null>(null);
   const [edgeStyle, setEdgeStyle] = useState<EdgeStyle>('smoothstep');
+  const [hasSavedWorkflow, setHasSavedWorkflow] = useState(false);
 
   const { saveWorkflow: persist, loadWorkflow: load, hasSavedWorkflow: hasSavedCheck } =
     useWorkflowPersistence();
+
+  useEffect(() => {
+    const handle = requestAnimationFrame(() => {
+      setHasSavedWorkflow(hasSavedCheck());
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [hasSavedCheck]);
 
   useEffect(() => {
     setEdges((eds) =>
@@ -222,6 +230,7 @@ export function useBuilder(): UseBuilderReturn {
 
   const saveWorkflow = useCallback(() => {
     persist(workflowName, nodes, edges);
+    setHasSavedWorkflow(true);
   }, [workflowName, nodes, edges, persist]);
 
   const loadWorkflowFn = useCallback((): boolean => {
@@ -249,7 +258,7 @@ export function useBuilder(): UseBuilderReturn {
     setWorkflowName,
     saveWorkflow,
     loadWorkflow: loadWorkflowFn,
-    hasSavedWorkflow: hasSavedCheck(),
+    hasSavedWorkflow,
     palettePosition,
     setPalettePosition,
     edgeStyle,

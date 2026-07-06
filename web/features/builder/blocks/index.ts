@@ -1,5 +1,5 @@
 import type { BlockDefinition, BlockCategory } from '@/lib/models';
-import { LoadDatasetBlock, SplitDatasetBlock } from './definitions/data.blocks';
+import { LoadCsvExcel, LoadJsonBlock, LoadXmlBlock } from './definitions/data.blocks';
 import { NormalizeBlock, AugmentBlock, FilterBlock } from './definitions/transform.blocks';
 import { TrainModelBlock, FineTuneBlock } from './definitions/model.blocks';
 import { EvaluateBlock, CrossValidateBlock } from './definitions/evaluate.blocks';
@@ -9,8 +9,9 @@ export { SocketTypes } from './socket-types';
 export type { SocketType, SocketDefinition, BlockConfigField } from './socket-types';
 
 export const ALL_BLOCKS: BlockDefinition[] = [
-  LoadDatasetBlock,
-  SplitDatasetBlock,
+  LoadCsvExcel,
+  LoadJsonBlock,
+  LoadXmlBlock,
   NormalizeBlock,
   AugmentBlock,
   FilterBlock,
@@ -21,6 +22,7 @@ export const ALL_BLOCKS: BlockDefinition[] = [
   SaveModelBlock,
   ExportDatasetBlock,
   LogMetricsBlock,
+
 ];
 
 export function getBlocksByCategory(categoryId: string): BlockDefinition[] {
