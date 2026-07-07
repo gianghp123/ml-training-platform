@@ -19,11 +19,6 @@ export const LoadCsvExcel: BlockDefinition = {
       label: 'Ký tự phân tách cột',
       default: ',',
     } satisfies BlockConfigField,
-    quote_char: {
-      type: 'text',
-      label: 'Ký tự bao chuỗi',
-      default: '"',
-    } satisfies BlockConfigField,
     has_header: {
       type: "switch",
       label: "Dòng đầu là tên cột",
@@ -46,11 +41,6 @@ export const LoadCsvExcel: BlockDefinition = {
         { label: "UTF-16", value: "utf-16" },
         { label: "Windows-1252", value: "windows-1252" },
       ],
-    } satisfies BlockConfigField,
-    null_values: {
-      type: "text",
-      label: "Các chuỗi được coi là giá trị thiếu",
-      default: "NA,NULL,",
     } satisfies BlockConfigField,
     expected_columns: {
       type: "textarea",

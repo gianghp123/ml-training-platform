@@ -211,130 +211,254 @@ export const Normalization: BlockDefinition = {
     } as Record<string, unknown>,
 }
 
-export const ResizeCropImage: BlockDefinition = {
-    id: "resize_crop_image",
-    code: "resize_crop_image",
-    name: "Resize/Crop ảnh",
+export const DataTypeConversion: BlockDefinition = {
+    id: "data_type_conversion",
+    code: "data_type_conversion",
+    name: "Data Type Conversion",
     categoryId: "preprocess_data",
-    description: "Đưa toàn bộ ảnh về cùng kích thước và/hoặc cắt bớt vùng ảnh không cần thiết.",
+    description: "Chuyển đổi kiểu dữ liệu của một hoặc nhiều cột.",
     configSchema: {
-        operation: {
+        target_columns: {
+            type: "textarea",
+            label: "Danh sách cột cần chuyển đổi",
+            validation: { required: true },
+        } satisfies BlockConfigField,
+        target_type: {
             type: "select",
-            label: "Thao tác áp dụng",
-            default: "resize",
+            label: "Kiểu dữ liệu đích",
+            default: "string",
             options: [
-                { label: "Chỉ resize", value: "resize" },
-                { label: "Chỉ crop", value: "crop" },
-                { label: "Resize rồi crop", value: "resize_and_crop" },
+                { label: "Số nguyên", value: "integer" },
+                { label: "Số thực", value: "float" },
+                { label: "Chuỗi", value: "string" },
+                { label: "Boolean", value: "boolean" },
+                { label: "Ngày giờ", value: "datetime" },
+                { label: "Category", value: "category" },
             ],
             validation: { required: true },
         } satisfies BlockConfigField,
-        target_width: {
-            type: "number",
-            label: "Chiều rộng đích",
-            default: 224,
-            validation: { required: true, min: 1 },
-        } satisfies BlockConfigField,
-        target_height: {
-            type: "number",
-            label: "Chiều cao đích",
-            default: 224,
-            validation: { required: true, min: 1 },
-        } satisfies BlockConfigField,
-        crop_mode: {
+        invalid_value_handling: {
             type: "select",
-            label: "Vị trí crop",
-            default: "center",
+            label: "Xử lý giá trị không thể chuyển đổi",
+            default: "raise",
             options: [
-                { label: "Ở giữa", value: "center" },
-                { label: "Ngẫu nhiên", value: "random" },
-                { label: "Góc trên trái", value: "top_left" },
+                { label: "Báo lỗi", value: "raise" },
+                { label: "Chuyển thành giá trị thiếu", value: "coerce" },
+                { label: "Giữ nguyên giá trị", value: "ignore" },
             ],
         } satisfies BlockConfigField,
-        interpolation: {
-            type: "select",
-            label: "Thuật toán nội suy khi resize",
-            default: "bilinear",
-            options: [
-                { label: "Nearest Neighbor", value: "nearest" },
-                { label: "Bilinear", value: "bilinear" },
-                { label: "Bicubic", value: "bicubic" },
-            ],
+        datetime_format: {
+            type: "text",
+            label: "Định dạng ngày giờ (nếu có)",
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
     inputSchema: {
         entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu vào",
+            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu vào",
             schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
         }],
     } as Record<string, unknown>,
     outputSchema: {
         entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu ra",
+            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu ra",
             schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
         }],
     } as Record<string, unknown>,
 }
 
-export const DataAugmentation: BlockDefinition = {
-    id: "data_augmentation",
-    code: "data_augmentation",
-    name: "Data Augmentation",
+export const RenameColumns: BlockDefinition = {
+    id: "rename_columns",
+    code: "rename_columns",
+    name: "Rename Columns",
     categoryId: "preprocess_data",
-    description:
-        "Sinh thêm dữ liệu ảnh huấn luyện bằng cách biến đổi ảnh gốc",
+    description: "Đổi tên một hoặc nhiều cột trong dataset.",
     configSchema: {
-        enable_rotation: { type: "switch", label: "Bật xoay ảnh ngẫu nhiên", default: false } satisfies BlockConfigField,
-        rotation_range: {
-            type: "number",
-            label: "Góc xoay tối đa",
-            default: 15,
-            validation: { min: 0, max: 180 },
+        rename_mapping: {
+            type: "textarea",
+            label: "Ánh xạ tên cột (tên_cũ:tên_mới, mỗi dòng một cặp)",
+            validation: { required: true },
         } satisfies BlockConfigField,
-        enable_flip_horizontal: { type: "switch", label: "Bật lật ngang", default: true } satisfies BlockConfigField,
-        enable_flip_vertical: { type: "switch", label: "Bật lật dọc", default: false } satisfies BlockConfigField,
-        enable_zoom: { type: "switch", label: "Bật phóng to/thu nhỏ ngẫu nhiên", default: false } satisfies BlockConfigField,
-        zoom_range: {
-            type: "number",
-            label: "Biên độ zoom",
-            default: 0.1,
-            validation: { min: 0, max: 1 },
+        trim_names: {
+            type: "switch",
+            label: "Xoá khoảng trắng thừa trong tên cột",
+            default: true,
         } satisfies BlockConfigField,
-        enable_brightness: { type: "switch", label: "Bật thay đổi độ sáng ngẫu nhiên", default: false } satisfies BlockConfigField,
-        brightness_range: {
-            type: "number",
-            label: "Biên độ thay đổi độ sáng",
-            default: 0.2,
-            validation: { min: 0, max: 1 },
-        } satisfies BlockConfigField,
-        augmentation_factor: {
-            type: "number",
-            label: "Số ảnh biến đổi sinh thêm cho mỗi ảnh gốc",
-            default: 1,
-            validation: { min: 1 },
+        duplicate_handling: {
+            type: "select",
+            label: "Xử lý khi tên mới đã tồn tại",
+            default: "error",
+            options: [
+                { label: "Báo lỗi", value: "error" },
+                { label: "Ghi đè", value: "overwrite" },
+            ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
     inputSchema: {
         entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu vào",
+            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu vào",
             schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
         }],
     } as Record<string, unknown>,
     outputSchema: {
         entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu ra",
+            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu ra",
+            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
+        }],
+    } as Record<string, unknown>,
+}
+
+export const DropColumns: BlockDefinition = {
+    id: "drop_columns",
+    code: "drop_columns",
+    name: "Drop Columns",
+    categoryId: "preprocess_data",
+    description: "Loại bỏ các cột không cần thiết khỏi dataset.",
+    configSchema: {
+        target_columns: {
+            type: "textarea",
+            label: "Danh sách cột cần xoá",
+            validation: { required: true },
+        } satisfies BlockConfigField,
+        ignore_missing_columns: {
+            type: "switch",
+            label: "Bỏ qua cột không tồn tại",
+            default: false,
+        } satisfies BlockConfigField,
+    } as Record<string, unknown>,
+    inputSchema: {
+        entries: [{
+            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu vào",
+            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
+        }],
+    } as Record<string, unknown>,
+    outputSchema: {
+        entries: [{
+            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu ra",
+            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
+        }],
+    } as Record<string, unknown>,
+}
+
+export const OutlierHandling: BlockDefinition = {
+    id: "outlier_handling",
+    code: "outlier_handling",
+    name: "Outlier Handling",
+    categoryId: "preprocess_data",
+    description: "Phát hiện và xử lý các giá trị ngoại lệ trong những cột số.",
+    configSchema: {
+        target_columns: {
+            type: "textarea",
+            label: "Danh sách cột số cần xử lý",
+            validation: { required: true },
+        } satisfies BlockConfigField,
+        detection_method: {
+            type: "select",
+            label: "Phương pháp phát hiện",
+            default: "iqr",
+            options: [
+                { label: "IQR", value: "iqr" },
+                { label: "Z-score", value: "z_score" },
+                { label: "Percentile", value: "percentile" },
+            ],
+            validation: { required: true },
+        } satisfies BlockConfigField,
+        action: {
+            type: "select",
+            label: "Cách xử lý ngoại lệ",
+            default: "cap",
+            options: [
+                { label: "Xoá dòng", value: "remove" },
+                { label: "Giới hạn về ngưỡng", value: "cap" },
+                { label: "Thay bằng trung vị", value: "replace_median" },
+                { label: "Thay bằng trung bình", value: "replace_mean" },
+            ],
+            validation: { required: true },
+        } satisfies BlockConfigField,
+        threshold: {
+            type: "number",
+            label: "Ngưỡng phát hiện (IQR multiplier hoặc Z-score)",
+            default: 1.5,
+            validation: { min: 0 },
+        } satisfies BlockConfigField,
+        lower_percentile: {
+            type: "number",
+            label: "Phân vị dưới",
+            default: 0.01,
+            validation: { min: 0, max: 1 },
+        } satisfies BlockConfigField,
+        upper_percentile: {
+            type: "number",
+            label: "Phân vị trên",
+            default: 0.99,
+            validation: { min: 0, max: 1 },
+        } satisfies BlockConfigField,
+    } as Record<string, unknown>,
+    inputSchema: {
+        entries: [{
+            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu vào",
+            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
+        }],
+    } as Record<string, unknown>,
+    outputSchema: {
+        entries: [{
+            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu ra",
+            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
+        }],
+    } as Record<string, unknown>,
+}
+
+export const TextCleaning: BlockDefinition = {
+    id: "text_cleaning",
+    code: "text_cleaning",
+    name: "Text Cleaning",
+    categoryId: "preprocess_data",
+    description: "Làm sạch và chuẩn hoá dữ liệu văn bản trước khi huấn luyện.",
+    configSchema: {
+        target_columns: {
+            type: "textarea",
+            label: "Danh sách cột văn bản cần làm sạch",
+            validation: { required: true },
+        } satisfies BlockConfigField,
+        lowercase: {
+            type: "switch", label: "Chuyển thành chữ thường", default: true,
+        } satisfies BlockConfigField,
+        trim_whitespace: {
+            type: "switch", label: "Xoá khoảng trắng ở đầu và cuối", default: true,
+        } satisfies BlockConfigField,
+        normalize_whitespace: {
+            type: "switch", label: "Chuẩn hoá khoảng trắng liên tiếp", default: true,
+        } satisfies BlockConfigField,
+        remove_punctuation: {
+            type: "switch", label: "Xoá dấu câu", default: false,
+        } satisfies BlockConfigField,
+        remove_numbers: {
+            type: "switch", label: "Xoá chữ số", default: false,
+        } satisfies BlockConfigField,
+        remove_special_characters: {
+            type: "switch", label: "Xoá ký tự đặc biệt", default: false,
+        } satisfies BlockConfigField,
+        remove_stopwords: {
+            type: "switch", label: "Xoá stop words", default: false,
+        } satisfies BlockConfigField,
+        language: {
+            type: "select",
+            label: "Ngôn ngữ dùng cho stop words",
+            default: "vietnamese",
+            options: [
+                { label: "Tiếng Việt", value: "vietnamese" },
+                { label: "Tiếng Anh", value: "english" },
+            ],
+        } satisfies BlockConfigField,
+    } as Record<string, unknown>,
+    inputSchema: {
+        entries: [{
+            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu vào",
+            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
+        }],
+    } as Record<string, unknown>,
+    outputSchema: {
+        entries: [{
+            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu ra",
             schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
         }],
     } as Record<string, unknown>,
