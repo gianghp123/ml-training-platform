@@ -1,11 +1,28 @@
 import type { BlockDefinition, BlockCategory } from '@/lib/models';
 import { LoadCsvExcel, LoadJsonBlock, LoadXmlBlock } from './definitions/data.blocks';
-import { HandleMissingValues, RemoveDuplicates, Encoding, Normalization, ResizeCropImage, DataAugmentation } from './definitions/preprocessing.block';
+import {
+  DataTypeConversion,
+  DropColumns,
+  Encoding,
+  HandleMissingValues,
+  Normalization,
+  OutlierHandling,
+  RemoveDuplicates,
+  RenameColumns,
+  TextCleaning,
+} from './definitions/preprocessing.block';
 import { TrainTestSplitBlock, KFoldSplitBlock, StratifiedSplitBlock } from './definitions/splitting.blocks';
 import { FeatureSelectionBlock, PCABlock, CreateNewFeatureBlock } from './definitions/transform.blocks';
 import { HyperparametersBlock, LossFunctionBlock, EarlyStoppingBlock } from './definitions/configuration.blocks';
 import { LogisticRegressionBlock, DecisionTreeBlock, RandomForestBlock, SVMBlock, LinearRegressionBlock, RidgeRegressionBlock, KMeansBlock, ANNBlock, CNNBlock } from './definitions/model.blocks';
-import { ClassificationMetricsBlock, ConfusionMatrixBlock, RocAucCurveBlock } from './definitions/evaluate.blocks';
+import {
+  ClassificationMetricsBlock,
+  ClassificationReportBlock,
+  ConfusionMatrixBlock,
+  CrossValidationBlock,
+  PredictionResultBlock,
+  RocAucCurveBlock,
+} from './definitions/evaluate.blocks';
 import { SaveModelBlock, ExportDatasetBlock, LogMetricsBlock } from './definitions/export.blocks';
 
 export { SocketTypes } from './socket-types';
@@ -19,8 +36,11 @@ export const ALL_BLOCKS: BlockDefinition[] = [
   RemoveDuplicates,
   Encoding,
   Normalization,
-  ResizeCropImage,
-  DataAugmentation,
+  DataTypeConversion,
+  RenameColumns,
+  DropColumns,
+  OutlierHandling,
+  TextCleaning,
   TrainTestSplitBlock,
   KFoldSplitBlock,
   StratifiedSplitBlock,
@@ -42,6 +62,9 @@ export const ALL_BLOCKS: BlockDefinition[] = [
   ClassificationMetricsBlock,
   ConfusionMatrixBlock,
   RocAucCurveBlock,
+  ClassificationReportBlock,
+  PredictionResultBlock,
+  CrossValidationBlock,
   SaveModelBlock,
   ExportDatasetBlock,
   LogMetricsBlock,
