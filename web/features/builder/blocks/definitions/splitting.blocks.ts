@@ -1,5 +1,6 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition, BlockInputPort, BlockOutputPort } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
+
 export const TrainTestSplitBlock: BlockDefinition = {
     id: "train_test_split",
     code: "train_test_split",
@@ -25,15 +26,8 @@ export const TrainTestSplitBlock: BlockDefinition = {
             default: true,
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [
-            { id: 'train_dataset', type: 'dataset', label: 'Train Dataset' },
-            { id: 'test_dataset', type: 'dataset', label: 'Test Dataset' },
-        ],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const KFoldSplitBlock: BlockDefinition = {
@@ -61,12 +55,8 @@ export const KFoldSplitBlock: BlockDefinition = {
             default: true,
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' }],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const StratifiedSplitBlock: BlockDefinition = {
@@ -99,13 +89,6 @@ export const StratifiedSplitBlock: BlockDefinition = {
             default: true,
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [
-            { id: 'train_dataset', type: 'dataset', label: 'Train Dataset' },
-            { id: 'test_dataset', type: 'dataset', label: 'Test Dataset' },
-        ],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }

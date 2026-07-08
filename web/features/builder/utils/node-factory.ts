@@ -1,4 +1,4 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition, BlockInputPort, BlockOutputPort } from '@/lib/models';
 import type { Node, XYPosition } from '@xyflow/react';
 import { ALL_BLOCKS } from '../blocks';
 import type { SocketDefinition } from '../blocks/socket-types';
@@ -23,12 +23,17 @@ export function createNodeId(): string {
 }
 
 export function parseSocketEntries(
-  schema: Record<string, unknown> | undefined
+  schema: BlockInputPort[] | BlockOutputPort[] | undefined
 ): SocketDefinition[] {
-  if (!schema || !Array.isArray((schema as Record<string, unknown>).entries)) {
+  if (!schema || !Array.isArray(schema)) {
     return [];
   }
-  return (schema as { entries: SocketDefinition[] }).entries;
+  return (schema as Array<BlockInputPort | BlockOutputPort>).map((port) => ({
+    id: port.name,
+    type: port.type,
+    label: port.label ?? port.name,
+    optional: port.optional,
+  }));
 }
 
 export function createDefaultConfig(

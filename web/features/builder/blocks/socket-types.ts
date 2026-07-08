@@ -1,5 +1,16 @@
-export const SocketTypes = ['dataset', 'model', 'metrics', 'config'] as const;
-export type SocketType = typeof SocketTypes[number];
+import type { PortType } from '@/lib/models';
+
+export const SocketTypes = [
+  'Dataset',
+  'Folds',
+  'TrainedModel',
+  'Hyperparameters',
+  'LossConfig',
+  'EarlyStoppingConfig',
+  'Metrics'
+] as const;
+
+export type SocketType = PortType;
 
 export interface SocketDefinition {
   id: string;

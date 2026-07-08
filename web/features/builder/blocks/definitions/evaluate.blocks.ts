@@ -1,19 +1,6 @@
 import type { BlockDefinition } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
 
-const commonInputSchema = {
-    entries: [
-        { id: 'model', type: 'model', label: 'Trained Model' },
-        { id: 'dataset', type: 'dataset', label: 'Test Dataset' },
-    ],
-} as Record<string, unknown>;
-
-const commonOutputSchema = {
-    entries: [
-        { id: 'metrics', type: 'metrics', label: 'Evaluation Metrics' },
-    ],
-} as Record<string, unknown>;
-
 export const ClassificationMetricsBlock: BlockDefinition = {
     id: "classification_metrics",
     code: "classification_metrics",
@@ -33,8 +20,8 @@ export const ClassificationMetricsBlock: BlockDefinition = {
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const ConfusionMatrixBlock: BlockDefinition = {
@@ -56,8 +43,8 @@ export const ConfusionMatrixBlock: BlockDefinition = {
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const RocAucCurveBlock: BlockDefinition = {
@@ -73,8 +60,8 @@ export const RocAucCurveBlock: BlockDefinition = {
             default: "1",
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const ClassificationReportBlock: BlockDefinition = {
@@ -106,17 +93,8 @@ export const ClassificationReportBlock: BlockDefinition = {
             default: true,
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: {
-        entries: [
-            {
-                id: 'metrics',
-                type: 'metrics',
-                label: 'Classification Report',
-                schema: { rows: "array<{class, precision, recall, f1_score, support}>" },
-            },
-        ],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const PredictionResultBlock: BlockDefinition = {
@@ -148,22 +126,8 @@ export const PredictionResultBlock: BlockDefinition = {
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: {
-        entries: [
-            {
-                id: 'dataset',
-                type: 'dataset',
-                dataType: 'tabular',
-                label: 'Prediction Results',
-                schema: {
-                    columns: "array<{name: actual|predicted|probability|error, dtype}>",
-                    num_rows: "number",
-                    num_columns: "number",
-                },
-            },
-        ],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const CrossValidationBlock: BlockDefinition = {
@@ -210,15 +174,6 @@ export const CrossValidationBlock: BlockDefinition = {
             default: true,
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: {
-        entries: [
-            {
-                id: 'metrics',
-                type: 'metrics',
-                label: 'Cross-validation Metrics',
-                schema: { fold_scores: "number[]", mean_score: "number", std_score: "number" },
-            },
-        ],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }

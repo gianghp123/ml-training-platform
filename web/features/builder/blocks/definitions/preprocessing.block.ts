@@ -1,6 +1,9 @@
 import type { BlockDefinition } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
 
+const commonInputSchema: any[] = [];
+const commonOutputSchema: any[] = [];
+
 export const HandleMissingValues: BlockDefinition = {
     id: "handle_missing_values",
     code: "handle_missing_values",
@@ -37,24 +40,8 @@ export const HandleMissingValues: BlockDefinition = {
             validation: { min: 0, max: 1 },
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu vào",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu ra",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
+    inputSchema: commonInputSchema,
+    outputSchema: commonOutputSchema,
 }
 
 export const RemoveDuplicates: BlockDefinition = {
@@ -79,24 +66,8 @@ export const RemoveDuplicates: BlockDefinition = {
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu vào",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu ra",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
+    inputSchema: commonInputSchema,
+    outputSchema: commonOutputSchema,
 }
 
 export const Encoding: BlockDefinition = {
@@ -138,24 +109,8 @@ export const Encoding: BlockDefinition = {
             validation: { min: 2 },
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu vào",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu ra",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
+    inputSchema: commonInputSchema,
+    outputSchema: commonOutputSchema,
 }
 
 export const Normalization: BlockDefinition = {
@@ -191,24 +146,8 @@ export const Normalization: BlockDefinition = {
             default: 1,
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu vào",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{
-            id: 'dataset',
-            type: 'dataset',
-            dataType: "tabular",
-            label: "Dataset đầu ra",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
+    inputSchema: commonInputSchema,
+    outputSchema: commonOutputSchema,
 }
 
 export const DataTypeConversion: BlockDefinition = {
@@ -252,18 +191,8 @@ export const DataTypeConversion: BlockDefinition = {
             label: "Định dạng ngày giờ (nếu có)",
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{
-            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu vào",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{
-            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu ra",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
+    inputSchema: commonInputSchema,
+    outputSchema: commonOutputSchema,
 }
 
 export const RenameColumns: BlockDefinition = {
@@ -293,18 +222,8 @@ export const RenameColumns: BlockDefinition = {
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{
-            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu vào",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{
-            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu ra",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
+    inputSchema: commonInputSchema,
+    outputSchema: commonOutputSchema,
 }
 
 export const DropColumns: BlockDefinition = {
@@ -325,18 +244,8 @@ export const DropColumns: BlockDefinition = {
             default: false,
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{
-            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu vào",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{
-            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu ra",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
+    inputSchema: commonInputSchema,
+    outputSchema: commonOutputSchema,
 }
 
 export const OutlierHandling: BlockDefinition = {
@@ -393,18 +302,8 @@ export const OutlierHandling: BlockDefinition = {
             validation: { min: 0, max: 1 },
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{
-            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu vào",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{
-            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu ra",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
+    inputSchema: commonInputSchema,
+    outputSchema: commonOutputSchema,
 }
 
 export const TextCleaning: BlockDefinition = {
@@ -450,17 +349,6 @@ export const TextCleaning: BlockDefinition = {
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{
-            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu vào",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{
-            id: 'dataset', type: 'dataset', dataType: "tabular", label: "Dataset đầu ra",
-            schema: { columns: "array<{name, dtype}>", num_rows: "number", num_columns: "number" }
-        }],
-    } as Record<string, unknown>,
+    inputSchema: commonInputSchema,
+    outputSchema: commonOutputSchema,
 }
-

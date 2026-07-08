@@ -1,4 +1,4 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition, BlockInputPort, BlockOutputPort } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
 
 export const SaveModelBlock: BlockDefinition = {
@@ -34,15 +34,8 @@ export const SaveModelBlock: BlockDefinition = {
             label: "Mô tả chi tiết",
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [
-            { id: "model", type: "model", label: "Trained Model" },
-            { id: "metrics", type: "metrics", label: "Optional Metrics", optional: true },
-        ],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const ExportDatasetBlock: BlockDefinition = {
@@ -76,14 +69,8 @@ export const ExportDatasetBlock: BlockDefinition = {
             default: false,
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [
-            { id: "dataset", type: "dataset", label: "Dataset đầu vào" },
-        ],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const LogMetricsBlock: BlockDefinition = {
@@ -105,12 +92,6 @@ export const LogMetricsBlock: BlockDefinition = {
             default: false,
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [
-            { id: "metrics", type: "metrics", label: "Evaluation Metrics" },
-        ],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
