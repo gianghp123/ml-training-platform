@@ -1,4 +1,4 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition, BlockInputPort, BlockOutputPort } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
 
 export const FeatureSelectionBlock: BlockDefinition = {
@@ -32,12 +32,8 @@ export const FeatureSelectionBlock: BlockDefinition = {
             validation: { min: 0 },
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' }],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const PCABlock: BlockDefinition = {
@@ -69,12 +65,8 @@ export const PCABlock: BlockDefinition = {
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' }],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const CreateNewFeatureBlock: BlockDefinition = {
@@ -102,13 +94,10 @@ export const CreateNewFeatureBlock: BlockDefinition = {
                 { label: "Số", value: "numeric" },
                 { label: "Chuỗi", value: "categorical" },
                 { label: "Boolean", value: "boolean" },
+                { label: "Ngày giờ", value: "datetime" },
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' }],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' }],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }

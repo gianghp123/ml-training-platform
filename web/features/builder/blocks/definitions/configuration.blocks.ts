@@ -44,14 +44,8 @@ export const HyperparametersBlock: BlockDefinition = {
             validation: { min: 0 },
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [
-            { id: "config", type: "config", label: "Hyperparameters Config" },
-        ],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const LossFunctionBlock: BlockDefinition = {
@@ -92,14 +86,8 @@ export const LossFunctionBlock: BlockDefinition = {
             ],
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [
-            { id: "config", type: "config", label: "Loss Config" },
-        ],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }
 
 export const EarlyStoppingBlock: BlockDefinition = {
@@ -138,12 +126,6 @@ export const EarlyStoppingBlock: BlockDefinition = {
             default: true,
         } satisfies BlockConfigField,
     } as Record<string, unknown>,
-    inputSchema: {
-        entries: [],
-    } as Record<string, unknown>,
-    outputSchema: {
-        entries: [
-            { id: "config", type: "config", label: "Early Stopping Config" },
-        ],
-    } as Record<string, unknown>,
+    inputSchema: [],
+    outputSchema: [],
 }

@@ -1,19 +1,8 @@
 import type { BlockDefinition } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
 
-const commonInputSchema = {
-  entries: [
-    { id: 'train_dataset', type: 'dataset', label: 'Train Dataset' },
-    { id: 'val_dataset', type: 'dataset', label: 'Validation Dataset', optional: true },
-    { id: 'config', type: 'config', label: 'Optional Config', optional: true },
-  ],
-} as Record<string, unknown>;
-
-const commonOutputSchema = {
-  entries: [
-    { id: 'model', type: 'model', label: 'Trained Model' },
-  ],
-} as Record<string, unknown>;
+const commonInputSchema: any[] = [];
+const commonOutputSchema: any[] = [];
 
 // ==========================================
 // CLASSIFICATION

@@ -51,14 +51,8 @@ export const LoadCsvExcel: BlockDefinition = {
       label: "Danh sách cột cần loại bỏ khỏi dataset ",
     } satisfies BlockConfigField,
   } as Record<string, unknown>,
-  inputSchema: {
-    entries: []
-  } as Record<string, unknown>,
-  outputSchema: {
-    entries: [
-      { id: 'dataset', type: 'dataset', label: 'Dataset' },
-    ],
-  } as Record<string, unknown>,
+  inputSchema: [],
+  outputSchema: [],
 }
 
 export const LoadJsonBlock: BlockDefinition = {
@@ -116,12 +110,8 @@ export const LoadJsonBlock: BlockDefinition = {
       label: "Danh sách cột cần loại bỏ khỏi dataset",
     } satisfies BlockConfigField,
   } as Record<string, unknown>,
-  inputSchema: {
-    entries: []
-  } as Record<string, unknown>,
-  outputSchema: {
-    entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' },]
-  } as Record<string, unknown>,
+  inputSchema: [],
+  outputSchema: [],
 }
 
 
@@ -171,11 +161,7 @@ export const LoadXmlBlock: BlockDefinition = {
       label: "Danh sách cột cần loại bỏ khỏi dataset",
     } satisfies BlockConfigField,
   } as Record<string, unknown>,
-  inputSchema: {
-    entries: []
-  } as Record<string, unknown>,
-  outputSchema: {
-    entries: [{ id: 'dataset', type: 'dataset', label: 'Dataset' },],
-  } as Record<string, unknown>,
+  inputSchema: [],
+  outputSchema: [],
 }
 
