@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { paginate, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { NodeExecution } from 'src/database/entities/node-execution.entity';
 import { CreateNodeExecutionDto, UpdateNodeExecutionDto } from '../dtos/node-execution.dto';
 
@@ -11,8 +12,17 @@ export class NodeExecutionService {
     private nodeExecutionRepository: Repository<NodeExecution>,
   ) {}
 
-  async findAll(): Promise<NodeExecution[]> {
-    return this.nodeExecutionRepository.find();
+  async findAll(options: IPaginationOptions) {
+    const { items, meta } = await paginate<NodeExecution>(this.nodeExecutionRepository, options);
+    return {
+      data: items,
+      meta: {
+        page: meta.currentPage,
+        limit: meta.itemsPerPage,
+        total: meta.totalItems,
+        totalPages: meta.totalPages,
+      },
+    };
   }
 
   async findOne(id: string): Promise<NodeExecution> {

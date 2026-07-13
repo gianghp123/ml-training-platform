@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from "@nestjs/common";
+import { Body, Controller, DefaultValuePipe, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { ZodResponse } from "nestjs-zod";
-import { CreateDatasetDto, DatasetDto, UpdateDatasetDto } from "../dtos/dataset.dto";
+import { CreateDatasetDto, DatasetDto, PaginatedDatasetResponseDto, UpdateDatasetDto } from "../dtos/dataset.dto";
 import { DatasetService } from "../services/dataset.service";
 
 @ApiBearerAuth()
@@ -12,9 +12,13 @@ export class DatasetController {
   ) { }
 
   @Get()
-  @ZodResponse({ status: HttpStatus.OK, type: [DatasetDto] })
-  async findAll() {
-    return this.datasetService.findAll();
+  @ZodResponse({ status: HttpStatus.OK, type: PaginatedDatasetResponseDto })
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    limit = limit > 100 ? 100 : limit;
+    return this.datasetService.findAll({ page, limit });
   }
 
   @Get(':id')

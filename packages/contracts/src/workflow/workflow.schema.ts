@@ -20,3 +20,6 @@ export const WorkflowSchema = z.object({
 export type CreateWorkflow = z.infer<typeof CreateWorkflowSchema>;
 export type UpdateWorkflow = z.infer<typeof UpdateWorkflowSchema>;
 export type Workflow = z.infer<typeof WorkflowSchema>;
+
+import { createPaginatedResponseSchema } from "../response";
+export const PaginatedWorkflowResponseSchema = createPaginatedResponseSchema(WorkflowSchema);

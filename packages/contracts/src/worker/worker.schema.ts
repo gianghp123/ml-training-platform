@@ -31,3 +31,6 @@ export const WorkerSchema = z.object({
 export type CreateWorker = z.infer<typeof CreateWorkerSchema>;
 export type UpdateWorker = z.infer<typeof UpdateWorkerSchema>;
 export type Worker = z.infer<typeof WorkerSchema>;
+
+import { createPaginatedResponseSchema } from "../response";
+export const PaginatedWorkerResponseSchema = createPaginatedResponseSchema(WorkerSchema);

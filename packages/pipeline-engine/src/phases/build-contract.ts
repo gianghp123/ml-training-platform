@@ -1,19 +1,19 @@
 import {
-  PipelineArtifactType,
   DatasetRole,
+  PipelineArtifactType,
   type Contract,
   type ValidationError,
 } from '@training-ml/contracts';
-import type { NodeContext } from '../types';
-import { getDatasetColumns, isDatasetContract } from '../utils/contract-helpers';
 import { resolvePath } from '../operators/_resolve-path';
+import type { NodeContext } from '../types';
+import { isDatasetContract } from '../utils/contract-helpers';
 
 export function buildOutputContracts(ctx: NodeContext): {
   contracts: Record<string, Contract>;
   errors: ValidationError[];
 } {
   const errors: ValidationError[] = [];
-  const transform = ctx.definition.outputTransform;
+  const transform = unwrapDeclared(ctx.definition.outputTransform);
   const contracts: Record<string, Contract> = {};
 
   if (typeof transform === 'object' && transform !== null && 'ports' in transform && (transform as Record<string, unknown>).ports) {
@@ -94,17 +94,17 @@ function buildContractFromTransform(
       const cols = columnsUnknown
         ? []
         : (input.schema.columns as Exclude<typeof input.schema.columns, 'unknown'>).map((col) => {
-            const match = (t.columnUpdates as Array<Record<string, unknown>>).find((u) =>
-              (u.columns as string[]).includes(col.name),
-            );
-            if (!match) return col;
-            return {
-              ...col,
-              primitive: (match.primitive as string) ?? col.primitive,
-              semantic: (match.semantic as string) ?? col.semantic,
-              nullable: (match.nullable as boolean | undefined) ?? col.nullable,
-            };
-          });
+          const match = (t.columnUpdates as Array<Record<string, unknown>>).find((u) =>
+            (u.columns as string[]).includes(col.name),
+          );
+          if (!match) return col;
+          return {
+            ...col,
+            primitive: (match.primitive as string) ?? col.primitive,
+            semantic: (match.semantic as string) ?? col.semantic,
+            nullable: (match.nullable as boolean | undefined) ?? col.nullable,
+          };
+        });
       return {
         artifact: PipelineArtifactType.DATASET,
         schema: {
@@ -168,9 +168,9 @@ function buildContractFromTransform(
         columns: columnsUnknown
           ? 'unknown'
           : (input.schema.columns as Exclude<typeof input.schema.columns, 'unknown'>).map((col) => ({
-              ...col,
-              name: mapping[col.name] ?? col.name,
-            })),
+            ...col,
+            name: mapping[col.name] ?? col.name,
+          })),
         target: input.schema.target,
       },
       role: input.role,
@@ -191,6 +191,18 @@ function buildContractFromTransform(
   }
 
   return null;
+}
+
+function unwrapDeclared(transform: unknown): unknown {
+  if (
+    typeof transform === 'object' &&
+    transform !== null &&
+    'declared' in transform &&
+    (transform as Record<string, unknown>).declared !== undefined
+  ) {
+    return (transform as Record<string, unknown>).declared;
+  }
+  return transform;
 }
 
 function getFirstDatasetContract(ctx: NodeContext) {

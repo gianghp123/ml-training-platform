@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { BlockCategory } from "src/database/entities/block-category.entity";
 import { Repository } from "typeorm";
+import { paginate, IPaginationOptions } from "nestjs-typeorm-paginate";
 import { CreateBlockCategoryDto, UpdateBlockCategoryDto } from "../dtos/block-category.dto";
 
 @Injectable()
@@ -11,8 +12,17 @@ export class BlockCategoryService {
     private blockCategoryRepository: Repository<BlockCategory>,
   ) { }
 
-  async findAll(): Promise<BlockCategory[]> {
-    return this.blockCategoryRepository.find();
+  async findAll(options: IPaginationOptions) {
+    const { items, meta } = await paginate<BlockCategory>(this.blockCategoryRepository, options);
+    return {
+      data: items,
+      meta: {
+        page: meta.currentPage,
+        limit: meta.itemsPerPage,
+        total: meta.totalItems,
+        totalPages: meta.totalPages,
+      },
+    };
   }
 
   async findOne(id: string): Promise<BlockCategory> {

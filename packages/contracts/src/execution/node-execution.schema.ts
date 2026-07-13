@@ -43,3 +43,6 @@ export const NodeExecutionSchema = z.object({
 export type CreateNodeExecution = z.infer<typeof CreateNodeExecutionSchema>;
 export type UpdateNodeExecution = z.infer<typeof UpdateNodeExecutionSchema>;
 export type NodeExecution = z.infer<typeof NodeExecutionSchema>;
+
+import { createPaginatedResponseSchema } from "../response";
+export const PaginatedNodeExecutionResponseSchema = createPaginatedResponseSchema(NodeExecutionSchema);

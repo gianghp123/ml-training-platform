@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { paginate, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { Artifact } from 'src/database/entities/artifact.entity';
 import { CreateArtifactDto, UpdateArtifactDto } from '../dtos/artifact.dto';
 
@@ -11,8 +12,17 @@ export class ArtifactService {
     private artifactRepository: Repository<Artifact>,
   ) {}
 
-  async findAll(): Promise<Artifact[]> {
-    return this.artifactRepository.find();
+  async findAll(options: IPaginationOptions) {
+    const { items, meta } = await paginate<Artifact>(this.artifactRepository, options);
+    return {
+      data: items,
+      meta: {
+        page: meta.currentPage,
+        limit: meta.itemsPerPage,
+        total: meta.totalItems,
+        totalPages: meta.totalPages,
+      },
+    };
   }
 
   async findOne(id: string): Promise<Artifact> {

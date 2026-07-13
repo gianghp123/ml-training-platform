@@ -4,7 +4,8 @@ export const loadCsvBlock: BlockDefinition = {
   id: 'load-csv',
   version: 1,
   status: 'active',
-  metadata: { name: 'Load CSV', category: 'Data Source' },
+  name: 'Load CSV',
+  categoryId: 'Data Source',
   ports: {
     inputs: [],
     outputs: [{ id: 'dataset', artifact: 'Dataset' }],
@@ -12,7 +13,7 @@ export const loadCsvBlock: BlockDefinition = {
   configSchema: {
     fields: [
       { type: 'FileUpload', id: 'file', accept: ['.csv'] },
-      { type: 'Select', id: 'delimiter', options: [',', ';', '\\t'], default: ',' },
+      { type: 'Select', id: 'delimiter', options: [',', ';', '\t'], default: ',' },
       { type: 'Boolean', id: 'hasHeader', default: true },
     ],
   },
@@ -20,10 +21,13 @@ export const loadCsvBlock: BlockDefinition = {
     rules: [{ op: 'exists', target: '$config.file', severity: 'error', message: 'A CSV file must be uploaded.' }],
   },
   outputTransform: {
-    artifact: 'Dataset',
-    schema: { columns: 'unknown', target: null },
-    role: 'full',
-    task: null,
+    declared: {
+      artifact: 'Dataset',
+      schema: { columns: 'unknown', target: null },
+      role: 'full',
+      task: null,
+    },
+    confirmProvider: 'backend',
   },
 };
 
@@ -31,7 +35,8 @@ export const selectTargetBlock: BlockDefinition = {
   id: 'select-target',
   version: 1,
   status: 'active',
-  metadata: { name: 'Select Target', category: 'Preprocessing' },
+  name: 'Select Target',
+  categoryId: 'Preprocessing',
   ports: {
     inputs: [{ id: 'dataset', artifact: 'Dataset' }],
     outputs: [{ id: 'dataset', artifact: 'Dataset' }],
@@ -54,8 +59,10 @@ export const selectTargetBlock: BlockDefinition = {
     ],
   },
   outputTransform: {
-    copyInput: true,
-    set: { 'schema.target': '$config.targetColumn', task: '$config.task' },
+    declared: {
+      copyInput: true,
+      set: { 'schema.target': '$config.targetColumn', task: '$config.task' },
+    },
   },
 };
 
@@ -63,7 +70,8 @@ export const normalizationBlock: BlockDefinition = {
   id: 'normalization',
   version: 1,
   status: 'active',
-  metadata: { name: 'Normalization', category: 'Preprocessing' },
+  name: 'Normalization',
+  categoryId: 'Preprocessing',
   ports: {
     inputs: [{ id: 'dataset', artifact: 'Dataset' }],
     outputs: [{ id: 'dataset', artifact: 'Dataset' }],
@@ -86,8 +94,10 @@ export const normalizationBlock: BlockDefinition = {
     ],
   },
   outputTransform: {
-    copyInput: true,
-    columnUpdates: [{ columns: '$config.columns', primitive: 'float' }],
+    declared: {
+      copyInput: true,
+      columnUpdates: [{ columns: '$config.columns', primitive: 'float' }],
+    },
   },
 };
 
@@ -95,7 +105,8 @@ export const trainTestSplitBlock: BlockDefinition = {
   id: 'train-test-split',
   version: 1,
   status: 'active',
-  metadata: { name: 'Train/Test Split', category: 'Data Split' },
+  name: 'Train/Test Split',
+  categoryId: 'Data Split',
   ports: {
     inputs: [{ id: 'dataset', artifact: 'Dataset' }],
     outputs: [
@@ -131,7 +142,8 @@ export const randomForestBlock: BlockDefinition = {
   id: 'random-forest',
   version: 1,
   status: 'active',
-  metadata: { name: 'Random Forest', category: 'Model' },
+  name: 'Random Forest',
+  categoryId: 'Model',
   ports: {
     inputs: [{ id: 'dataset', artifact: 'Dataset' }],
     outputs: [{ id: 'model', artifact: 'Model' }],
@@ -160,11 +172,13 @@ export const randomForestBlock: BlockDefinition = {
     ],
   },
   outputTransform: {
-    artifact: 'Model',
-    algorithm: 'RandomForest',
-    task: '$input.dataset.task',
-    featureSchema: '$input.dataset.schema.columns',
-    targetSchema: '$input.dataset.schema.target',
+    declared: {
+      artifact: 'Model',
+      algorithm: 'RandomForest',
+      task: '$input.dataset.task',
+      featureSchema: '$input.dataset.schema.columns',
+      targetSchema: '$input.dataset.schema.target',
+    },
   },
 };
 

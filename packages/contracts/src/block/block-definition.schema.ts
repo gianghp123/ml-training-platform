@@ -27,7 +27,7 @@ export const ConfigSchemaSchema = z.object({
 
 export type ConfigSchema = z.infer<typeof ConfigSchemaSchema>;
 
-export const OutputTransformSchema: z.ZodType<unknown> = z.union([
+const OutputTransformBodySchema: z.ZodType<unknown> = z.union([
   z.object({
     copyInput: z.literal(true),
     columnUpdates: z
@@ -67,6 +67,14 @@ export const OutputTransformSchema: z.ZodType<unknown> = z.union([
   }),
 ]);
 
+export const OutputTransformSchema: z.ZodType<unknown> = z.union([
+  OutputTransformBodySchema,
+  z.object({
+    declared: OutputTransformBodySchema,
+    confirmProvider: z.literal('backend').optional(),
+  }),
+]);
+
 export type OutputTransform = z.infer<typeof OutputTransformSchema>;
 
 export const BlockDefinitionSchema = z.object({
@@ -74,10 +82,8 @@ export const BlockDefinitionSchema = z.object({
   version: z.number().int().positive(),
   status: BlockStatusSchema,
 
-  metadata: z.object({
-    name: z.string(),
-    category: z.string(),
-  }),
+  name: z.string(),
+  categoryId: z.string(),
 
   ports: z.object({
     inputs: z.array(PortSchema),
@@ -92,3 +98,12 @@ export const BlockDefinitionSchema = z.object({
 });
 
 export type BlockDefinition = z.infer<typeof BlockDefinitionSchema>;
+
+export const CreateBlockDefinitionSchema = BlockDefinitionSchema;
+export const UpdateBlockDefinitionSchema = BlockDefinitionSchema.partial();
+
+export type CreateBlockDefinition = z.infer<typeof CreateBlockDefinitionSchema>;
+export type UpdateBlockDefinition = z.infer<typeof UpdateBlockDefinitionSchema>;
+
+import { createPaginatedResponseSchema } from "../response";
+export const PaginatedBlockDefinitionResponseSchema = createPaginatedResponseSchema(BlockDefinitionSchema);

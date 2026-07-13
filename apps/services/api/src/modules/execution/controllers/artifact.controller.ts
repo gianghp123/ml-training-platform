@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { ZodResponse } from "nestjs-zod";
 import { ArtifactService } from '../services/artifact.service';
-import { CreateArtifactDto, UpdateArtifactDto, ArtifactDto } from '../dtos/artifact.dto';
+import { CreateArtifactDto, UpdateArtifactDto, ArtifactDto, PaginatedArtifactResponseDto } from '../dtos/artifact.dto';
 
 @ApiBearerAuth()
 @Controller('artifacts')
@@ -12,9 +12,13 @@ export class ArtifactController {
   ) {}
 
   @Get()
-  @ZodResponse({ status: HttpStatus.OK, type: [ArtifactDto] })
-  async findAll() {
-    return this.artifactService.findAll();
+  @ZodResponse({ status: HttpStatus.OK, type: PaginatedArtifactResponseDto })
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    limit = limit > 100 ? 100 : limit;
+    return this.artifactService.findAll({ page, limit });
   }
 
   @Get(':id')

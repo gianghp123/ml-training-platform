@@ -1,16 +1,16 @@
+import { ArtifactType } from '@training-ml/contracts';
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  ManyToOne,
+  Entity,
   JoinColumn,
+  ManyToOne,
   OneToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
-import { ArtifactType } from '@training-ml/contracts';
-import { WorkflowRun } from './workflow-run.entity';
-import { NodeExecution } from './node-execution.entity';
 import { ModelRegistry } from './model-registry.entity';
+import { NodeExecution } from './node-execution.entity';
+import { WorkflowRun } from './workflow-run.entity';
 
 @Entity('artifacts')
 export class Artifact {

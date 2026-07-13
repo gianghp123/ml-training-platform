@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { ZodResponse } from "nestjs-zod";
 import { NodeExecutionService } from '../services/node-execution.service';
-import { CreateNodeExecutionDto, UpdateNodeExecutionDto, NodeExecutionDto } from '../dtos/node-execution.dto';
+import { CreateNodeExecutionDto, UpdateNodeExecutionDto, NodeExecutionDto, PaginatedNodeExecutionResponseDto } from '../dtos/node-execution.dto';
 
 @ApiBearerAuth()
 @Controller('node-executions')
@@ -12,9 +12,13 @@ export class NodeExecutionController {
   ) {}
 
   @Get()
-  @ZodResponse({ status: HttpStatus.OK, type: [NodeExecutionDto] })
-  async findAll() {
-    return this.nodeExecutionService.findAll();
+  @ZodResponse({ status: HttpStatus.OK, type: PaginatedNodeExecutionResponseDto })
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    limit = limit > 100 ? 100 : limit;
+    return this.nodeExecutionService.findAll({ page, limit });
   }
 
   @Get(':id')

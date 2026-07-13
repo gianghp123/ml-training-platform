@@ -32,16 +32,18 @@ describe('validateGraph', () => {
         ? {
             ...b,
             outputTransform: {
-              artifact: 'Dataset',
-              schema: {
-                columns: [
-                  { name: 'age', primitive: 'int', semantic: 'numeric' },
-                  { name: 'churn', primitive: 'string', semantic: 'categorical' },
-                ],
-                target: null,
+              declared: {
+                artifact: 'Dataset',
+                schema: {
+                  columns: [
+                    { name: 'age', primitive: 'int', semantic: 'numeric' },
+                    { name: 'churn', primitive: 'string', semantic: 'categorical' },
+                  ],
+                  target: null,
+                },
+                role: 'full',
+                task: null,
               },
-              role: 'full',
-              task: null,
             },
           }
         : b,
@@ -54,6 +56,56 @@ describe('validateGraph', () => {
     expect(result.contracts.rf.model).toMatchObject({
       artifact: 'Model',
       algorithm: 'RandomForest',
+      task: 'classification',
+    });
+  });
+
+  it('produces distinct output contracts per port for recursive outputTransform.ports', () => {
+    const graph = {
+      nodes: [
+        { id: 'load', blockId: 'load-csv', blockVersion: 1, config: { file: 'data.csv' } },
+        { id: 'target', blockId: 'select-target', blockVersion: 1, config: { targetColumn: 'churn', task: 'classification' } },
+        { id: 'split', blockId: 'train-test-split', blockVersion: 1, config: { testSize: 0.2 } },
+      ],
+      edges: [
+        { id: 'e1', sourceNodeId: 'load', sourcePortId: 'dataset', targetNodeId: 'target', targetPortId: 'dataset' },
+        { id: 'e2', sourceNodeId: 'target', sourcePortId: 'dataset', targetNodeId: 'split', targetPortId: 'dataset' },
+      ],
+    };
+
+    const catalog = v1Catalog.map((b) =>
+      b.id === 'load-csv'
+        ? {
+            ...b,
+            outputTransform: {
+              declared: {
+                artifact: 'Dataset',
+                schema: {
+                  columns: [
+                    { name: 'age', primitive: 'int', semantic: 'numeric' },
+                    { name: 'churn', primitive: 'string', semantic: 'categorical' },
+                  ],
+                  target: null,
+                },
+                role: 'full',
+                task: null,
+              },
+            },
+          }
+        : b,
+    );
+
+    const result = validateGraph(graph, catalog);
+
+    expect(result.valid).toBe(true);
+    expect(result.contracts.split.train).toMatchObject({
+      artifact: 'Dataset',
+      role: 'train',
+      task: 'classification',
+    });
+    expect(result.contracts.split.test).toMatchObject({
+      artifact: 'Dataset',
+      role: 'test',
       task: 'classification',
     });
   });
@@ -76,16 +128,18 @@ describe('validateGraph', () => {
         ? {
             ...b,
             outputTransform: {
-              artifact: 'Dataset',
-              schema: {
-                columns: [
-                  { name: 'age', primitive: 'int', semantic: 'numeric' },
-                  { name: 'churn', primitive: 'string', semantic: 'categorical' },
-                ],
-                target: null,
+              declared: {
+                artifact: 'Dataset',
+                schema: {
+                  columns: [
+                    { name: 'age', primitive: 'int', semantic: 'numeric' },
+                    { name: 'churn', primitive: 'string', semantic: 'categorical' },
+                  ],
+                  target: null,
+                },
+                role: 'full',
+                task: null,
               },
-              role: 'full',
-              task: null,
             },
           }
         : b,

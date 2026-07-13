@@ -1,9 +1,9 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  Entity,
   OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { BlockDefinition } from './block-definition.entity';
 
@@ -18,6 +18,6 @@ export class BlockCategory {
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @OneToMany(() => BlockDefinition, (definition) => definition.category)
+  @OneToMany(() => BlockDefinition, (blockDef) => blockDef.category)
   blockDefinitions: BlockDefinition[];
 }

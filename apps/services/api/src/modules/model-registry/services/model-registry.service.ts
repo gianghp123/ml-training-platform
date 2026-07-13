@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ModelRegistry } from "src/database/entities/model-registry.entity";
 import { Repository } from "typeorm";
+import { paginate, IPaginationOptions } from "nestjs-typeorm-paginate";
 import { CreateModelRegistryDto, UpdateModelRegistryDto } from "../dtos/model-registry.dto";
 
 @Injectable()
@@ -11,8 +12,17 @@ export class ModelRegistryService {
     private modelRegistryRepository: Repository<ModelRegistry>,
   ) { }
 
-  async findAll(): Promise<ModelRegistry[]> {
-    return this.modelRegistryRepository.find();
+  async findAll(options: IPaginationOptions) {
+    const { items, meta } = await paginate<ModelRegistry>(this.modelRegistryRepository, options);
+    return {
+      data: items,
+      meta: {
+        page: meta.currentPage,
+        limit: meta.itemsPerPage,
+        total: meta.totalItems,
+        totalPages: meta.totalPages,
+      },
+    };
   }
 
   async findOne(id: string): Promise<ModelRegistry> {

@@ -41,3 +41,6 @@ export const DatasetSchema = z.object({
 export type CreateDataset = z.infer<typeof CreateDatasetSchema>;
 export type UpdateDataset = z.infer<typeof UpdateDatasetSchema>;
 export type Dataset = z.infer<typeof DatasetSchema>;
+
+import { createPaginatedResponseSchema } from "../response";
+export const PaginatedDatasetResponseSchema = createPaginatedResponseSchema(DatasetSchema);

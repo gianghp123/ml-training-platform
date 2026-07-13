@@ -1,4 +1,4 @@
-import { PipelineArtifactType, DatasetRole, MlTask } from '@training-ml/contracts';
+import { DatasetRole, MlTask, PipelineArtifactType } from '@training-ml/contracts';
 import { eq } from '../../src/operators/eq';
 import type { NodeContext } from '../../src/types';
 

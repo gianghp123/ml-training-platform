@@ -23,3 +23,6 @@ export const ModelRegistrySchema = z.object({
 export type CreateModelRegistry = z.infer<typeof CreateModelRegistrySchema>;
 export type UpdateModelRegistry = z.infer<typeof UpdateModelRegistrySchema>;
 export type ModelRegistry = z.infer<typeof ModelRegistrySchema>;
+
+import { createPaginatedResponseSchema } from "../response";
+export const PaginatedModelRegistryResponseSchema = createPaginatedResponseSchema(ModelRegistrySchema);

@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from "@nestjs/common";
+import { Body, Controller, DefaultValuePipe, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post, Query } from "@nestjs/common";
 import { ModelRegistryService } from "../services/model-registry.service";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { ZodResponse } from "nestjs-zod";
-import { CreateModelRegistryDto, UpdateModelRegistryDto, ModelRegistryDto } from "../dtos/model-registry.dto";
+import { CreateModelRegistryDto, UpdateModelRegistryDto, ModelRegistryDto, PaginatedModelRegistryResponseDto } from "../dtos/model-registry.dto";
 
 @ApiBearerAuth()
 @Controller('model-registries')
@@ -12,9 +12,13 @@ export class ModelRegistryController {
   ) { }
 
   @Get()
-  @ZodResponse({ status: HttpStatus.OK, type: [ModelRegistryDto] })
-  async findAll() {
-    return this.modelRegistryService.findAll();
+  @ZodResponse({ status: HttpStatus.OK, type: PaginatedModelRegistryResponseDto })
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    limit = limit > 100 ? 100 : limit;
+    return this.modelRegistryService.findAll({ page, limit });
   }
 
   @Get(':id')

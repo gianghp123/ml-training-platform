@@ -13,9 +13,6 @@ export function resolvePath(path: string, ctx: NodeContext): unknown {
   } else if (root === 'input' && parts[1]) {
     value = ctx.inputContracts[parts[1]];
     parts.splice(0, 2);
-  } else if (root === 'inputs' && parts[1]) {
-    value = ctx.inputContracts[parts[1]];
-    parts.splice(0, 2);
   } else {
     return undefined;
   }
