@@ -7,7 +7,7 @@ import { DataTable, type Column } from "@/components/data-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { formatVariant } from "@/features/dataset/utils/dataset.util"
-import { DatasetFormat } from "@/lib/enums"
+import { DatasetFormat } from "@training-ml/contracts"
 import { Dataset } from "@training-ml/contracts"
 import { formatBytes } from "@/lib/utils/storage.utils"
 

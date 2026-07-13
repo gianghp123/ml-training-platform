@@ -18,7 +18,7 @@ import { ZodResponse } from "nestjs-zod";
 import { WorkerService } from '../../services/worker.service';
 import { CreateWorkerDto, UpdateWorkerDto, WorkerDto } from '../../dtos/worker.dto';
 import { Roles } from 'src/modules/auth/decorators/role.decorator';
-import { UserRole } from 'src/libs/enums/user-role.enum';
+import { UserRole } from '@training-ml/contracts';
 
 @ApiTags('Admin-Workers')
 @ApiBearerAuth()

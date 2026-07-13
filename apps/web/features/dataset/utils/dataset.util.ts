@@ -1,4 +1,4 @@
-import { DatasetFormat } from "@/lib/enums";
+import { DatasetFormat } from "@training-ml/contracts";
 
 
 export const formatVariant: Record<DatasetFormat, "default" | "secondary" | "info" | "warning"> = {

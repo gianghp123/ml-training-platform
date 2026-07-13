@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { getAuth } from '@clerk/express';
-import { UserRole } from 'src/libs/enums/user-role.enum';
+import { UserRole } from '@training-ml/contracts';
 
 export const CurrentUser = createParamDecorator(
   (_: unknown, ctx: ExecutionContext) => {

@@ -1,4 +1,4 @@
-import { UserRole } from "../enums/user-role.enum";
+import { UserRole } from "@training-ml/contracts";
 
 declare global {
   interface CustomJwtSessionClaims {

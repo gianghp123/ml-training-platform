@@ -15,7 +15,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { ZodResponse } from "nestjs-zod";
-import { UserRole } from "src/libs/enums/user-role.enum";
+import { UserRole } from "@training-ml/contracts";
 import { Roles } from "src/modules/auth/decorators/role.decorator";
 import { BlockDefinitionDto, CreateBlockDefinitionDto, UpdateBlockDefinitionDto } from "../../dtos/block-definition.dto";
 import { BlockDefinitionService } from "../../services/block-definition.service";

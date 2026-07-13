@@ -1,5 +1,5 @@
 // auth/interfaces/current-user.interface.ts
-import { UserRole } from "src/libs/enums/user-role.enum";
+import { UserRole } from "@training-ml/contracts";
 
 export interface CurrentUser {
   userId: string;

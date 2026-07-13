@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { UserRole } from 'src/libs/enums/user-role.enum';
+import { UserRole } from '@training-ml/contracts';
 
 export const ROLES_KEY = 'roles';
 

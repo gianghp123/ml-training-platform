@@ -6,7 +6,7 @@ import {
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { WorkflowRunStatus } from '../../libs/enums';
+import { WorkflowRunStatus } from '@training-ml/contracts';
 import { WorkflowVersion } from './workflow-version.entity';
 import { Dataset } from './dataset.entity';
 import { NodeExecution } from './node-execution.entity';

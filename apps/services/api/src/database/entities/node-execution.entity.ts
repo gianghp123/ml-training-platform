@@ -7,7 +7,7 @@ import {
   OneToMany,
   Unique,
 } from 'typeorm';
-import { NodeExecutionStatus } from '../../libs/enums';
+import { NodeExecutionStatus } from '@training-ml/contracts';
 import { WorkflowRun } from './workflow-run.entity';
 import { Worker } from './worker.entity';
 import { Artifact } from './artifact.entity';

@@ -5,7 +5,7 @@ import {
   OneToMany,
   Unique,
 } from 'typeorm';
-import { WorkerStatus } from '../../libs/enums';
+import { WorkerStatus } from '@training-ml/contracts';
 import { NodeExecution } from './node-execution.entity';
 
 @Entity('workers')

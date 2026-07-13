@@ -18,7 +18,7 @@ import {
 import { ZodResponse } from "nestjs-zod";
 import { BlockCategoryDto, CreateBlockCategoryDto, UpdateBlockCategoryDto } from "../../dtos/block-category.dto";
 import { Roles } from "src/modules/auth/decorators/role.decorator";
-import { UserRole } from "src/libs/enums/user-role.enum";
+import { UserRole } from "@training-ml/contracts";
 
 @ApiTags('Admin-BlockCategory')
 @ApiBearerAuth()

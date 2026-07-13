@@ -6,7 +6,7 @@ import {
   OneToMany,
   Unique,
 } from 'typeorm';
-import { DatasetFormat } from '../../libs/enums';
+import { DatasetFormat } from '@training-ml/contracts';
 import { WorkflowRun } from './workflow-run.entity';
 
 @Entity('datasets')

@@ -7,7 +7,7 @@ import {
   JoinColumn,
   OneToOne,
 } from 'typeorm';
-import { ArtifactType } from '../../libs/enums';
+import { ArtifactType } from '@training-ml/contracts';
 import { WorkflowRun } from './workflow-run.entity';
 import { NodeExecution } from './node-execution.entity';
 import { ModelRegistry } from './model-registry.entity';
