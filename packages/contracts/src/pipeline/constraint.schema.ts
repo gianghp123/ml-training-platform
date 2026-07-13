@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ValidationSeverity, ValidationSeveritySchema } from './validation-error.schema';
 
 export const ConstraintType = {
   REQUIRED: 'required',
@@ -18,5 +19,20 @@ export const ConstraintSchema = z.object({
 
 export type Constraint = z.infer<typeof ConstraintSchema>;
 
-export const ConstraintSetSchema = z.array(ConstraintSchema);
+export const BaseConstraintRuleSchema = z.object({
+  op: z.string(),
+  message: z.string().optional(),
+  severity: ValidationSeveritySchema.default(ValidationSeverity.ERROR),
+  condition: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const ConstraintRuleSchema = BaseConstraintRuleSchema.and(z.record(z.string(), z.unknown()));
+
+export type ConstraintRule = z.infer<typeof ConstraintRuleSchema>;
+
+export const ConstraintSetSchema = z.object({
+  selectedColumns: z.record(z.string(), z.unknown()).optional(),
+  rules: z.array(z.lazy(() => ConstraintRuleSchema)).optional(),
+});
+
 export type ConstraintSet = z.infer<typeof ConstraintSetSchema>;
