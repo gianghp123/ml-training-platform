@@ -6,6 +6,7 @@ import {
 } from '@training-ml/contracts';
 import type { NodeContext } from '../types';
 import { getDatasetColumns, isDatasetContract } from '../utils/contract-helpers';
+import { resolvePath } from '../operators/_resolve-path';
 
 export function buildOutputContracts(ctx: NodeContext): {
   contracts: Record<string, Contract>;
@@ -76,10 +77,10 @@ function buildContractFromTransform(
     if (artifact === PipelineArtifactType.DATASET) {
       return {
         artifact: PipelineArtifactType.DATASET,
-        schema: { columns: 'unknown', target: null },
-        role: DatasetRole.FULL,
-        task: null,
-      };
+        schema: t.schema !== undefined ? t.schema : { columns: 'unknown' as const, target: null },
+        role: t.role !== undefined ? t.role : DatasetRole.FULL,
+        task: t.task !== undefined ? t.task : null,
+      } as Contract;
     }
   }
 
@@ -117,15 +118,18 @@ function buildContractFromTransform(
 
     if ('set' in t && t.set) {
       const set = t.set as Record<string, unknown>;
-      const task = set['task'] as string | undefined;
-      const target = set['schema.target'] as string | undefined;
+      const resolveSetValue = (val: unknown): unknown =>
+        typeof val === 'string' && val.startsWith('$') ? resolvePath(val, ctx) : val;
+      const task = resolveSetValue(set['task']) as string | undefined;
+      const target = resolveSetValue(set['schema.target']) as string | undefined;
+      const role = resolveSetValue(set['role']) as string | undefined;
       return {
         artifact: PipelineArtifactType.DATASET,
         schema: {
           columns: columnsUnknown ? 'unknown' : input.schema.columns,
           target: target ?? input.schema.target,
         },
-        role: input.role,
+        role: role ?? input.role,
         task: task ?? input.task,
       };
     }
