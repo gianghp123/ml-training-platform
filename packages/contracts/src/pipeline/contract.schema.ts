@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { PipelineArtifactType, PipelineArtifactTypeSchema } from './artifact.schema';
-import { DatasetRole, DatasetRoleSchema } from './dataset-role.schema';
-import { MlTask, MlTaskSchema } from './ml-task.schema';
+import { PipelineArtifactType } from './artifact.schema';
+import { DatasetRoleSchema } from './dataset-role.schema';
+import { MlTaskSchema } from './ml-task.schema';
 import { PrimitiveTypeSchema, SemanticTypeSchema } from './primitive.schema';
 
 export const ColumnSchema = z.object({
