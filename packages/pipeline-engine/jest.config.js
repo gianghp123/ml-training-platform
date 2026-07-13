@@ -4,8 +4,5 @@ module.exports = {
   testEnvironment: 'node',
   rootDir: '.',
   testMatch: ['**/tests/**/*.test.ts'],
-  transform: {
-    '^.+\\.ts$': 'ts-jest',
-  },
   moduleFileExtensions: ['ts', 'js', 'json'],
 };
