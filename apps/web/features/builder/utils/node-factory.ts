@@ -1,4 +1,4 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition } from '@training-ml/contracts';
 import type { Node, XYPosition } from '@xyflow/react';
 import { ALL_BLOCKS } from '../blocks';
 import type { SocketDefinition } from '../blocks/socket-types';

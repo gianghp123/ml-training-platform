@@ -38,7 +38,7 @@ import {
 } from "@/features/dataset/schema/dataset-files"
 import { fetchDatasetFiles } from "@/features/dataset/services/mock-s3"
 import { formatVariant } from "@/features/dataset/utils/dataset.util"
-import type { Dataset } from "@/lib/models"
+import type { Dataset } from "@training-ml/contracts"
 import { formatBytes } from "@/lib/utils/storage.utils"
 
 interface DatasetFileViewerProps {

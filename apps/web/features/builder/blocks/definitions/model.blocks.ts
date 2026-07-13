@@ -1,4 +1,4 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition } from '@training-ml/contracts';
 import type { BlockConfigField } from '../socket-types';
 
 export const TrainModelBlock: BlockDefinition = {
@@ -7,6 +7,8 @@ export const TrainModelBlock: BlockDefinition = {
   name: 'Train Model',
   categoryId: 'model',
   description: 'Train a model on a dataset',
+  dockerImage: '',
+  version: '1.0.0',
   configSchema: {
     epochs: { type: 'number', label: 'Epochs', default: 10, validation: { min: 1, max: 1000, required: true } } satisfies BlockConfigField,
     learningRate: { type: 'number', label: 'Learning Rate', default: 0.001, validation: { min: 0.0001, max: 1, step: 0.0001 } } satisfies BlockConfigField,
@@ -29,6 +31,8 @@ export const FineTuneBlock: BlockDefinition = {
   name: 'Fine Tune',
   categoryId: 'model',
   description: 'Fine-tune a pre-trained model',
+  dockerImage: '',
+  version: '1.0.0',
   configSchema: {
     epochs: { type: 'number', label: 'Epochs', default: 5, validation: { min: 1, max: 100 } } satisfies BlockConfigField,
     learningRate: { type: 'number', label: 'Learning Rate', default: 0.0001, validation: { min: 0.00001, max: 0.1, step: 0.00001 } } satisfies BlockConfigField,

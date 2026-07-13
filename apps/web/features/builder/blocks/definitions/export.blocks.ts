@@ -1,4 +1,4 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition } from '@training-ml/contracts';
 import type { BlockConfigField } from '../socket-types';
 
 export const SaveModelBlock: BlockDefinition = {
@@ -7,6 +7,8 @@ export const SaveModelBlock: BlockDefinition = {
   name: 'Save Model',
   categoryId: 'export',
   description: 'Save trained model to registry',
+  dockerImage: '',
+  version: '1.0.0',
   configSchema: {
     name: { type: 'text', label: 'Model Name', default: '', validation: { required: true } } satisfies BlockConfigField,
     version: { type: 'text', label: 'Version', default: '1.0.0', validation: { required: true } } satisfies BlockConfigField,
@@ -28,6 +30,8 @@ export const ExportDatasetBlock: BlockDefinition = {
   name: 'Export Dataset',
   categoryId: 'export',
   description: 'Export processed dataset',
+  dockerImage: '',
+  version: '1.0.0',
   configSchema: {
     format: {
       type: 'radio',
@@ -55,6 +59,8 @@ export const LogMetricsBlock: BlockDefinition = {
   name: 'Log Metrics',
   categoryId: 'export',
   description: 'Log metrics to dashboard',
+  dockerImage: '',
+  version: '1.0.0',
   configSchema: {} as Record<string, unknown>,
   inputSchema: {
     entries: [{ id: 'metrics', type: 'metrics', label: 'Metrics' }],

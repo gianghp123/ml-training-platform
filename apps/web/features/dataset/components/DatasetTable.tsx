@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { formatVariant } from "@/features/dataset/utils/dataset.util"
 import { DatasetFormat } from "@/lib/enums"
-import { Dataset } from "@/lib/models/dataset.interface"
+import { Dataset } from "@training-ml/contracts"
 import { formatBytes } from "@/lib/utils/storage.utils"
 
 import { DatasetFileViewer } from "@/features/dataset/components/DatasetFileViewer"

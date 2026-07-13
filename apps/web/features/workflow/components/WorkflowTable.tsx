@@ -5,7 +5,7 @@ import Link from "next/link"
 
 import { DataTable, type Column } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
-import { Workflow } from "@/lib/models/workflow.interface"
+import { Workflow } from "@training-ml/contracts"
 import { ROUTES } from "@/lib/route"
 
 const MOCK_WORKFLOWS: Workflow[] = Array.from({ length: 42 }, (_, i) => {

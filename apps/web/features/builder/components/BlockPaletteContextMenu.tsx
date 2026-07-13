@@ -3,7 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { BlockCategory, BlockDefinition } from '@/lib/models';
+import type { BlockCategory, BlockDefinition } from '@training-ml/contracts';
 import { GripVertical, Group, Search } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CATEGORY_COLORS } from '../blocks';

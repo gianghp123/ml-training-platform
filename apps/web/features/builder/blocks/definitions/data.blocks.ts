@@ -1,4 +1,4 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition } from '@training-ml/contracts';
 import type { BlockConfigField } from '../socket-types';
 
 export const LoadDatasetBlock: BlockDefinition = {
@@ -7,6 +7,8 @@ export const LoadDatasetBlock: BlockDefinition = {
   name: 'Load Dataset',
   categoryId: 'data',
   description: 'Load a dataset from storage',
+  dockerImage: '',
+  version: '1.0.0',
   configSchema: {
     datasetId: {
       type: 'select',
@@ -33,6 +35,8 @@ export const SplitDatasetBlock: BlockDefinition = {
   name: 'Split Dataset',
   categoryId: 'data',
   description: 'Split dataset into train/validation/test',
+  dockerImage: '',
+  version: '1.0.0',
   configSchema: {
     trainRatio: { type: 'number', label: 'Train Ratio', default: 0.7, validation: { min: 0, max: 1, step: 0.01 } } satisfies BlockConfigField,
     valRatio: { type: 'number', label: 'Val Ratio', default: 0.15, validation: { min: 0, max: 1, step: 0.01 } } satisfies BlockConfigField,

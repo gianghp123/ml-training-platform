@@ -1,4 +1,4 @@
-import type { BlockDefinition, BlockCategory } from '@/lib/models';
+import type { BlockDefinition, BlockCategory } from '@training-ml/contracts';
 import { LoadDatasetBlock, SplitDatasetBlock } from './definitions/data.blocks';
 import { NormalizeBlock, AugmentBlock, FilterBlock } from './definitions/transform.blocks';
 import { TrainModelBlock, FineTuneBlock } from './definitions/model.blocks';

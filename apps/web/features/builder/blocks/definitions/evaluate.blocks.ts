@@ -1,4 +1,4 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition } from '@training-ml/contracts';
 import type { BlockConfigField } from '../socket-types';
 
 export const EvaluateBlock: BlockDefinition = {
@@ -7,6 +7,8 @@ export const EvaluateBlock: BlockDefinition = {
   name: 'Evaluate',
   categoryId: 'evaluate',
   description: 'Evaluate model performance on a dataset',
+  dockerImage: '',
+  version: '1.0.0',
   configSchema: {
     metrics: {
       type: 'checkbox',
@@ -38,6 +40,8 @@ export const CrossValidateBlock: BlockDefinition = {
   name: 'Cross Validate',
   categoryId: 'evaluate',
   description: 'K-fold cross validation',
+  dockerImage: '',
+  version: '1.0.0',
   configSchema: {
     folds: { type: 'number', label: 'Folds', default: 5, validation: { min: 2, max: 20, required: true } } satisfies BlockConfigField,
     shuffle: { type: 'switch', label: 'Shuffle', default: true } satisfies BlockConfigField,

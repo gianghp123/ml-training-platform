@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import type { BlockDefinition, BlockCategory } from '@/lib/models';
+import type { BlockDefinition, BlockCategory } from '@training-ml/contracts';
 import { ALL_BLOCKS, BLOCK_CATEGORIES } from '../blocks';
 
 interface UseBlockPaletteReturn {
