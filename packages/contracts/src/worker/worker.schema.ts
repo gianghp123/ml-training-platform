@@ -1,14 +1,20 @@
 import { z } from 'zod';
 
-export enum WorkerStatus {
-  IDLE = 'idle',
-  BUSY = 'busy',
-  OFFLINE = 'offline',
-}
+export const WorkerStatus = {
+  IDLE: 'idle',
+  BUSY: 'busy',
+  OFFLINE: 'offline',
+} as const;
+
+export const WorkerStatusSchema = z.enum(
+  Object.values(WorkerStatus) as [string, ...string[]],
+);
+
+export type WorkerStatus = z.infer<typeof WorkerStatusSchema>;
 
 export const CreateWorkerSchema = z.object({
   hostname: z.string().min(1),
-  status: z.nativeEnum(WorkerStatus).optional(),
+  status: WorkerStatusSchema.optional(),
   capability: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -17,7 +23,7 @@ export const UpdateWorkerSchema = CreateWorkerSchema.partial();
 export const WorkerSchema = z.object({
   id: z.string().uuid(),
   hostname: z.string(),
-  status: z.nativeEnum(WorkerStatus),
+  status: WorkerStatusSchema,
   lastHeartbeat: z.date(),
   capability: z.record(z.string(), z.unknown()),
 });

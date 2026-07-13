@@ -1,17 +1,23 @@
 import { z } from 'zod';
 
-export enum DatasetFormat {
-  CSV = 'csv',
-  JSON = 'json',
-  PARQUET = 'parquet',
-  AVRO = 'avro',
-}
+export const DatasetFormat = {
+  CSV: 'csv',
+  JSON: 'json',
+  PARQUET: 'parquet',
+  AVRO: 'avro',
+} as const;
+
+export const DatasetFormatSchema = z.enum(
+  Object.values(DatasetFormat) as [string, ...string[]],
+);
+
+export type DatasetFormat = z.infer<typeof DatasetFormatSchema>;
 
 export const CreateDatasetSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   storageUri: z.string().min(1),
-  format: z.nativeEnum(DatasetFormat),
+  format: DatasetFormatSchema,
   size: z.number(),
   checksum: z.string().optional(),
   version: z.number().optional(),
@@ -25,7 +31,7 @@ export const DatasetSchema = z.object({
   name: z.string(),
   description: z.string(),
   storageUri: z.string(),
-  format: z.nativeEnum(DatasetFormat),
+  format: DatasetFormatSchema,
   size: z.number(),
   checksum: z.string(),
   version: z.number(),

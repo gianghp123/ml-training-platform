@@ -1,19 +1,25 @@
 import { z } from 'zod';
 import { UuidSchema } from '../shared';
 
-export enum ArtifactType {
-  MODEL = 'model',
-  DATASET = 'dataset',
-  LOG = 'log',
-  METRIC = 'metric',
-  CHECKPOINT = 'checkpoint',
-}
+export const ArtifactType = {
+  MODEL: 'model',
+  DATASET: 'dataset',
+  LOG: 'log',
+  METRIC: 'metric',
+  CHECKPOINT: 'checkpoint',
+} as const;
+
+export const ArtifactTypeSchema = z.enum(
+  Object.values(ArtifactType) as [string, ...string[]],
+);
+
+export type ArtifactType = z.infer<typeof ArtifactTypeSchema>;
 
 export const CreateArtifactSchema = z.object({
   workflowRunId: UuidSchema,
   nodeExecutionId: UuidSchema,
   name: z.string().min(1),
-  artifactType: z.nativeEnum(ArtifactType),
+  artifactType: ArtifactTypeSchema,
   mimeType: z.string().min(1),
   storageUri: z.string().min(1),
   metadata: z.record(z.string(), z.unknown()).optional(),
@@ -26,7 +32,7 @@ export const ArtifactSchema = z.object({
   workflowRunId: z.string(),
   nodeExecutionId: z.string(),
   name: z.string(),
-  artifactType: z.nativeEnum(ArtifactType),
+  artifactType: ArtifactTypeSchema,
   mimeType: z.string(),
   storageUri: z.string(),
   metadata: z.record(z.string(), z.unknown()),

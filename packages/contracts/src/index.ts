@@ -5,3 +5,4 @@ export * from './model-registry';
 export * from './dataset';
 export * from './workflow';
 export * from './execution';
+export * from './auth';

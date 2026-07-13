@@ -1,19 +1,25 @@
 import { z } from 'zod';
 import { UuidSchema } from '../shared';
 
-export enum NodeExecutionStatus {
-  PENDING = 'pending',
-  RUNNING = 'running',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  SKIPPED = 'skipped',
-}
+export const NodeExecutionStatus = {
+  PENDING: 'pending',
+  RUNNING: 'running',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  SKIPPED: 'skipped',
+} as const;
+
+export const NodeExecutionStatusSchema = z.enum(
+  Object.values(NodeExecutionStatus) as [string, ...string[]],
+);
+
+export type NodeExecutionStatus = z.infer<typeof NodeExecutionStatusSchema>;
 
 export const CreateNodeExecutionSchema = z.object({
   workflowRunId: UuidSchema,
   nodeId: z.string().min(1),
   nodeType: z.string().min(1),
-  status: z.nativeEnum(NodeExecutionStatus).optional(),
+  status: NodeExecutionStatusSchema.optional(),
   workerId: UuidSchema.optional(),
   retryCount: z.number().int().optional(),
   startedAt: z.coerce.date().optional(),
@@ -27,7 +33,7 @@ export const NodeExecutionSchema = z.object({
   workflowRunId: z.string(),
   nodeId: z.string(),
   nodeType: z.string(),
-  status: z.nativeEnum(NodeExecutionStatus),
+  status: NodeExecutionStatusSchema,
   workerId: z.string(),
   retryCount: z.number(),
   startedAt: z.date(),
