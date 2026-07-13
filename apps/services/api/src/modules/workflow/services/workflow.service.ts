@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Workflow } from "src/database/entities/workflow.entity";
 import { Repository } from "typeorm";
+import { paginate, IPaginationOptions } from "nestjs-typeorm-paginate";
 import { CreateWorkflowDto, UpdateWorkflowDto } from "../dtos/workflow.dto";
 
 @Injectable()
@@ -11,8 +12,17 @@ export class WorkflowService {
     private workflowRepository: Repository<Workflow>,
   ) { }
 
-  async findAll(): Promise<Workflow[]> {
-    return this.workflowRepository.find();
+  async findAll(options: IPaginationOptions) {
+    const { items, meta } = await paginate<Workflow>(this.workflowRepository, options);
+    return {
+      data: items,
+      meta: {
+        page: meta.currentPage,
+        limit: meta.itemsPerPage,
+        total: meta.totalItems,
+        totalPages: meta.totalPages,
+      },
+    };
   }
 
   async findOne(id: string): Promise<Workflow> {

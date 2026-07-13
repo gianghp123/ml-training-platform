@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from "@nestjs/common";
+import { Body, Controller, DefaultValuePipe, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post, Query } from "@nestjs/common";
 import { WorkflowService } from "../services/workflow.service";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { ZodResponse } from "nestjs-zod";
-import { CreateWorkflowDto, UpdateWorkflowDto, WorkflowDto } from "../dtos/workflow.dto";
+import { CreateWorkflowDto, UpdateWorkflowDto, WorkflowDto, PaginatedWorkflowResponseDto } from "../dtos/workflow.dto";
 
 @ApiBearerAuth()
 @Controller('workflows')
@@ -12,9 +12,13 @@ export class WorkflowController {
   ) { }
 
   @Get()
-  @ZodResponse({ status: HttpStatus.OK, type: [WorkflowDto] })
-  async findAll() {
-    return this.workflowService.findAll();
+  @ZodResponse({ status: HttpStatus.OK, type: PaginatedWorkflowResponseDto })
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    limit = limit > 100 ? 100 : limit;
+    return this.workflowService.findAll({ page, limit });
   }
 
   @Get(':id')

@@ -1,14 +1,17 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -17,7 +20,7 @@ import {
 import { ZodResponse } from "nestjs-zod";
 import { UserRole } from "@training-ml/contracts";
 import { Roles } from "src/modules/auth/decorators/role.decorator";
-import { BlockDefinitionDto, CreateBlockDefinitionDto, UpdateBlockDefinitionDto } from "../../dtos/block-definition.dto";
+import { BlockDefinitionDto, CreateBlockDefinitionDto, UpdateBlockDefinitionDto, PaginatedBlockDefinitionResponseDto } from "../../dtos/block-definition.dto";
 import { BlockDefinitionService } from "../../services/block-definition.service";
 
 @ApiTags('Admin-BlockDefinition')
@@ -30,9 +33,13 @@ export class BlockDefinitionAdminController {
   ) { }
 
   @Get()
-  @ZodResponse({ status: HttpStatus.OK, type: [BlockDefinitionDto] })
-  async findAll() {
-    return this.blockDefinitionService.findAll();
+  @ZodResponse({ status: HttpStatus.OK, type: PaginatedBlockDefinitionResponseDto })
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    limit = limit > 100 ? 100 : limit;
+    return this.blockDefinitionService.findAll({ page, limit });
   }
 
   @Get(':id')

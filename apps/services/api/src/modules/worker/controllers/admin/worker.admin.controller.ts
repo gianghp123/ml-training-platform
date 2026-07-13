@@ -1,14 +1,17 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -16,7 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { ZodResponse } from "nestjs-zod";
 import { WorkerService } from '../../services/worker.service';
-import { CreateWorkerDto, UpdateWorkerDto, WorkerDto } from '../../dtos/worker.dto';
+import { CreateWorkerDto, UpdateWorkerDto, WorkerDto, PaginatedWorkerResponseDto } from '../../dtos/worker.dto';
 import { Roles } from 'src/modules/auth/decorators/role.decorator';
 import { UserRole } from '@training-ml/contracts';
 
@@ -30,9 +33,13 @@ export class WorkerAdminController {
   ) {}
 
   @Get()
-  @ZodResponse({ status: HttpStatus.OK, type: [WorkerDto] })
-  async findAll() {
-    return this.workerService.findAll();
+  @ZodResponse({ status: HttpStatus.OK, type: PaginatedWorkerResponseDto })
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    limit = limit > 100 ? 100 : limit;
+    return this.workerService.findAll({ page, limit });
   }
 
   @Get(':id')

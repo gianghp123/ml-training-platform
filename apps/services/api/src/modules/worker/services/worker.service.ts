@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { paginate, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { Worker } from 'src/database/entities/worker.entity';
 import { CreateWorkerDto, UpdateWorkerDto } from '../dtos/worker.dto';
 
@@ -11,8 +12,17 @@ export class WorkerService {
     private workerRepository: Repository<Worker>,
   ) {}
 
-  async findAll(): Promise<Worker[]> {
-    return this.workerRepository.find();
+  async findAll(options: IPaginationOptions) {
+    const { items, meta } = await paginate<Worker>(this.workerRepository, options);
+    return {
+      data: items,
+      meta: {
+        page: meta.currentPage,
+        limit: meta.itemsPerPage,
+        total: meta.totalItems,
+        totalPages: meta.totalPages,
+      },
+    };
   }
 
   async findOne(id: string): Promise<Worker> {

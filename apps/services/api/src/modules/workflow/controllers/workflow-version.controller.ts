@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from "@nestjs/common";
+import { Body, Controller, DefaultValuePipe, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post, Query } from "@nestjs/common";
 import { WorkflowVersionService } from "../services/workflow-version.service";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { ZodResponse } from "nestjs-zod";
-import { CreateWorkflowVersionDto, UpdateWorkflowVersionDto, WorkflowVersionDto } from "../dtos/workflow-version.dto";
+import { CreateWorkflowVersionDto, UpdateWorkflowVersionDto, WorkflowVersionDto, PaginatedWorkflowVersionResponseDto } from "../dtos/workflow-version.dto";
 
 @ApiBearerAuth()
 @Controller('workflow-versions')
@@ -12,9 +12,13 @@ export class WorkflowVersionController {
   ) { }
 
   @Get()
-  @ZodResponse({ status: HttpStatus.OK, type: [WorkflowVersionDto] })
-  async findAll() {
-    return this.workflowVersionService.findAll();
+  @ZodResponse({ status: HttpStatus.OK, type: PaginatedWorkflowVersionResponseDto })
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    limit = limit > 100 ? 100 : limit;
+    return this.workflowVersionService.findAll({ page, limit });
   }
 
   @Get(':id')
