@@ -17,3 +17,6 @@ export const ConstraintSchema = z.object({
 });
 
 export type Constraint = z.infer<typeof ConstraintSchema>;
+
+export const ConstraintSetSchema = z.array(ConstraintSchema);
+export type ConstraintSet = z.infer<typeof ConstraintSetSchema>;
