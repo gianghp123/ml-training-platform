@@ -20,7 +20,8 @@
     "migration:generate": "typeorm-ts-node-commonjs migration:generate -d ./src/configs/typeorm.config.ts",
     "migration:create": "typeorm migration:create",
     "migration:run": "typeorm migration:run -d ./dist/configs/typeorm.config.js",
-    "migration:revert": "typeorm migration:revert -d ./dist/configs/typeorm.config.js"
+    "migration:revert": "typeorm migration:revert -d ./dist/configs/typeorm.config.js",
+    "check-types": "tsc --noEmit"
   },
   "engines": {
     "npm": ">=10.0.0",

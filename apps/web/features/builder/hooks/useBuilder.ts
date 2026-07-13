@@ -62,7 +62,7 @@ interface UseBuilderReturn {
   setWorkflowName: (name: string) => void;
   saveWorkflow: () => void;
   loadWorkflow: () => boolean;
-  hasSavedWorkflow: boolean;
+  hasSavedWorkflow: () => boolean;
   palettePosition: XYPosition | null;
   setPalettePosition: (pos: XYPosition | null) => void;
   edgeStyle: EdgeStyle;
@@ -249,7 +249,7 @@ export function useBuilder(): UseBuilderReturn {
     setWorkflowName,
     saveWorkflow,
     loadWorkflow: loadWorkflowFn,
-    hasSavedWorkflow: hasSavedCheck(),
+    hasSavedWorkflow: hasSavedCheck,
     palettePosition,
     setPalettePosition,
     edgeStyle,

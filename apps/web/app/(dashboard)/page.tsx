@@ -5,7 +5,17 @@ import { Button } from "@/components/ui/button"
 import { WorkflowTable } from "@/features/workflow/components/WorkflowTable"
 import { ROUTES } from "@/lib/route"
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    page?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const pageSize = 10;
+
   return (
     <PageContainer
       title="Workflows"
@@ -18,7 +28,7 @@ export default function Home() {
         </Button>
       }
     >
-      <WorkflowTable />
+      <WorkflowTable page={page} pageSize={pageSize} />
     </PageContainer>
   )
 }

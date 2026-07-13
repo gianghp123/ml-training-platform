@@ -31,16 +31,17 @@ interface UseWorkflowPersistenceReturn {
 }
 
 export function useWorkflowPersistence(): UseWorkflowPersistenceReturn {
-  const saveWorkflow = useCallback(
-    (name: string, nodes: Node[], edges: Edge[]) => {
-      const graph = serializeGraph(nodes, edges);
-      const data = { name, graph, savedAt: new Date().toISOString() };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    },
-    []
-  );
+  const saveWorkflow = useCallback((name: string, nodes: Node[], edges: Edge[]) => {
+    if (typeof window === "undefined") return;
+
+    const graph = serializeGraph(nodes, edges);
+    const data = { name, graph, savedAt: new Date().toISOString() };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }, []);
 
   const loadWorkflow = useCallback(() => {
+    if (typeof window === "undefined") return null;
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     try {
@@ -57,6 +58,7 @@ export function useWorkflowPersistence(): UseWorkflowPersistenceReturn {
   }, []);
 
   const hasSavedWorkflow = useCallback(() => {
+    if (typeof window === "undefined") return false;
     return localStorage.getItem(STORAGE_KEY) !== null;
   }, []);
 

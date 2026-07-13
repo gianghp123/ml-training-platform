@@ -23,9 +23,9 @@ import { WorkflowToolbar } from './WorkflowToolbar';
 
 import { BuilderContext, type BuilderContextValue } from '../contexts/builder.context';
 
-import PipelineEdge from './edges/PipelineEdge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Ungroup, Pause, Play } from 'lucide-react';
+import { Pause, Play, Ungroup } from 'lucide-react';
+import PipelineEdge from './edges/PipelineEdge';
 
 const nodeTypes = {
   block: BaseNode,
@@ -122,8 +122,8 @@ export function BuilderCanvas() {
         workflowName={builder.workflowName}
         onWorkflowNameChange={builder.setWorkflowName}
         onSave={builder.saveWorkflow}
-        onRun={() => {}}
-        hasSavedWorkflow={builder.hasSavedWorkflow}
+        onRun={() => { }}
+        hasSavedWorkflow={builder.hasSavedWorkflow()}
         onLoad={builder.loadWorkflow}
         edgeStyle={builder.edgeStyle}
         onEdgeStyleChange={builder.setEdgeStyle}

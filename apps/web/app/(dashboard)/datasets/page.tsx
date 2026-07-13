@@ -2,7 +2,17 @@ import { PageContainer } from "@/components/layouts/PageContainer";
 import { Button } from "@/components/ui/button";
 import { DatasetTable } from "@/features/dataset/components/DatasetTable";
 
-export default function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    page?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const pageSize = 10;
+
   return <PageContainer
     title="Datasets"
     description="Manage datasets used for training and evaluation."
@@ -12,6 +22,6 @@ export default function Page() {
       </Button>
     }
   >
-    <DatasetTable />
+    <DatasetTable page={page} pageSize={pageSize} />
   </PageContainer>
 }

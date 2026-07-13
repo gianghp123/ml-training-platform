@@ -10,7 +10,8 @@
     "test": "node --experimental-strip-types --test components/**/*.test.ts",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.12",

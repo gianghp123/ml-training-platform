@@ -2,7 +2,6 @@
 
 import { Play } from "lucide-react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
 
 import { DataTable, type Column } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
@@ -37,10 +36,7 @@ const MOCK_WORKFLOWS: Workflow[] = Array.from({ length: 42 }, (_, i) => {
   }
 })
 
-export function WorkflowTable() {
-  const searchParams = useSearchParams()
-  const page = Number(searchParams.get("page")) || 1
-  const pageSize = Number(searchParams.get("pageSize")) || 10
+export function WorkflowTable({ page, pageSize }: { page: number; pageSize: number }) {
   const start = (page - 1) * pageSize
   const pagedData = MOCK_WORKFLOWS.slice(start, start + pageSize)
 

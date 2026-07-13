@@ -1,7 +1,6 @@
 "use client"
 
 import { FolderTree } from "lucide-react"
-import { useSearchParams } from "next/navigation"
 import { useState } from "react"
 
 import { DataTable, type Column } from "@/components/data-table"
@@ -39,10 +38,7 @@ const MOCK_DATASETS: Dataset[] = Array.from({ length: 42 }, (_, i) => ({
   userId: "user_0001",
 }))
 
-export function DatasetTable() {
-  const searchParams = useSearchParams()
-  const page = Number(searchParams.get("page")) || 1
-  const pageSize = Number(searchParams.get("pageSize")) || 10
+export function DatasetTable({ page, pageSize }: { page: number; pageSize: number }) {
   const start = (page - 1) * pageSize
   const pagedData = MOCK_DATASETS.slice(start, start + pageSize)
 
