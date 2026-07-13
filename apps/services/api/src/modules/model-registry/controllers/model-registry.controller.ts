@@ -1,48 +1,42 @@
-import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, SerializeOptions, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from "@nestjs/common";
 import { ModelRegistryService } from "../services/model-registry.service";
-import { ApiBearerAuth, ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse } from "@nestjs/swagger";
-import { ModelRegistryDTO } from "../dtos/responses/model-registry.response";
-import { CreateModelRegistryDto } from "../dtos/requests/create-model-registry.dto";
-import { UpdateModelRegistryDto } from "../dtos/requests/update-model-registry.dto";
+import { ApiBearerAuth } from "@nestjs/swagger";
+import { ZodResponse } from "nestjs-zod";
+import { CreateModelRegistryDto, UpdateModelRegistryDto, ModelRegistryDto } from "../dtos/model-registry.dto";
 
 @ApiBearerAuth()
 @Controller('model-registries')
-@UseInterceptors(ClassSerializerInterceptor)
 export class ModelRegistryController {
   constructor(
     private readonly modelRegistryService: ModelRegistryService
   ) { }
 
   @Get()
-  @SerializeOptions({ type: ModelRegistryDTO })
-  @ApiOkResponse({ type: ModelRegistryDTO, isArray: true })
+  @ZodResponse({ status: HttpStatus.OK, type: [ModelRegistryDto] })
   async findAll() {
     return this.modelRegistryService.findAll();
   }
 
   @Get(':id')
-  @SerializeOptions({ type: ModelRegistryDTO })
-  @ApiOkResponse({ type: ModelRegistryDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: ModelRegistryDto })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.modelRegistryService.findOne(id);
   }
 
   @Post()
-  @SerializeOptions({ type: ModelRegistryDTO })
-  @ApiCreatedResponse({ type: ModelRegistryDTO })
+  @ZodResponse({ status: HttpStatus.CREATED, type: ModelRegistryDto })
   async create(@Body() dto: CreateModelRegistryDto) {
     return this.modelRegistryService.create(dto);
   }
 
   @Patch(':id')
-  @SerializeOptions({ type: ModelRegistryDTO })
-  @ApiOkResponse({ type: ModelRegistryDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: ModelRegistryDto })
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateModelRegistryDto) {
     return this.modelRegistryService.update(id, dto);
   }
 
   @Delete(':id')
-  @ApiNoContentResponse()
+  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.modelRegistryService.remove(id);
   }

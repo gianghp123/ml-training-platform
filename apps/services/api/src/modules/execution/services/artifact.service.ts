@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Artifact } from 'src/database/entities/artifact.entity';
-import { CreateArtifactDto } from '../dtos/requests/create-artifact.dto';
-import { UpdateArtifactDto } from '../dtos/requests/update-artifact.dto';
+import { CreateArtifactDto, UpdateArtifactDto } from '../dtos/artifact.dto';
 
 @Injectable()
 export class ArtifactService {

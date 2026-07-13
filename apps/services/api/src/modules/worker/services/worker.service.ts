@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Worker } from 'src/database/entities/worker.entity';
-import { CreateWorkerDto } from '../dtos/requests/create-worker.dto';
-import { UpdateWorkerDto } from '../dtos/requests/update-worker.dto';
+import { CreateWorkerDto, UpdateWorkerDto } from '../dtos/worker.dto';
 
 @Injectable()
 export class WorkerService {

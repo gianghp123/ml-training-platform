@@ -1,34 +1,30 @@
 import {
-  ClassSerializerInterceptor,
   Controller,
   Get,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
-  SerializeOptions,
-  UseInterceptors,
 } from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
+import { ZodResponse } from "nestjs-zod";
+import { BlockDefinitionDto } from "../dtos/block-definition.dto";
 import { BlockDefinitionService } from "../services/block-definition.service";
-import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
-import { BlockDefinitionDTO } from "../dtos/responses/block-definition.response";
 
 @ApiTags('BlockDefinition')
 @Controller('block-definitions')
-@UseInterceptors(ClassSerializerInterceptor)
 export class BlockDefinitionController {
   constructor(
     private readonly blockDefinitionService: BlockDefinitionService,
-  ) {}
+  ) { }
 
   @Get()
-  @SerializeOptions({ type: BlockDefinitionDTO })
-  @ApiOkResponse({ type: BlockDefinitionDTO, isArray: true })
+  @ZodResponse({ status: HttpStatus.OK, type: [BlockDefinitionDto] })
   async findAll() {
     return this.blockDefinitionService.findAll();
   }
 
   @Get(':id')
-  @SerializeOptions({ type: BlockDefinitionDTO })
-  @ApiOkResponse({ type: BlockDefinitionDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: BlockDefinitionDto })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.blockDefinitionService.findOne(id);
   }

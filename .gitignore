@@ -3,3 +3,7 @@ superpowers
 system-design
 .turbo
 node_modules
+dist
+.env
+.env.local
+.env.prod

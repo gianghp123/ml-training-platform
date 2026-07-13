@@ -18,5 +18,8 @@
     "apps/*",
     "apps/services/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "nestjs-zod": "^5.4.0"
+  }
 }

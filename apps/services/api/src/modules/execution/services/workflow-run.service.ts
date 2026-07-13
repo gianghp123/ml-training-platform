@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WorkflowRun } from 'src/database/entities/workflow-run.entity';
-import { CreateWorkflowRunDto } from '../dtos/requests/create-workflow-run.dto';
-import { UpdateWorkflowRunDto } from '../dtos/requests/update-workflow-run.dto';
+import { CreateWorkflowRunDto, UpdateWorkflowRunDto } from '../dtos/workflow-run.dto';
 
 @Injectable()
 export class WorkflowRunService {

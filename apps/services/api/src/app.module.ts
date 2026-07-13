@@ -11,9 +11,10 @@ import { WorkerModule } from './modules/worker/worker.module';
 import { ModelRegistryModule } from './modules/model-registry/model-registry.module';
 import { WorkflowModule } from './modules/workflow/workflow.module';
 import { ExecutionModule } from './modules/execution/execution.module';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClerkAuthGuard } from './modules/auth/guards/clerk-auth.guard';
 import { RolesGuard } from './modules/auth/guards/role.guard';
+import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
 
 @Module({
   imports: [
@@ -56,7 +57,15 @@ import { RolesGuard } from './modules/auth/guards/role.guard';
     {
       provide: APP_GUARD,
       useClass: RolesGuard
-    }
+    },
+    {
+      provide: APP_PIPE,
+      useClass: ZodValidationPipe,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ZodSerializerInterceptor,
+    },
   ],
 })
 export class AppModule { }

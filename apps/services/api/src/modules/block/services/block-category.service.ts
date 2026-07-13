@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { BlockCategory } from "src/database/entities/block-category.entity";
 import { Repository } from "typeorm";
-import { CreateBlockCategoryDto } from "../dtos/requests/create-block-category.dto";
-import { UpdateBlockCategoryDto } from "../dtos/requests/update-block-category.dto";
+import { CreateBlockCategoryDto, UpdateBlockCategoryDto } from "../dtos/block-category.dto";
 
 @Injectable()
 export class BlockCategoryService {

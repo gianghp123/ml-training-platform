@@ -1,27 +1,22 @@
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
-  SerializeOptions,
-  UseInterceptors,
 } from "@nestjs/common";
 import { BlockCategoryService } from "../../services/block-category.service";
 import {
   ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiNoContentResponse,
-  ApiOkResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { BlockCategoryDTO } from "../../dtos/responses/block-category.request";
-import { CreateBlockCategoryDto } from "../../dtos/requests/create-block-category.dto";
-import { UpdateBlockCategoryDto } from "../../dtos/requests/update-block-category.dto";
+import { ZodResponse } from "nestjs-zod";
+import { BlockCategoryDto, CreateBlockCategoryDto, UpdateBlockCategoryDto } from "../../dtos/block-category.dto";
 import { Roles } from "src/modules/auth/decorators/role.decorator";
 import { UserRole } from "src/libs/enums/user-role.enum";
 
@@ -29,36 +24,31 @@ import { UserRole } from "src/libs/enums/user-role.enum";
 @ApiBearerAuth()
 @Roles(UserRole.Admin)
 @Controller('admin/block-categories')
-@UseInterceptors(ClassSerializerInterceptor)
 export class BlockCategoryAdminController {
   constructor(
     private readonly blockCategoryService: BlockCategoryService,
   ) {}
 
   @Get()
-  @SerializeOptions({ type: BlockCategoryDTO })
-  @ApiOkResponse({ type: BlockCategoryDTO, isArray: true })
+  @ZodResponse({ status: HttpStatus.OK, type: [BlockCategoryDto] })
   async findAll() {
     return this.blockCategoryService.findAll();
   }
 
   @Get(':id')
-  @SerializeOptions({ type: BlockCategoryDTO })
-  @ApiOkResponse({ type: BlockCategoryDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: BlockCategoryDto })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.blockCategoryService.findOne(id);
   }
 
   @Post()
-  @SerializeOptions({ type: BlockCategoryDTO })
-  @ApiCreatedResponse({ type: BlockCategoryDTO })
+  @ZodResponse({ status: HttpStatus.CREATED, type: BlockCategoryDto })
   async create(@Body() dto: CreateBlockCategoryDto) {
     return this.blockCategoryService.create(dto);
   }
 
   @Patch(':id')
-  @SerializeOptions({ type: BlockCategoryDTO })
-  @ApiOkResponse({ type: BlockCategoryDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: BlockCategoryDto })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateBlockCategoryDto,
@@ -67,7 +57,7 @@ export class BlockCategoryAdminController {
   }
 
   @Delete(':id')
-  @ApiNoContentResponse()
+  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.blockCategoryService.remove(id);
   }

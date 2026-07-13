@@ -1,48 +1,42 @@
-import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, SerializeOptions, UseInterceptors } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { ZodResponse } from "nestjs-zod";
 import { WorkflowRunService } from '../services/workflow-run.service';
-import { WorkflowRunDTO } from '../dtos/responses/workflow-run.response';
-import { CreateWorkflowRunDto } from '../dtos/requests/create-workflow-run.dto';
-import { UpdateWorkflowRunDto } from '../dtos/requests/update-workflow-run.dto';
+import { CreateWorkflowRunDto, UpdateWorkflowRunDto, WorkflowRunDto } from '../dtos/workflow-run.dto';
 
 @ApiBearerAuth()
 @Controller('workflow-runs')
-@UseInterceptors(ClassSerializerInterceptor)
 export class WorkflowRunController {
   constructor(
     private readonly workflowRunService: WorkflowRunService,
   ) {}
 
   @Get()
-  @SerializeOptions({ type: WorkflowRunDTO })
-  @ApiOkResponse({ type: WorkflowRunDTO, isArray: true })
+  @ZodResponse({ status: HttpStatus.OK, type: [WorkflowRunDto] })
   async findAll() {
     return this.workflowRunService.findAll();
   }
 
   @Get(':id')
-  @SerializeOptions({ type: WorkflowRunDTO })
-  @ApiOkResponse({ type: WorkflowRunDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: WorkflowRunDto })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.workflowRunService.findOne(id);
   }
 
   @Post()
-  @SerializeOptions({ type: WorkflowRunDTO })
-  @ApiCreatedResponse({ type: WorkflowRunDTO })
+  @ZodResponse({ status: HttpStatus.CREATED, type: WorkflowRunDto })
   async create(@Body() dto: CreateWorkflowRunDto) {
     return this.workflowRunService.create(dto);
   }
 
   @Patch(':id')
-  @SerializeOptions({ type: WorkflowRunDTO })
-  @ApiOkResponse({ type: WorkflowRunDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: WorkflowRunDto })
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateWorkflowRunDto) {
     return this.workflowRunService.update(id, dto);
   }
 
   @Delete(':id')
-  @ApiNoContentResponse()
+  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.workflowRunService.remove(id);
   }

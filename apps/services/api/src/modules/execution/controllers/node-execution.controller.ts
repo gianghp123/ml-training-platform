@@ -1,48 +1,42 @@
-import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, SerializeOptions, UseInterceptors } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { ZodResponse } from "nestjs-zod";
 import { NodeExecutionService } from '../services/node-execution.service';
-import { NodeExecutionDTO } from '../dtos/responses/node-execution.response';
-import { CreateNodeExecutionDto } from '../dtos/requests/create-node-execution.dto';
-import { UpdateNodeExecutionDto } from '../dtos/requests/update-node-execution.dto';
+import { CreateNodeExecutionDto, UpdateNodeExecutionDto, NodeExecutionDto } from '../dtos/node-execution.dto';
 
 @ApiBearerAuth()
 @Controller('node-executions')
-@UseInterceptors(ClassSerializerInterceptor)
 export class NodeExecutionController {
   constructor(
     private readonly nodeExecutionService: NodeExecutionService,
   ) {}
 
   @Get()
-  @SerializeOptions({ type: NodeExecutionDTO })
-  @ApiOkResponse({ type: NodeExecutionDTO, isArray: true })
+  @ZodResponse({ status: HttpStatus.OK, type: [NodeExecutionDto] })
   async findAll() {
     return this.nodeExecutionService.findAll();
   }
 
   @Get(':id')
-  @SerializeOptions({ type: NodeExecutionDTO })
-  @ApiOkResponse({ type: NodeExecutionDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: NodeExecutionDto })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.nodeExecutionService.findOne(id);
   }
 
   @Post()
-  @SerializeOptions({ type: NodeExecutionDTO })
-  @ApiCreatedResponse({ type: NodeExecutionDTO })
+  @ZodResponse({ status: HttpStatus.CREATED, type: NodeExecutionDto })
   async create(@Body() dto: CreateNodeExecutionDto) {
     return this.nodeExecutionService.create(dto);
   }
 
   @Patch(':id')
-  @SerializeOptions({ type: NodeExecutionDTO })
-  @ApiOkResponse({ type: NodeExecutionDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: NodeExecutionDto })
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateNodeExecutionDto) {
     return this.nodeExecutionService.update(id, dto);
   }
 
   @Delete(':id')
-  @ApiNoContentResponse()
+  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.nodeExecutionService.remove(id);
   }

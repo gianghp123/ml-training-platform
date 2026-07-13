@@ -1,34 +1,30 @@
 import {
-  ClassSerializerInterceptor,
   Controller,
   Get,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
-  SerializeOptions,
-  UseInterceptors,
 } from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
+import { ZodResponse } from "nestjs-zod";
+import { BlockCategoryDto } from "../dtos/block-category.dto";
 import { BlockCategoryService } from "../services/block-category.service";
-import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
-import { BlockCategoryDTO } from "../dtos/responses/block-category.request";
 
 @ApiTags('BlockCategory')
 @Controller('block-categories')
-@UseInterceptors(ClassSerializerInterceptor)
 export class BlockCategoryController {
   constructor(
     private readonly blockCategoryService: BlockCategoryService,
-  ) {}
+  ) { }
 
   @Get()
-  @SerializeOptions({ type: BlockCategoryDTO })
-  @ApiOkResponse({ type: BlockCategoryDTO, isArray: true })
+  @ZodResponse({ status: HttpStatus.OK, type: [BlockCategoryDto] })
   async findAll() {
     return this.blockCategoryService.findAll();
   }
 
   @Get(':id')
-  @SerializeOptions({ type: BlockCategoryDTO })
-  @ApiOkResponse({ type: BlockCategoryDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: BlockCategoryDto })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.blockCategoryService.findOne(id);
   }

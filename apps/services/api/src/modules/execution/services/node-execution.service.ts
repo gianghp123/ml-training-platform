@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NodeExecution } from 'src/database/entities/node-execution.entity';
-import { CreateNodeExecutionDto } from '../dtos/requests/create-node-execution.dto';
-import { UpdateNodeExecutionDto } from '../dtos/requests/update-node-execution.dto';
+import { CreateNodeExecutionDto, UpdateNodeExecutionDto } from '../dtos/node-execution.dto';
 
 @Injectable()
 export class NodeExecutionService {

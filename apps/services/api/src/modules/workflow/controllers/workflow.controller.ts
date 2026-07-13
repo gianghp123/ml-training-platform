@@ -1,48 +1,42 @@
-import { Body, ClassSerializerInterceptor, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, SerializeOptions, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Patch, Post } from "@nestjs/common";
 import { WorkflowService } from "../services/workflow.service";
-import { ApiBearerAuth, ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse } from "@nestjs/swagger";
-import { WorkflowDTO } from "../dtos/responses/workflow.response";
-import { CreateWorkflowDto } from "../dtos/requests/create-workflow.dto";
-import { UpdateWorkflowDto } from "../dtos/requests/update-workflow.dto";
+import { ApiBearerAuth } from "@nestjs/swagger";
+import { ZodResponse } from "nestjs-zod";
+import { CreateWorkflowDto, UpdateWorkflowDto, WorkflowDto } from "../dtos/workflow.dto";
 
 @ApiBearerAuth()
 @Controller('workflows')
-@UseInterceptors(ClassSerializerInterceptor)
 export class WorkflowController {
   constructor(
     private readonly workflowService: WorkflowService
   ) { }
 
   @Get()
-  @SerializeOptions({ type: WorkflowDTO })
-  @ApiOkResponse({ type: WorkflowDTO, isArray: true })
+  @ZodResponse({ status: HttpStatus.OK, type: [WorkflowDto] })
   async findAll() {
     return this.workflowService.findAll();
   }
 
   @Get(':id')
-  @SerializeOptions({ type: WorkflowDTO })
-  @ApiOkResponse({ type: WorkflowDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: WorkflowDto })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.workflowService.findOne(id);
   }
 
   @Post()
-  @SerializeOptions({ type: WorkflowDTO })
-  @ApiCreatedResponse({ type: WorkflowDTO })
+  @ZodResponse({ status: HttpStatus.CREATED, type: WorkflowDto })
   async create(@Body() dto: CreateWorkflowDto) {
     return this.workflowService.create(dto);
   }
 
   @Patch(':id')
-  @SerializeOptions({ type: WorkflowDTO })
-  @ApiOkResponse({ type: WorkflowDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: WorkflowDto })
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateWorkflowDto) {
     return this.workflowService.update(id, dto);
   }
 
   @Delete(':id')
-  @ApiNoContentResponse()
+  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.workflowService.remove(id);
   }

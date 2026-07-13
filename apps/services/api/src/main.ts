@@ -1,18 +1,17 @@
-import { NestFactory, Reflector } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { clerkMiddleware } from '@clerk/express';
 import {
-  ClassSerializerInterceptor,
   ConsoleLogger,
   Logger,
-  ValidationPipe,
   VersioningType,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import helmet from 'helmet';
-import { json, urlencoded } from 'express';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { clerkMiddleware } from '@clerk/express'
+import { json, urlencoded } from 'express';
 import expressBasicAuth from 'express-basic-auth';
+import helmet from 'helmet';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -24,9 +23,6 @@ async function bootstrap() {
   });
   const configService = app.get(ConfigService);
   app.use(helmet());
-
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   app.use(json({ limit: '100mb' }));
   app.use(urlencoded({ extended: true, limit: '100mb' }));
@@ -58,9 +54,9 @@ async function bootstrap() {
       .addBearerAuth()
       .build();
 
-    const documentFactory = () => SwaggerModule.createDocument(app, config);
+    const document = SwaggerModule.createDocument(app, config);
 
-    SwaggerModule.setup('api', app, documentFactory, {
+    SwaggerModule.setup('api', app, cleanupOpenApiDoc(document), {
       swaggerOptions: {
         persistAuthorization: true,
       },

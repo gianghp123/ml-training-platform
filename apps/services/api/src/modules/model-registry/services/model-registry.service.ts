@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ModelRegistry } from "src/database/entities/model-registry.entity";
 import { Repository } from "typeorm";
-import { CreateModelRegistryDto } from "../dtos/requests/create-model-registry.dto";
-import { UpdateModelRegistryDto } from "../dtos/requests/update-model-registry.dto";
+import { CreateModelRegistryDto, UpdateModelRegistryDto } from "../dtos/model-registry.dto";
 
 @Injectable()
 export class ModelRegistryService {

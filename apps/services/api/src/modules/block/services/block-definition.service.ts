@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { BlockDefinition } from "src/database/entities/block-definition.entity";
 import { Repository } from "typeorm";
-import { CreateBlockDefinitionDto } from "../dtos/requests/create-block-definition.dto";
-import { UpdateBlockDefinitionDto } from "../dtos/requests/update-block-definition.dto";
+import { CreateBlockDefinitionDto, UpdateBlockDefinitionDto } from "../dtos/block-definition.dto";
 
 @Injectable()
 export class BlockDefinitionService {

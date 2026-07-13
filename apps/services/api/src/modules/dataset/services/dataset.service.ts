@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Dataset } from "src/database/entities/dataset.entity";
 import { Repository } from "typeorm";
-import { CreateDatasetDto } from "../dtos/requests/create-dataset.dto";
-import { UpdateDatasetDto } from "../dtos/requests/update-dataset.dto";
+import { CreateDatasetDto, UpdateDatasetDto } from "../dtos/dataset.dto";
 
 @Injectable()
 export class DatasetService {

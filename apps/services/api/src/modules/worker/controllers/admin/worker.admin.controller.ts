@@ -1,27 +1,22 @@
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
-  SerializeOptions,
-  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiNoContentResponse,
-  ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { ZodResponse } from "nestjs-zod";
 import { WorkerService } from '../../services/worker.service';
-import { WorkerDTO } from '../../dtos/responses/worker.response';
-import { CreateWorkerDto } from '../../dtos/requests/create-worker.dto';
-import { UpdateWorkerDto } from '../../dtos/requests/update-worker.dto';
+import { CreateWorkerDto, UpdateWorkerDto, WorkerDto } from '../../dtos/worker.dto';
 import { Roles } from 'src/modules/auth/decorators/role.decorator';
 import { UserRole } from 'src/libs/enums/user-role.enum';
 
@@ -29,36 +24,31 @@ import { UserRole } from 'src/libs/enums/user-role.enum';
 @ApiBearerAuth()
 @Roles(UserRole.Admin)
 @Controller('admin/workers')
-@UseInterceptors(ClassSerializerInterceptor)
 export class WorkerAdminController {
   constructor(
     private readonly workerService: WorkerService,
   ) {}
 
   @Get()
-  @SerializeOptions({ type: WorkerDTO })
-  @ApiOkResponse({ type: WorkerDTO, isArray: true })
+  @ZodResponse({ status: HttpStatus.OK, type: [WorkerDto] })
   async findAll() {
     return this.workerService.findAll();
   }
 
   @Get(':id')
-  @SerializeOptions({ type: WorkerDTO })
-  @ApiOkResponse({ type: WorkerDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: WorkerDto })
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.workerService.findOne(id);
   }
 
   @Post()
-  @SerializeOptions({ type: WorkerDTO })
-  @ApiCreatedResponse({ type: WorkerDTO })
+  @ZodResponse({ status: HttpStatus.CREATED, type: WorkerDto })
   async create(@Body() dto: CreateWorkerDto) {
     return this.workerService.create(dto);
   }
 
   @Patch(':id')
-  @SerializeOptions({ type: WorkerDTO })
-  @ApiOkResponse({ type: WorkerDTO })
+  @ZodResponse({ status: HttpStatus.OK, type: WorkerDto })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateWorkerDto,
@@ -67,7 +57,7 @@ export class WorkerAdminController {
   }
 
   @Delete(':id')
-  @ApiNoContentResponse()
+  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     await this.workerService.remove(id);
   }
