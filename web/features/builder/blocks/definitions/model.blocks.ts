@@ -1,8 +1,22 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition, BlockPort } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
 
-const commonInputSchema: any[] = [];
-const commonOutputSchema: any[] = [];
+const standardPorts: BlockPort[] = [
+  { id: 'train_dataset', label: 'Train Dataset', direction: 'input', artifact: 'Dataset', required: true, multiple: false },
+  { id: 'val_dataset', label: 'Validation Dataset', direction: 'input', artifact: 'Dataset', required: false, multiple: false },
+  { id: 'model', label: 'Trained Model', direction: 'output', artifact: 'TrainedModel', required: true, multiple: true },
+  { id: 'model_spec', label: 'Model Specification', direction: 'output', artifact: 'ModelSpec', required: true, multiple: true },
+];
+
+const deepLearningPorts: BlockPort[] = [
+  { id: 'train_dataset', label: 'Train Dataset', direction: 'input', artifact: 'Dataset', required: true, multiple: false },
+  { id: 'val_dataset', label: 'Validation Dataset', direction: 'input', artifact: 'Dataset', required: false, multiple: false },
+  { id: 'hyperparameters', label: 'Hyperparameters', direction: 'input', artifact: 'Hyperparameters', required: false, multiple: false },
+  { id: 'loss_config', label: 'Loss Config', direction: 'input', artifact: 'LossConfig', required: false, multiple: false },
+  { id: 'early_stopping_config', label: 'Early Stopping Config', direction: 'input', artifact: 'EarlyStoppingConfig', required: false, multiple: false },
+  { id: 'model', label: 'Trained Model', direction: 'output', artifact: 'TrainedModel', required: true, multiple: true },
+  { id: 'model_spec', label: 'Model Specification', direction: 'output', artifact: 'ModelSpec', required: true, multiple: true },
+];
 
 // ==========================================
 // CLASSIFICATION
@@ -49,9 +63,8 @@ export const LogisticRegressionBlock: BlockDefinition = {
       default: 100,
       validation: { min: 1 },
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: commonInputSchema,
-  outputSchema: commonOutputSchema,
+  },
+  portSchema: { ports: standardPorts },
 }
 
 export const DecisionTreeBlock: BlockDefinition = {
@@ -89,9 +102,8 @@ export const DecisionTreeBlock: BlockDefinition = {
       default: 1,
       validation: { min: 1 },
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: commonInputSchema,
-  outputSchema: commonOutputSchema,
+  },
+  portSchema: { ports: standardPorts },
 }
 
 export const RandomForestBlock: BlockDefinition = {
@@ -133,9 +145,8 @@ export const RandomForestBlock: BlockDefinition = {
         { label: "Toàn bộ", value: "none" },
       ],
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: commonInputSchema,
-  outputSchema: commonOutputSchema,
+  },
+  portSchema: { ports: standardPorts },
 }
 
 export const SVMBlock: BlockDefinition = {
@@ -177,9 +188,8 @@ export const SVMBlock: BlockDefinition = {
         { label: "Auto", value: "auto" },
       ],
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: commonInputSchema,
-  outputSchema: commonOutputSchema,
+  },
+  portSchema: { ports: standardPorts },
 }
 
 // ==========================================
@@ -203,9 +213,8 @@ export const LinearRegressionBlock: BlockDefinition = {
       label: "Copy thuộc tính X để tránh ghi đè",
       default: true,
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: commonInputSchema,
-  outputSchema: commonOutputSchema,
+  },
+  portSchema: { ports: standardPorts },
 }
 
 export const RidgeRegressionBlock: BlockDefinition = {
@@ -213,7 +222,7 @@ export const RidgeRegressionBlock: BlockDefinition = {
   code: "ridge_regression",
   name: "Ridge Regression",
   categoryId: "model",
-  description: "Hồi quy tuyến tính bổ sung hình phạt L2 vào hàm tối ưu để chống đa cộng tuyến.",
+  description: "Hồi quy tuyến tính bổ dung hình phạt L2 vào hàm tối ưu để chống đa cộng tuyến.",
   configSchema: {
     alpha: {
       type: "number",
@@ -239,9 +248,8 @@ export const RidgeRegressionBlock: BlockDefinition = {
         { label: "Saga", value: "saga" },
       ],
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: commonInputSchema,
-  outputSchema: commonOutputSchema,
+  },
+  portSchema: { ports: standardPorts },
 }
 
 // ==========================================
@@ -282,9 +290,8 @@ export const KMeansBlock: BlockDefinition = {
       default: 42,
       validation: { min: 0 },
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: commonInputSchema,
-  outputSchema: commonOutputSchema,
+  },
+  portSchema: { ports: standardPorts },
 }
 
 // ==========================================
@@ -327,9 +334,8 @@ export const ANNBlock: BlockDefinition = {
       default: 0.001,
       validation: { required: true, min: 0.00001 },
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: commonInputSchema,
-  outputSchema: commonOutputSchema,
+  },
+  portSchema: { ports: deepLearningPorts },
 }
 
 export const CNNBlock: BlockDefinition = {
@@ -369,7 +375,6 @@ export const CNNBlock: BlockDefinition = {
       default: 0.25,
       validation: { min: 0.0, max: 0.9 },
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: commonInputSchema,
-  outputSchema: commonOutputSchema,
+  },
+  portSchema: { ports: deepLearningPorts },
 }

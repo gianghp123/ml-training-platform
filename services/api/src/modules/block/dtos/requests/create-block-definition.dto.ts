@@ -29,12 +29,12 @@ export class CreateBlockDefinitionDto {
   @ApiPropertyOptional()
   @IsObject()
   @IsOptional()
-  inputSchema?: Record<string, unknown>;
+  portSchema?: Record<string, unknown>;
 
   @ApiPropertyOptional()
   @IsObject()
   @IsOptional()
-  outputSchema?: Record<string, unknown>;
+  runtimeInfo?: Record<string, unknown>;
 
   @ApiPropertyOptional()
   @IsString()

@@ -13,7 +13,10 @@ import {
   type XYPosition,
 } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { ALL_BLOCKS, BLOCK_CATEGORIES } from '../blocks';
 import { createPipelineNode, findBlockById, type PipelineNode } from '../utils/node-factory';
+import { validatePipeline } from '../utils/pipeline-validator';
 import { isValidNodeConnection } from '../utils/socket-validator';
 import { useWorkflowPersistence } from './useWorkflowPersistence';
 
@@ -55,12 +58,13 @@ interface UseBuilderReturn {
   addNode: (blockId: string, position: XYPosition) => PipelineNode | null;
   removeNode: (nodeId: string) => void;
   duplicateNode: (nodeId: string) => void;
-  updateNodeConfig: (nodeId: string, key: string, value: string | number | boolean) => void;
+  updateNodeConfig: (nodeId: string, key: string, value: string | number | boolean | string[]) => void;
   selectedNodeId: string | null;
   setSelectedNodeId: (id: string | null) => void;
   workflowName: string;
   setWorkflowName: (name: string) => void;
   saveWorkflow: () => void;
+  runWorkflow: () => void;
   loadWorkflow: () => boolean;
   hasSavedWorkflow: boolean;
   palettePosition: XYPosition | null;
@@ -174,7 +178,7 @@ export function useBuilder(): UseBuilderReturn {
   );
 
   const updateNodeConfig = useCallback(
-    (nodeId: string, key: string, value: string | number | boolean) => {
+    (nodeId: string, key: string, value: string | number | boolean | string[]) => {
       setNodes((nds) =>
         nds.map((n) => {
           if (n.id !== nodeId || n.type !== 'block') return n;
@@ -229,9 +233,34 @@ export function useBuilder(): UseBuilderReturn {
   );
 
   const saveWorkflow = useCallback(() => {
+    const issues = validatePipeline(
+      pipelineNodes,
+      edges,
+      ALL_BLOCKS,
+      new Set(BLOCK_CATEGORIES.map((category) => category.id)),
+    );
+    if (issues.length > 0) {
+      toast.error('Pipeline chưa hợp lệ', { description: issues[0].message });
+      return;
+    }
     persist(workflowName, nodes, edges);
     setHasSavedWorkflow(true);
-  }, [workflowName, nodes, edges, persist]);
+    toast.success('Đã lưu workflow');
+  }, [workflowName, nodes, pipelineNodes, edges, persist]);
+
+  const runWorkflow = useCallback(() => {
+    const issues = validatePipeline(
+      pipelineNodes,
+      edges,
+      ALL_BLOCKS,
+      new Set(BLOCK_CATEGORIES.map((category) => category.id)),
+    );
+    if (issues.length > 0) {
+      toast.error('Không thể chạy pipeline', { description: issues[0].message });
+      return;
+    }
+    toast.info('Pipeline hợp lệ', { description: 'Frontend đã sẵn sàng gửi graph sang Run API.' });
+  }, [pipelineNodes, edges]);
 
   const loadWorkflowFn = useCallback((): boolean => {
     const data = load();
@@ -257,6 +286,7 @@ export function useBuilder(): UseBuilderReturn {
     workflowName,
     setWorkflowName,
     saveWorkflow,
+    runWorkflow,
     loadWorkflow: loadWorkflowFn,
     hasSavedWorkflow,
     palettePosition,
@@ -306,7 +336,7 @@ function createGroups(nds: Node[], nodeIds: string[]): Node[] {
   const groupX = minX - GROUP_PADDING;
   const groupY = minY - GROUP_HEADER_HEIGHT - GROUP_PADDING;
 
-  const groupId = `group_${Date.now()}`;
+  const groupId = `group_${crypto.randomUUID()}`;
 
   const groupNode: Node = {
     id: groupId,

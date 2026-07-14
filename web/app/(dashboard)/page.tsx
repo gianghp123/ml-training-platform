@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import Link from "next/link"
 
 import { PageContainer } from "@/components/layouts/PageContainer"
@@ -18,7 +19,9 @@ export default function Home() {
         </Button>
       }
     >
-      <WorkflowTable />
+      <Suspense fallback={<div>Loading workflows...</div>}>
+        <WorkflowTable />
+      </Suspense>
     </PageContainer>
   )
 }

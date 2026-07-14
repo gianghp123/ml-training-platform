@@ -21,8 +21,8 @@ import type { BlockConfigField } from '../blocks/socket-types';
 
 interface BlockConfigFormProps {
   schema: Record<string, BlockConfigField>;
-  values: Record<string, string | number | boolean>;
-  onChange: (key: string, value: string | number | boolean) => void;
+  values: Record<string, string | number | boolean | string[]>;
+  onChange: (key: string, value: string | number | boolean | string[]) => void;
 }
 
 function buildZodSchema(fields: Record<string, BlockConfigField>): z.ZodObject<Record<string, z.ZodTypeAny>> {
@@ -36,8 +36,10 @@ function buildZodSchema(fields: Record<string, BlockConfigField>): z.ZodObject<R
         let num = z.coerce.number();
         if (v?.min !== undefined) num = num.min(v.min, `Min ${v.min}`);
         if (v?.max !== undefined) num = num.max(v.max, `Max ${v.max}`);
-        if (v?.required) num = num.refine((n) => !isNaN(n), 'Required');
-        shape[key] = num;
+        shape[key] = z.preprocess(
+          (value) => value === '' ? undefined : value,
+          v?.required ? num : num.optional(),
+        );
         break;
       }
       case 'checkbox':
@@ -68,18 +70,19 @@ function buildZodSchema(fields: Record<string, BlockConfigField>): z.ZodObject<R
 
 function buildDefaultValues(
   fields: Record<string, BlockConfigField>,
-  values: Record<string, string | number | boolean>,
+  values: Record<string, string | number | boolean | string[]>,
 ): Record<string, unknown> {
   const defaults: Record<string, unknown> = {};
   for (const [key, field] of Object.entries(fields)) {
     const raw = values[key];
     if (field.type === 'number') {
-      defaults[key] = raw !== undefined ? Number(raw) : (field.default ?? 0);
+      defaults[key] = raw !== undefined && raw !== '' ? Number(raw) : (field.default ?? '');
     } else if (field.type === 'switch') {
       defaults[key] = Boolean(raw ?? field.default ?? false);
     } else if (field.type === 'checkbox') {
-      const parsed = raw ? String(raw).split(',').filter(Boolean) : [];
-      defaults[key] = parsed.length > 0 ? parsed : [];
+      defaults[key] = Array.isArray(raw)
+        ? raw
+        : raw ? String(raw).split(',').filter(Boolean) : [];
     } else {
       defaults[key] = raw !== undefined ? String(raw) : String(field.default ?? '');
     }
@@ -155,7 +158,9 @@ export function BlockConfigForm({ schema: fields, values, onChange }: BlockConfi
                     const raw = e.target.value;
                     const v = raw === '' ? '' : raw;
                     controllerField.onChange(v);
-                    if (raw !== '') {
+                    if (raw === '') {
+                      onChange(key, '');
+                    } else {
                       const n = Number(raw);
                       if (!isNaN(n)) onChange(key, n);
                     }
@@ -232,7 +237,7 @@ export function BlockConfigForm({ schema: fields, values, onChange }: BlockConfi
                               ? [...arr, v]
                               : arr.filter((i) => i !== v);
                             controllerField.onChange(next);
-                            onChange(key, next.join(','));
+                            onChange(key, next);
                           }}
                           className="nodrag"
                         />

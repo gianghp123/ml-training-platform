@@ -43,9 +43,10 @@ export const HyperparametersBlock: BlockDefinition = {
             default: 0.0001,
             validation: { min: 0 },
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: [
+      { id: "hyperparameters", label: "Hyperparameters", direction: "output", artifact: "Hyperparameters", required: true, multiple: true }
+    ] },
 }
 
 export const LossFunctionBlock: BlockDefinition = {
@@ -85,9 +86,10 @@ export const LossFunctionBlock: BlockDefinition = {
                 { label: "Huber Loss", value: "huber" },
             ],
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: [
+      { id: "loss_config", label: "Loss Config", direction: "output", artifact: "LossConfig", required: true, multiple: true }
+    ] },
 }
 
 export const EarlyStoppingBlock: BlockDefinition = {
@@ -125,7 +127,8 @@ export const EarlyStoppingBlock: BlockDefinition = {
             label: "Khôi phục trọng số tốt nhất",
             default: true,
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: [
+      { id: "early_stopping_config", label: "Early Stopping Config", direction: "output", artifact: "EarlyStoppingConfig", required: true, multiple: true }
+    ] },
 }

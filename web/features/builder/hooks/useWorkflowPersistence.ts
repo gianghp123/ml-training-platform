@@ -48,7 +48,7 @@ export function useWorkflowPersistence(): UseWorkflowPersistenceReturn {
     try {
       const data = JSON.parse(raw) as {
         name: string;
-        graph: SerializedGraph;
+        graph: SerializedGraph | Omit<SerializedGraph, 'version'>;
         savedAt: string;
       };
       const { nodes, edges } = deserializeGraph(data.graph, createEdge);

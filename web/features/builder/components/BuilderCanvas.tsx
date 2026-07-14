@@ -122,7 +122,7 @@ export function BuilderCanvas() {
         workflowName={builder.workflowName}
         onWorkflowNameChange={builder.setWorkflowName}
         onSave={builder.saveWorkflow}
-        onRun={() => {}}
+        onRun={builder.runWorkflow}
         hasSavedWorkflow={builder.hasSavedWorkflow}
         onLoad={builder.loadWorkflow}
         edgeStyle={builder.edgeStyle}

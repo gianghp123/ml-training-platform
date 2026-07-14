@@ -28,11 +28,11 @@ export class BlockDefinitionDTO {
 
   @ApiPropertyOptional()
   @Expose()
-  inputSchema: Record<string, unknown>;
+  portSchema: Record<string, unknown>;
 
   @ApiPropertyOptional()
   @Expose()
-  outputSchema: Record<string, unknown>;
+  runtimeInfo: Record<string, unknown>;
 
   @ApiPropertyOptional()
   @Expose()

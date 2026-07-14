@@ -1,5 +1,17 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition, BlockPort } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
+
+const commonPorts: BlockPort[] = [
+    { id: 'model', label: 'Trained Model', direction: 'input', artifact: 'TrainedModel', required: true, multiple: false },
+    { id: 'dataset', label: 'Test Dataset', direction: 'input', artifact: 'Dataset', required: true, multiple: false },
+    { id: 'metrics', label: 'Evaluation Metrics', direction: 'output', artifact: 'Metrics', required: true, multiple: true },
+];
+
+const crossValPorts: BlockPort[] = [
+    { id: 'model_spec', label: 'Model Specification', direction: 'input', artifact: 'ModelSpec', required: true, multiple: false },
+    { id: 'folds', label: 'Folds', direction: 'input', artifact: 'Folds', required: true, multiple: false },
+    { id: 'metrics', label: 'Evaluation Metrics', direction: 'output', artifact: 'Metrics', required: true, multiple: true },
+];
 
 export const ClassificationMetricsBlock: BlockDefinition = {
     id: "classification_metrics",
@@ -19,9 +31,8 @@ export const ClassificationMetricsBlock: BlockDefinition = {
                 { label: "Micro Average", value: "micro" },
             ],
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const ConfusionMatrixBlock: BlockDefinition = {
@@ -42,9 +53,8 @@ export const ConfusionMatrixBlock: BlockDefinition = {
                 { label: "Chuẩn hóa toàn bộ", value: "all" },
             ],
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const RocAucCurveBlock: BlockDefinition = {
@@ -59,9 +69,8 @@ export const RocAucCurveBlock: BlockDefinition = {
             label: "Nhãn lớp dương tính",
             default: "1",
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const ClassificationReportBlock: BlockDefinition = {
@@ -92,9 +101,8 @@ export const ClassificationReportBlock: BlockDefinition = {
             label: "Bao gồm Macro/Weighted Average",
             default: true,
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const PredictionResultBlock: BlockDefinition = {
@@ -125,9 +133,12 @@ export const PredictionResultBlock: BlockDefinition = {
                 { label: "Dự đoán sai/đúng", value: "mismatch" },
             ],
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: [
+        { id: 'model', label: 'Trained Model', direction: 'input', artifact: 'TrainedModel', required: true, multiple: false },
+        { id: 'dataset', label: 'Test Dataset', direction: 'input', artifact: 'Dataset', required: true, multiple: false },
+        { id: 'predictions', label: 'Prediction Results', direction: 'output', artifact: 'Predictions', required: true, multiple: true },
+    ] },
 }
 
 export const CrossValidationBlock: BlockDefinition = {
@@ -137,12 +148,6 @@ export const CrossValidationBlock: BlockDefinition = {
     categoryId: "evaluate",
     description: "Chạy K-fold cross-validation và tính giá trị trung bình, độ lệch chuẩn của score.",
     configSchema: {
-        folds: {
-            type: "number",
-            label: "Số fold",
-            default: 5,
-            validation: { required: true, min: 2 },
-        } satisfies BlockConfigField,
         scoring: {
             type: "select",
             label: "Chỉ số đánh giá",
@@ -173,7 +178,6 @@ export const CrossValidationBlock: BlockDefinition = {
             label: "Giữ tỷ lệ class giữa các fold",
             default: true,
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: crossValPorts },
 }

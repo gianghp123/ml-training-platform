@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // One-off local migration helpers are not application modules.
+    "features/builder/blocks/*.cjs",
   ]),
 ]);
 

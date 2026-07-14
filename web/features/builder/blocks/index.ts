@@ -76,14 +76,14 @@ export function getBlocksByCategory(categoryId: string): BlockDefinition[] {
 }
 
 export const BLOCK_CATEGORIES: BlockCategory[] = [
-  { id: 'load_data', name: 'Load Data' },
-  { id: 'preprocess_data', name: 'Preprocess' },
-  { id: 'split_data', name: 'Split Data' },
-  { id: 'transform', name: 'Transform' },
-  { id: 'config', name: 'Configuration' },
-  { id: 'model', name: 'Model' },
-  { id: 'evaluate', name: 'Evaluate' },
-  { id: 'export', name: 'Export' },
+  { id: 'load_data', code: 'SOURCE', name: 'Load Data', orderIndex: 0 },
+  { id: 'preprocess_data', code: 'PREPROCESS', name: 'Preprocess', orderIndex: 10 },
+  { id: 'split_data', code: 'SPLIT', name: 'Split Data', orderIndex: 20 },
+  { id: 'transform', code: 'TRANSFORM', name: 'Transform', orderIndex: 30 },
+  { id: 'config', code: 'CONFIG', name: 'Configuration', orderIndex: 40 },
+  { id: 'model', code: 'MODEL', name: 'Model', orderIndex: 50 },
+  { id: 'evaluate', code: 'EVALUATE', name: 'Evaluate', orderIndex: 60 },
+  { id: 'export', code: 'EXPORT', name: 'Export', orderIndex: 70 },
 ];
 
 export const CATEGORY_COLORS: Record<string, string> = {

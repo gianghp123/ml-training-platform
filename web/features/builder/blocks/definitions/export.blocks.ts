@@ -1,4 +1,4 @@
-import type { BlockDefinition, BlockInputPort, BlockOutputPort } from '@/lib/models';
+import type { BlockDefinition } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
 
 export const SaveModelBlock: BlockDefinition = {
@@ -33,9 +33,11 @@ export const SaveModelBlock: BlockDefinition = {
             type: "textarea",
             label: "Mô tả chi tiết",
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: [
+      { id: "model", label: "Trained Model", direction: "input", artifact: "TrainedModel", required: true, multiple: false },
+      { id: "metrics", label: "Optional Metrics", direction: "input", artifact: "Metrics", required: false, multiple: false }
+    ] },
 }
 
 export const ExportDatasetBlock: BlockDefinition = {
@@ -68,9 +70,10 @@ export const ExportDatasetBlock: BlockDefinition = {
             label: "Bao gồm cột chỉ mục",
             default: false,
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: [
+      { id: "dataset", label: "Dataset đầu vào", direction: "input", artifact: "Dataset", required: true, multiple: false }
+    ] },
 }
 
 export const LogMetricsBlock: BlockDefinition = {
@@ -91,7 +94,8 @@ export const LogMetricsBlock: BlockDefinition = {
             label: "Đồng bộ lên MLflow tracking",
             default: false,
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: [
+      { id: "metrics", label: "Evaluation Metrics", direction: "input", artifact: "Metrics", required: true, multiple: false }
+    ] },
 }

@@ -6,7 +6,7 @@ export interface BuilderContextValue {
   onConfigChange: (
     nodeId: string,
     key: string,
-    value: string | number | boolean
+    value: string | number | boolean | string[]
   ) => void;
 }
 

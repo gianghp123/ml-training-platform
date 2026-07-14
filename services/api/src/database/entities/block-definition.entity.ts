@@ -25,14 +25,14 @@ export class BlockDefinition {
   @Column({ type: 'varchar', nullable: true })
   description: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'jsonb', nullable: true, name: 'config_schema' })
   configSchema: Record<string, unknown>;
 
-  @Column({ type: 'jsonb', nullable: true })
-  inputSchema: Record<string, unknown>;
+  @Column({ type: 'jsonb', nullable: true, name: 'port_schema' })
+  portSchema: Record<string, unknown>;
 
-  @Column({ type: 'jsonb', nullable: true })
-  outputSchema: Record<string, unknown>;
+  @Column({ type: 'jsonb', nullable: true, name: 'runtime_info' })
+  runtimeInfo: Record<string, unknown>;
 
   @Column({ type: 'varchar', nullable: true })
   dockerImage: string;

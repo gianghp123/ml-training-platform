@@ -46,7 +46,7 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
   }, [data.blockId]);
 
   const handleConfigChange = useCallback(
-    (key: string, value: string | number | boolean) => {
+    (key: string, value: string | number | boolean | string[]) => {
       builder.onConfigChange(id, key, value);
     },
     [id, builder]
@@ -93,14 +93,15 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
                         position: 'absolute',
                         transform: 'none',
                       }}
-                      className={`static! ${dotColor} border-2! border-background!`}
+                      className={`!absolute ${dotColor} !border-2 !border-background`}
                     />
                   </TooltipTrigger>
-                  <TooltipContent side="left">{input.label} ({input.type})</TooltipContent>
+                  <TooltipContent side="left">{input.label} ({input.artifact})</TooltipContent>
                 </Tooltip>
                 <span className="text-xs text-muted-foreground">
                   {input.label}
-                  {input.optional && <span className="text-[10px]"> (optional)</span>}
+                  {!input.required && <span className="text-[10px]"> (optional)</span>}
+                  {input.required && <span className="text-destructive ml-1">*</span>}
                 </span>
               </div>
             ))}
@@ -123,10 +124,10 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
                         position: 'absolute',
                         transform: 'none',
                       }}
-                      className={`static! ${dotColor} border-2! border-background!`}
+                      className={`!absolute ${dotColor} !border-2 !border-background`}
                     />
                   </TooltipTrigger>
-                  <TooltipContent side="right">{output.label} ({output.type})</TooltipContent>
+                  <TooltipContent side="right">{output.label} ({output.artifact})</TooltipContent>
                 </Tooltip>
               </div>
             ))}

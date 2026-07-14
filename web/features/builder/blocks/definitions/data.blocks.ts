@@ -50,9 +50,10 @@ export const LoadCsvExcel: BlockDefinition = {
       type: "textarea",
       label: "Danh sách cột cần loại bỏ khỏi dataset ",
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: [],
-  outputSchema: [],
+  },
+  portSchema: { ports: [
+      { id: "dataset", label: "Dataset", direction: "output", artifact: "Dataset", required: true, multiple: true }
+    ] },
 }
 
 export const LoadJsonBlock: BlockDefinition = {
@@ -109,9 +110,10 @@ export const LoadJsonBlock: BlockDefinition = {
       type: "textarea",
       label: "Danh sách cột cần loại bỏ khỏi dataset",
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: [],
-  outputSchema: [],
+  },
+  portSchema: { ports: [
+      { id: "dataset", label: "Dataset", direction: "output", artifact: "Dataset", required: true, multiple: true }
+    ] },
 }
 
 
@@ -160,8 +162,9 @@ export const LoadXmlBlock: BlockDefinition = {
       type: "textarea",
       label: "Danh sách cột cần loại bỏ khỏi dataset",
     } satisfies BlockConfigField,
-  } as Record<string, unknown>,
-  inputSchema: [],
-  outputSchema: [],
+  },
+  portSchema: { ports: [
+      { id: "dataset", label: "Dataset", direction: "output", artifact: "Dataset", required: true, multiple: true }
+    ] },
 }
 

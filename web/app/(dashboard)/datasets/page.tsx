@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { PageContainer } from "@/components/layouts/PageContainer";
 import { Button } from "@/components/ui/button";
 import { DatasetTable } from "@/features/dataset/components/DatasetTable";
@@ -12,6 +13,8 @@ export default function Page() {
       </Button>
     }
   >
-    <DatasetTable />
+    <Suspense fallback={<div>Loading datasets...</div>}>
+      <DatasetTable />
+    </Suspense>
   </PageContainer>
 }

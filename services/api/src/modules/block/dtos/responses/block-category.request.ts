@@ -8,5 +8,17 @@ export class BlockCategoryDTO {
 
   @ApiProperty()
   @Expose()
+  code: string;
+
+  @ApiProperty()
+  @Expose()
   name: string;
+
+  @ApiProperty()
+  @Expose()
+  orderIndex: number;
+
+  @ApiProperty({ required: false })
+  @Expose()
+  description?: string;
 }

@@ -1,0 +1,3008 @@
+[
+  {
+    "symbol": "HyperparametersBlock",
+    "sourceFile": "configuration.blocks.ts",
+    "id": "hyperparameters",
+    "code": "hyperparameters",
+    "name": "Set Hyperparameters",
+    "categoryId": "config",
+    "description": "Thiết lập các siêu tham số cho quá trình huấn luyện.",
+    "configSchema": {
+      "learning_rate": {
+        "type": "number",
+        "label": "Learning Rate",
+        "default": 0.001,
+        "validation": {
+          "required": true,
+          "min": 0.00001,
+          "max": 1,
+          "step": 0.0001
+        }
+      },
+      "epochs": {
+        "type": "number",
+        "label": "Epochs",
+        "default": 10,
+        "validation": {
+          "required": true,
+          "min": 1,
+          "max": 10000
+        }
+      },
+      "batch_size": {
+        "type": "number",
+        "label": "Batch Size",
+        "default": 32,
+        "validation": {
+          "required": true,
+          "min": 1,
+          "max": 4096
+        }
+      },
+      "optimizer": {
+        "type": "select",
+        "label": "Thuật toán tối ưu",
+        "default": "adam",
+        "options": [
+          {
+            "label": "Adam",
+            "value": "adam"
+          },
+          {
+            "label": "SGD",
+            "value": "sgd"
+          },
+          {
+            "label": "RMSprop",
+            "value": "rmsprop"
+          },
+          {
+            "label": "AdamW",
+            "value": "adamw"
+          }
+        ]
+      },
+      "weight_decay": {
+        "type": "number",
+        "label": "Weight Decay",
+        "default": 0.0001,
+        "validation": {
+          "min": 0
+        }
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "hyperparameters",
+          "label": "Hyperparameters",
+          "direction": "output",
+          "artifact": "Hyperparameters",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "LossFunctionBlock",
+    "sourceFile": "configuration.blocks.ts",
+    "id": "loss_function",
+    "code": "loss_function",
+    "name": "Loss Function Selection",
+    "categoryId": "config",
+    "description": "Lựa chọn hàm mất mát phù hợp với loại bài toán.",
+    "configSchema": {
+      "task_type": {
+        "type": "select",
+        "label": "Loại bài toán",
+        "default": "classification",
+        "options": [
+          {
+            "label": "Phân loại",
+            "value": "classification"
+          },
+          {
+            "label": "Hồi quy",
+            "value": "regression"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "loss_classification": {
+        "type": "select",
+        "label": "Hàm loss cho Phân loại",
+        "default": "cross_entropy",
+        "options": [
+          {
+            "label": "Cross Entropy Loss",
+            "value": "cross_entropy"
+          },
+          {
+            "label": "Binary Cross Entropy Loss",
+            "value": "binary_cross_entropy"
+          },
+          {
+            "label": "Focal Loss",
+            "value": "focal"
+          }
+        ]
+      },
+      "loss_regression": {
+        "type": "select",
+        "label": "Hàm loss cho Hồi quy",
+        "default": "mse",
+        "options": [
+          {
+            "label": "Mean Squared Error",
+            "value": "mse"
+          },
+          {
+            "label": "Mean Absolute Error",
+            "value": "mae"
+          },
+          {
+            "label": "Huber Loss",
+            "value": "huber"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "loss_config",
+          "label": "Loss Config",
+          "direction": "output",
+          "artifact": "LossConfig",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "EarlyStoppingBlock",
+    "sourceFile": "configuration.blocks.ts",
+    "id": "early_stopping",
+    "code": "early_stopping",
+    "name": "Early Stopping",
+    "categoryId": "config",
+    "description": "Cấu hình tự động dừng huấn luyện sớm khi metric trên tập validation không còn cải thiện.",
+    "configSchema": {
+      "monitor": {
+        "type": "select",
+        "label": "Chỉ số theo dõi",
+        "default": "val_loss",
+        "options": [
+          {
+            "label": "Validation Loss",
+            "value": "val_loss"
+          },
+          {
+            "label": "Validation Accuracy",
+            "value": "val_accuracy"
+          },
+          {
+            "label": "Training Loss",
+            "value": "train_loss"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "patience": {
+        "type": "number",
+        "label": "Số epoch chờ",
+        "default": 5,
+        "validation": {
+          "required": true,
+          "min": 1
+        }
+      },
+      "min_delta": {
+        "type": "number",
+        "label": "Mức cải thiện tối thiểu",
+        "default": 0.0001,
+        "validation": {
+          "min": 0
+        }
+      },
+      "restore_best_weights": {
+        "type": "switch",
+        "label": "Khôi phục trọng số tốt nhất",
+        "default": true
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "early_stopping_config",
+          "label": "Early Stopping Config",
+          "direction": "output",
+          "artifact": "EarlyStoppingConfig",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "LoadCsvExcel",
+    "sourceFile": "data.blocks.ts",
+    "id": "load_csv_excel",
+    "code": "load_csv_excel",
+    "name": "Load CSV/Excel",
+    "categoryId": "load_data",
+    "description": "Đọc dữ liệu dạng bảng từ file .csv hoặc .xlsx và trả về dữ liệu dạng Tabular.",
+    "configSchema": {
+      "file_path": {
+        "type": "text",
+        "label": "File CSV đã upload",
+        "validation": {
+          "required": true
+        }
+      },
+      "delimiter": {
+        "type": "text",
+        "label": "Ký tự phân tách cột",
+        "default": ","
+      },
+      "has_header": {
+        "type": "switch",
+        "label": "Dòng đầu là tên cột",
+        "default": true
+      },
+      "skip_rows": {
+        "type": "number",
+        "label": "Số dòng bỏ qua ở đầu file trước khi tới dữ liệu thật",
+        "default": 0,
+        "validation": {
+          "min": 0
+        }
+      },
+      "encoding": {
+        "type": "select",
+        "label": "Bảng mã ký tự",
+        "default": "utf-8",
+        "options": [
+          {
+            "label": "UTF-8",
+            "value": "utf-8"
+          },
+          {
+            "label": "ASCII",
+            "value": "ascii"
+          },
+          {
+            "label": "ISO-8859-1",
+            "value": "iso-8859-1"
+          },
+          {
+            "label": "UTF-16",
+            "value": "utf-16"
+          },
+          {
+            "label": "Windows-1252",
+            "value": "windows-1252"
+          }
+        ]
+      },
+      "expected_columns": {
+        "type": "textarea",
+        "label": "Danh sách tên cột kỳ vọng "
+      },
+      "skip_cols": {
+        "type": "textarea",
+        "label": "Danh sách cột cần loại bỏ khỏi dataset "
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset",
+          "label": "Dataset",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "LoadJsonBlock",
+    "sourceFile": "data.blocks.ts",
+    "id": "load_json",
+    "code": "load_json",
+    "name": "Load JSON",
+    "categoryId": "load_data",
+    "description": "Đọc dữ liệu từ file .json. Output type phụ thuộc vào tham số flatten_nested.",
+    "configSchema": {
+      "file_path": {
+        "type": "text",
+        "label": "File JSON đã upload",
+        "validation": {
+          "required": true
+        }
+      },
+      "root_key": {
+        "type": "text",
+        "label": "Đường dẫn tới mảng record gốc"
+      },
+      "flatten_nested": {
+        "type": "switch",
+        "label": "Tự động làm phẳng các trường lồng nhau",
+        "default": true
+      },
+      "max_nesting_depth": {
+        "type": "number",
+        "label": "Độ sâu lồng nhau tối đa được phép flatten tự động",
+        "default": 3,
+        "validation": {
+          "min": 1
+        }
+      },
+      "array_handling": {
+        "type": "select",
+        "label": "Cách xử lý khi 1 field là mảng con",
+        "default": "flatten_index",
+        "options": [
+          {
+            "label": "Tách thành nhiều cột",
+            "value": "flatten_index"
+          },
+          {
+            "label": "Nối thành 1 chuỗi",
+            "value": "join_string"
+          },
+          {
+            "label": "Từ chối và báo lỗi",
+            "value": "reject"
+          }
+        ]
+      },
+      "encoding": {
+        "type": "select",
+        "label": "Bảng mã ký tự",
+        "default": "utf-8",
+        "options": [
+          {
+            "label": "UTF-8",
+            "value": "utf-8"
+          },
+          {
+            "label": "ASCII",
+            "value": "ascii"
+          },
+          {
+            "label": "ISO-8859-1",
+            "value": "iso-8859-1"
+          },
+          {
+            "label": "UTF-16",
+            "value": "utf-16"
+          },
+          {
+            "label": "Windows-1252",
+            "value": "windows-1252"
+          }
+        ]
+      },
+      "skip_cols": {
+        "type": "textarea",
+        "label": "Danh sách cột cần loại bỏ khỏi dataset"
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset",
+          "label": "Dataset",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "LoadXmlBlock",
+    "sourceFile": "data.blocks.ts",
+    "id": "load_xml",
+    "code": "load_xml",
+    "name": "Load XML",
+    "categoryId": "load_data",
+    "description": "Đọc dữ liệu từ file .xml do người dùng upload. Vì cấu trúc XML rất đa dạng, người dùng bắt buộc phải khai báo record_xpath để hệ thống biết đâu là 1 'dòng dữ liệu'.",
+    "configSchema": {
+      "file_path": {
+        "type": "text",
+        "label": "File XML đã upload",
+        "validation": {
+          "required": true
+        }
+      },
+      "record_xpath": {
+        "type": "text",
+        "label": "XPath xác định element nào là 1 record",
+        "validation": {
+          "required": true
+        }
+      },
+      "include_attributes": {
+        "type": "switch",
+        "label": "Gộp attribute của element vào thành cột",
+        "default": true
+      },
+      "max_nesting_depth": {
+        "type": "number",
+        "label": "Độ sâu lồng nhau tối đa được phép flatten tự động",
+        "default": 3,
+        "validation": {
+          "min": 1
+        }
+      },
+      "encoding": {
+        "type": "select",
+        "label": "Bảng mã ký tự",
+        "default": "utf-8",
+        "options": [
+          {
+            "label": "UTF-8",
+            "value": "utf-8"
+          },
+          {
+            "label": "ASCII",
+            "value": "ascii"
+          },
+          {
+            "label": "ISO-8859-1",
+            "value": "iso-8859-1"
+          },
+          {
+            "label": "UTF-16",
+            "value": "utf-16"
+          },
+          {
+            "label": "Windows-1252",
+            "value": "windows-1252"
+          }
+        ]
+      },
+      "skip_cols": {
+        "type": "textarea",
+        "label": "Danh sách cột cần loại bỏ khỏi dataset"
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset",
+          "label": "Dataset",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "ClassificationMetricsBlock",
+    "sourceFile": "evaluate.blocks.ts",
+    "id": "classification_metrics",
+    "code": "classification_metrics",
+    "name": "Classification Metrics",
+    "categoryId": "evaluate",
+    "description": "Tính toán các chỉ số đánh giá phân loại phổ biến như Accuracy, Precision, Recall, F1-score.",
+    "configSchema": {
+      "average": {
+        "type": "select",
+        "label": "Phương pháp tính trung bình",
+        "default": "binary",
+        "options": [
+          {
+            "label": "Nhị phân",
+            "value": "binary"
+          },
+          {
+            "label": "Macro Average",
+            "value": "macro"
+          },
+          {
+            "label": "Weighted Average",
+            "value": "weighted"
+          },
+          {
+            "label": "Micro Average",
+            "value": "micro"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "input",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset",
+          "label": "Test Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "metrics",
+          "label": "Evaluation Metrics",
+          "direction": "output",
+          "artifact": "Metrics",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "ConfusionMatrixBlock",
+    "sourceFile": "evaluate.blocks.ts",
+    "id": "confusion_matrix",
+    "code": "confusion_matrix",
+    "name": "Confusion Matrix",
+    "categoryId": "evaluate",
+    "description": "Trực quan hóa ma trận nhầm lẫn để phân tích chi tiết kết quả dự báo của các lớp.",
+    "configSchema": {
+      "normalize": {
+        "type": "select",
+        "label": "Chuẩn hóa ma trận",
+        "default": "none",
+        "options": [
+          {
+            "label": "Không chuẩn hóa",
+            "value": "none"
+          },
+          {
+            "label": "Chuẩn hóa theo hàng",
+            "value": "true"
+          },
+          {
+            "label": "Chuẩn hóa theo cột",
+            "value": "pred"
+          },
+          {
+            "label": "Chuẩn hóa toàn bộ",
+            "value": "all"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "input",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset",
+          "label": "Test Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "metrics",
+          "label": "Evaluation Metrics",
+          "direction": "output",
+          "artifact": "Metrics",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "RocAucCurveBlock",
+    "sourceFile": "evaluate.blocks.ts",
+    "id": "roc_auc_curve",
+    "code": "roc_auc_curve",
+    "name": "ROC-AUC Curve",
+    "categoryId": "evaluate",
+    "description": "Vẽ đường cong ROC và tính toán chỉ số diện tích dưới đường cong AUC.",
+    "configSchema": {
+      "pos_label": {
+        "type": "text",
+        "label": "Nhãn lớp dương tính",
+        "default": "1"
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "input",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset",
+          "label": "Test Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "metrics",
+          "label": "Evaluation Metrics",
+          "direction": "output",
+          "artifact": "Metrics",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "ClassificationReportBlock",
+    "sourceFile": "evaluate.blocks.ts",
+    "id": "classification_report",
+    "code": "classification_report",
+    "name": "Classification Report",
+    "categoryId": "evaluate",
+    "description": "Xuất bảng Precision, Recall, F1-score và Support cho từng class.",
+    "configSchema": {
+      "digits": {
+        "type": "number",
+        "label": "Số chữ số thập phân",
+        "default": 2,
+        "validation": {
+          "min": 0,
+          "max": 10
+        }
+      },
+      "zero_division": {
+        "type": "select",
+        "label": "Giá trị khi phép chia cho 0",
+        "default": "0",
+        "options": [
+          {
+            "label": "Gán bằng 0",
+            "value": "0"
+          },
+          {
+            "label": "Gán bằng 1",
+            "value": "1"
+          },
+          {
+            "label": "Không xác định",
+            "value": "nan"
+          }
+        ]
+      },
+      "include_averages": {
+        "type": "switch",
+        "label": "Bao gồm Macro/Weighted Average",
+        "default": true
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "input",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset",
+          "label": "Test Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "metrics",
+          "label": "Evaluation Metrics",
+          "direction": "output",
+          "artifact": "Metrics",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "PredictionResultBlock",
+    "sourceFile": "evaluate.blocks.ts",
+    "id": "prediction_result",
+    "code": "prediction_result",
+    "name": "Prediction Results",
+    "categoryId": "evaluate",
+    "description": "Xuất bảng kết quả gồm giá trị thực tế, dự đoán, xác suất và sai số.",
+    "configSchema": {
+      "target_column": {
+        "type": "text",
+        "label": "Tên cột nhãn thực tế",
+        "validation": {
+          "required": true
+        }
+      },
+      "include_probability": {
+        "type": "switch",
+        "label": "Bao gồm xác suất dự đoán",
+        "default": true
+      },
+      "error_method": {
+        "type": "select",
+        "label": "Cách tính sai số",
+        "default": "auto",
+        "options": [
+          {
+            "label": "Tự động theo loại bài toán",
+            "value": "auto"
+          },
+          {
+            "label": "Sai khác tuyệt đối",
+            "value": "absolute"
+          },
+          {
+            "label": "Sai số bình phương",
+            "value": "squared"
+          },
+          {
+            "label": "Dự đoán sai/đúng",
+            "value": "mismatch"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "input",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset",
+          "label": "Test Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "predictions",
+          "label": "Prediction Results",
+          "direction": "output",
+          "artifact": "Predictions",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "CrossValidationBlock",
+    "sourceFile": "evaluate.blocks.ts",
+    "id": "cross_validation",
+    "code": "cross_validation",
+    "name": "Cross Validation",
+    "categoryId": "evaluate",
+    "description": "Chạy K-fold cross-validation và tính giá trị trung bình, độ lệch chuẩn của score.",
+    "configSchema": {
+      "scoring": {
+        "type": "select",
+        "label": "Chỉ số đánh giá",
+        "default": "accuracy",
+        "options": [
+          {
+            "label": "Accuracy",
+            "value": "accuracy"
+          },
+          {
+            "label": "Precision",
+            "value": "precision"
+          },
+          {
+            "label": "Recall",
+            "value": "recall"
+          },
+          {
+            "label": "F1-score",
+            "value": "f1"
+          },
+          {
+            "label": "ROC-AUC",
+            "value": "roc_auc"
+          },
+          {
+            "label": "R²",
+            "value": "r2"
+          },
+          {
+            "label": "Mean Squared Error",
+            "value": "neg_mean_squared_error"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "shuffle": {
+        "type": "switch",
+        "label": "Trộn dữ liệu trước khi chia fold",
+        "default": true
+      },
+      "random_state": {
+        "type": "number",
+        "label": "Random state",
+        "default": 42
+      },
+      "stratified": {
+        "type": "switch",
+        "label": "Giữ tỷ lệ class giữa các fold",
+        "default": true
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "model_spec",
+          "label": "Model Specification",
+          "direction": "input",
+          "artifact": "ModelSpec",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "folds",
+          "label": "Folds",
+          "direction": "input",
+          "artifact": "Folds",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "metrics",
+          "label": "Evaluation Metrics",
+          "direction": "output",
+          "artifact": "Metrics",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "SaveModelBlock",
+    "sourceFile": "export.blocks.ts",
+    "id": "save_model",
+    "code": "save_model",
+    "name": "Save Model",
+    "categoryId": "export",
+    "description": "Lưu trữ mô hình đã huấn luyện vào registry của hệ thống kèm theo các phiên bản và metadata.",
+    "configSchema": {
+      "model_name": {
+        "type": "text",
+        "label": "Tên mô hình",
+        "validation": {
+          "required": true
+        }
+      },
+      "version": {
+        "type": "text",
+        "label": "Phiên bản",
+        "default": "v1.0.0",
+        "validation": {
+          "required": true
+        }
+      },
+      "save_format": {
+        "type": "select",
+        "label": "Định dạng lưu trữ",
+        "default": "pickle",
+        "options": [
+          {
+            "label": "Pickle",
+            "value": "pickle"
+          },
+          {
+            "label": "ONNX",
+            "value": "onnx"
+          },
+          {
+            "label": "Keras/TensorFlow",
+            "value": "keras"
+          }
+        ]
+      },
+      "description": {
+        "type": "textarea",
+        "label": "Mô tả chi tiết"
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "input",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "metrics",
+          "label": "Optional Metrics",
+          "direction": "input",
+          "artifact": "Metrics",
+          "required": false,
+          "multiple": false
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "ExportDatasetBlock",
+    "sourceFile": "export.blocks.ts",
+    "id": "export_dataset",
+    "code": "export_dataset",
+    "name": "Export Dataset",
+    "categoryId": "export",
+    "description": "Xuất dữ liệu đã xử lý ra các định dạng tệp thông dụng để tải xuống hoặc lưu trữ.",
+    "configSchema": {
+      "format": {
+        "type": "select",
+        "label": "Định dạng xuất",
+        "default": "csv",
+        "options": [
+          {
+            "label": "CSV",
+            "value": "csv"
+          },
+          {
+            "label": "JSON",
+            "value": "json"
+          },
+          {
+            "label": "Excel",
+            "value": "xlsx"
+          },
+          {
+            "label": "Parquet",
+            "value": "parquet"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "file_name": {
+        "type": "text",
+        "label": "Tên tệp xuất ra",
+        "default": "exported_dataset",
+        "validation": {
+          "required": true
+        }
+      },
+      "include_index": {
+        "type": "switch",
+        "label": "Bao gồm cột chỉ mục",
+        "default": false
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset",
+          "label": "Dataset đầu vào",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "LogMetricsBlock",
+    "sourceFile": "export.blocks.ts",
+    "id": "log_metrics",
+    "code": "log_metrics",
+    "name": "Log Metrics",
+    "categoryId": "export",
+    "description": "Ghi nhận các chỉ số đánh giá lên bảng điều khiển Dashboard phục vụ giám sát.",
+    "configSchema": {
+      "run_name": {
+        "type": "text",
+        "label": "Tên lượt chạy",
+        "default": "run_1",
+        "validation": {
+          "required": true
+        }
+      },
+      "log_to_mlflow": {
+        "type": "switch",
+        "label": "Đồng bộ lên MLflow tracking",
+        "default": false
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "metrics",
+          "label": "Evaluation Metrics",
+          "direction": "input",
+          "artifact": "Metrics",
+          "required": true,
+          "multiple": false
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "LogisticRegressionBlock",
+    "sourceFile": "model.blocks.ts",
+    "id": "logistic_regression",
+    "code": "logistic_regression",
+    "name": "Logistic Regression",
+    "categoryId": "model",
+    "description": "Mô hình phân loại tuyến tính dùng hàm sigmoid để dự báo xác suất các lớp.",
+    "configSchema": {
+      "penalty": {
+        "type": "select",
+        "label": "Phạt Regularization",
+        "default": "l2",
+        "options": [
+          {
+            "label": "L1",
+            "value": "l1"
+          },
+          {
+            "label": "L2",
+            "value": "l2"
+          },
+          {
+            "label": "ElasticNet",
+            "value": "elasticnet"
+          },
+          {
+            "label": "Không phạt",
+            "value": "none"
+          }
+        ]
+      },
+      "C": {
+        "type": "number",
+        "label": "Hệ số C",
+        "default": 1,
+        "validation": {
+          "min": 0.0001
+        }
+      },
+      "solver": {
+        "type": "select",
+        "label": "Thuật toán tối ưu",
+        "default": "lbfgs",
+        "options": [
+          {
+            "label": "Lbfgs",
+            "value": "lbfgs"
+          },
+          {
+            "label": "Liblinear",
+            "value": "liblinear"
+          },
+          {
+            "label": "Sag",
+            "value": "sag"
+          },
+          {
+            "label": "Saga",
+            "value": "saga"
+          }
+        ]
+      },
+      "max_iter": {
+        "type": "number",
+        "label": "Số vòng lặp tối đa",
+        "default": 100,
+        "validation": {
+          "min": 1
+        }
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "val_dataset",
+          "label": "Validation Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "output",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "model_spec",
+          "label": "Model Specification",
+          "direction": "output",
+          "artifact": "ModelSpec",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "DecisionTreeBlock",
+    "sourceFile": "model.blocks.ts",
+    "id": "decision_tree",
+    "code": "decision_tree",
+    "name": "Decision Tree",
+    "categoryId": "model",
+    "description": "Mô hình cây quyết định học các quy tắc phân rẽ đặc trưng để phân loại hoặc hồi quy.",
+    "configSchema": {
+      "criterion": {
+        "type": "select",
+        "label": "Tiêu chí phân tách",
+        "default": "gini",
+        "options": [
+          {
+            "label": "Gini Impurity",
+            "value": "gini"
+          },
+          {
+            "label": "Entropy",
+            "value": "entropy"
+          },
+          {
+            "label": "Log Loss",
+            "value": "log_loss"
+          }
+        ]
+      },
+      "max_depth": {
+        "type": "number",
+        "label": "Chiều sâu tối đa của cây",
+        "default": 10,
+        "validation": {
+          "min": 1
+        }
+      },
+      "min_samples_split": {
+        "type": "number",
+        "label": "Số mẫu tối thiểu để phân tách một nút",
+        "default": 2,
+        "validation": {
+          "min": 2
+        }
+      },
+      "min_samples_leaf": {
+        "type": "number",
+        "label": "Số mẫu tối thiểu tại một nút lá",
+        "default": 1,
+        "validation": {
+          "min": 1
+        }
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "val_dataset",
+          "label": "Validation Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "output",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "model_spec",
+          "label": "Model Specification",
+          "direction": "output",
+          "artifact": "ModelSpec",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "RandomForestBlock",
+    "sourceFile": "model.blocks.ts",
+    "id": "random_forest",
+    "code": "random_forest",
+    "name": "Random Forest",
+    "categoryId": "model",
+    "description": "Mô hình Ensemble kết hợp nhiều cây quyết định để tăng độ chính xác và kháng overfitting.",
+    "configSchema": {
+      "n_estimators": {
+        "type": "number",
+        "label": "Số lượng cây quyết định",
+        "default": 100,
+        "validation": {
+          "min": 1
+        }
+      },
+      "criterion": {
+        "type": "select",
+        "label": "Tiêu chí phân tách",
+        "default": "gini",
+        "options": [
+          {
+            "label": "Gini Impurity",
+            "value": "gini"
+          },
+          {
+            "label": "Entropy",
+            "value": "entropy"
+          },
+          {
+            "label": "Log Loss",
+            "value": "log_loss"
+          }
+        ]
+      },
+      "max_depth": {
+        "type": "number",
+        "label": "Chiều sâu tối đa của cây",
+        "default": 15,
+        "validation": {
+          "min": 1
+        }
+      },
+      "max_features": {
+        "type": "select",
+        "label": "Số lượng đặc trưng tối đa khi rẽ nhánh",
+        "default": "sqrt",
+        "options": [
+          {
+            "label": "Căn bậc 2",
+            "value": "sqrt"
+          },
+          {
+            "label": "Logarit cơ số 2",
+            "value": "log2"
+          },
+          {
+            "label": "Toàn bộ",
+            "value": "none"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "val_dataset",
+          "label": "Validation Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "output",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "model_spec",
+          "label": "Model Specification",
+          "direction": "output",
+          "artifact": "ModelSpec",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "SVMBlock",
+    "sourceFile": "model.blocks.ts",
+    "id": "svm",
+    "code": "svm",
+    "name": "SVM",
+    "categoryId": "model",
+    "description": "Mô hình tìm kiếm siêu phẳng tối ưu để phân tách dữ liệu trong không gian nhiều chiều.",
+    "configSchema": {
+      "C": {
+        "type": "number",
+        "label": "Hệ số phạt lỗi C",
+        "default": 1,
+        "validation": {
+          "min": 0.0001
+        }
+      },
+      "kernel": {
+        "type": "select",
+        "label": "Hàm nhân",
+        "default": "rbf",
+        "options": [
+          {
+            "label": "Tuyến tính",
+            "value": "linear"
+          },
+          {
+            "label": "Đa thức",
+            "value": "poly"
+          },
+          {
+            "label": "RBF",
+            "value": "rbf"
+          },
+          {
+            "label": "Sigmoid",
+            "value": "sigmoid"
+          }
+        ]
+      },
+      "degree": {
+        "type": "number",
+        "label": "Bậc của đa thức",
+        "default": 3,
+        "validation": {
+          "min": 1
+        }
+      },
+      "gamma": {
+        "type": "select",
+        "label": "Hệ số Gamma",
+        "default": "scale",
+        "options": [
+          {
+            "label": "Scale",
+            "value": "scale"
+          },
+          {
+            "label": "Auto",
+            "value": "auto"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "val_dataset",
+          "label": "Validation Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "output",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "model_spec",
+          "label": "Model Specification",
+          "direction": "output",
+          "artifact": "ModelSpec",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "LinearRegressionBlock",
+    "sourceFile": "model.blocks.ts",
+    "id": "linear_regression",
+    "code": "linear_regression",
+    "name": "Linear Regression",
+    "categoryId": "model",
+    "description": "Mô hình tìm kiếm mối quan hệ tuyến tính giữa các biến độc lập và biến mục tiêu liên tục.",
+    "configSchema": {
+      "fit_intercept": {
+        "type": "switch",
+        "label": "Tính toán Bias hoặc Intercept",
+        "default": true
+      },
+      "copy_X": {
+        "type": "switch",
+        "label": "Copy thuộc tính X để tránh ghi đè",
+        "default": true
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "val_dataset",
+          "label": "Validation Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "output",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "model_spec",
+          "label": "Model Specification",
+          "direction": "output",
+          "artifact": "ModelSpec",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "RidgeRegressionBlock",
+    "sourceFile": "model.blocks.ts",
+    "id": "ridge_regression",
+    "code": "ridge_regression",
+    "name": "Ridge Regression",
+    "categoryId": "model",
+    "description": "Hồi quy tuyến tính bổ dung hình phạt L2 vào hàm tối ưu để chống đa cộng tuyến.",
+    "configSchema": {
+      "alpha": {
+        "type": "number",
+        "label": "Hệ số phạt Alpha",
+        "default": 1,
+        "validation": {
+          "min": 0
+        }
+      },
+      "fit_intercept": {
+        "type": "switch",
+        "label": "Tính toán Bias hoặc Intercept",
+        "default": true
+      },
+      "solver": {
+        "type": "select",
+        "label": "Thuật toán giải bài toán tối ưu",
+        "default": "auto",
+        "options": [
+          {
+            "label": "Tự động",
+            "value": "auto"
+          },
+          {
+            "label": "SVD decomposition",
+            "value": "svd"
+          },
+          {
+            "label": "Cholesky solver",
+            "value": "cholesky"
+          },
+          {
+            "label": "Lsqr",
+            "value": "lsqr"
+          },
+          {
+            "label": "Sag",
+            "value": "sag"
+          },
+          {
+            "label": "Saga",
+            "value": "saga"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "val_dataset",
+          "label": "Validation Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "output",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "model_spec",
+          "label": "Model Specification",
+          "direction": "output",
+          "artifact": "ModelSpec",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "KMeansBlock",
+    "sourceFile": "model.blocks.ts",
+    "id": "k_means",
+    "code": "k_means",
+    "name": "K-Means Clustering",
+    "categoryId": "model",
+    "description": "Thuật toán phân cụm không giám sát chia các quan sát thành K cụm dựa trên khoảng cách Euclid.",
+    "configSchema": {
+      "n_clusters": {
+        "type": "number",
+        "label": "Số lượng cụm phân chia",
+        "default": 8,
+        "validation": {
+          "required": true,
+          "min": 2
+        }
+      },
+      "init": {
+        "type": "select",
+        "label": "Cách khởi tạo tâm cụm",
+        "default": "k-means++",
+        "options": [
+          {
+            "label": "K-Means++",
+            "value": "k-means++"
+          },
+          {
+            "label": "Khởi tạo ngẫu nhiên",
+            "value": "random"
+          }
+        ]
+      },
+      "max_iter": {
+        "type": "number",
+        "label": "Số vòng lặp tối đa",
+        "default": 300,
+        "validation": {
+          "min": 1
+        }
+      },
+      "random_state": {
+        "type": "number",
+        "label": "Random State",
+        "default": 42,
+        "validation": {
+          "min": 0
+        }
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "val_dataset",
+          "label": "Validation Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "output",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "model_spec",
+          "label": "Model Specification",
+          "direction": "output",
+          "artifact": "ModelSpec",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "ANNBlock",
+    "sourceFile": "model.blocks.ts",
+    "id": "ann_model",
+    "code": "ann_model",
+    "name": "Mạng Nơ-ron Nhân tạo",
+    "categoryId": "model",
+    "description": "Mô hình Deep Learning cơ bản gồm các lớp Dense liên kết đầy đủ học các biểu diễn phi tuyến.",
+    "configSchema": {
+      "hidden_layers": {
+        "type": "textarea",
+        "label": "Số lượng nơ-ron tại các lớp ẩn",
+        "default": "64, 32",
+        "validation": {
+          "required": true
+        }
+      },
+      "activation": {
+        "type": "select",
+        "label": "Hàm kích hoạt",
+        "default": "relu",
+        "options": [
+          {
+            "label": "ReLU",
+            "value": "relu"
+          },
+          {
+            "label": "Tanh",
+            "value": "tanh"
+          },
+          {
+            "label": "Sigmoid",
+            "value": "sigmoid"
+          },
+          {
+            "label": "GeLU",
+            "value": "gelu"
+          }
+        ]
+      },
+      "dropout_rate": {
+        "type": "number",
+        "label": "Tỉ lệ Dropout chống Overfitting",
+        "default": 0,
+        "validation": {
+          "min": 0,
+          "max": 0.9,
+          "step": 0.05
+        }
+      },
+      "learning_rate": {
+        "type": "number",
+        "label": "Tốc độ học",
+        "default": 0.001,
+        "validation": {
+          "required": true,
+          "min": 0.00001
+        }
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "val_dataset",
+          "label": "Validation Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "hyperparameters",
+          "label": "Hyperparameters",
+          "direction": "input",
+          "artifact": "Hyperparameters",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "loss_config",
+          "label": "Loss Config",
+          "direction": "input",
+          "artifact": "LossConfig",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "early_stopping_config",
+          "label": "Early Stopping Config",
+          "direction": "input",
+          "artifact": "EarlyStoppingConfig",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "output",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "model_spec",
+          "label": "Model Specification",
+          "direction": "output",
+          "artifact": "ModelSpec",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "CNNBlock",
+    "sourceFile": "model.blocks.ts",
+    "id": "cnn_model",
+    "code": "cnn_model",
+    "name": "Mạng Nơ-ron Tích chập",
+    "categoryId": "model",
+    "description": "Mô hình học sâu sử dụng tích chập để tự động trích xuất các đặc trưng không gian.",
+    "configSchema": {
+      "conv_layers": {
+        "type": "textarea",
+        "label": "Số filter trong các lớp Conv",
+        "default": "32, 64",
+        "validation": {
+          "required": true
+        }
+      },
+      "kernel_size": {
+        "type": "number",
+        "label": "Kích thước ô tích chập",
+        "default": 3,
+        "validation": {
+          "required": true,
+          "min": 1
+        }
+      },
+      "pool_size": {
+        "type": "number",
+        "label": "Kích thước Pooling để giảm số chiều",
+        "default": 2,
+        "validation": {
+          "required": true,
+          "min": 1
+        }
+      },
+      "dense_units": {
+        "type": "number",
+        "label": "Số nơ-ron lớp ẩn Dense đầy đủ",
+        "default": 128,
+        "validation": {
+          "required": true,
+          "min": 1
+        }
+      },
+      "dropout_rate": {
+        "type": "number",
+        "label": "Tỉ lệ Dropout",
+        "default": 0.25,
+        "validation": {
+          "min": 0,
+          "max": 0.9
+        }
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "val_dataset",
+          "label": "Validation Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "hyperparameters",
+          "label": "Hyperparameters",
+          "direction": "input",
+          "artifact": "Hyperparameters",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "loss_config",
+          "label": "Loss Config",
+          "direction": "input",
+          "artifact": "LossConfig",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "early_stopping_config",
+          "label": "Early Stopping Config",
+          "direction": "input",
+          "artifact": "EarlyStoppingConfig",
+          "required": false,
+          "multiple": false
+        },
+        {
+          "id": "model",
+          "label": "Trained Model",
+          "direction": "output",
+          "artifact": "TrainedModel",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "model_spec",
+          "label": "Model Specification",
+          "direction": "output",
+          "artifact": "ModelSpec",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "HandleMissingValues",
+    "sourceFile": "preprocessing.block.ts",
+    "id": "handle_missing_values",
+    "code": "handle_missing_values",
+    "name": "Handle Missing Values",
+    "categoryId": "preprocess_data",
+    "description": "Xử lý các giá trị thiếu trong dataset bằng cách điền hoặc xoá bỏ.",
+    "configSchema": {
+      "strategy": {
+        "type": "select",
+        "label": "Chiến lược xử lý",
+        "default": "fill_mean",
+        "options": [
+          {
+            "label": "Xoá dòng chứa giá trị thiếu",
+            "value": "drop_rows"
+          },
+          {
+            "label": "Xoá cột chứa giá trị thiếu",
+            "value": "drop_columns"
+          },
+          {
+            "label": "Điền bằng trung bình",
+            "value": "fill_mean"
+          },
+          {
+            "label": "Điền bằng trung vị",
+            "value": "fill_median"
+          },
+          {
+            "label": "Điền bằng giá trị xuất hiện nhiều nhất",
+            "value": "fill_mode"
+          },
+          {
+            "label": "Điền bằng giá trị cố định",
+            "value": "fill_constant"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "fill_value": {
+        "type": "text",
+        "label": "Giá trị điền cố định"
+      },
+      "target_columns": {
+        "type": "textarea",
+        "label": "Danh sách cột áp dụng"
+      },
+      "missing_threshold": {
+        "type": "number",
+        "label": "Ngưỡng tỉ lệ thiếu để tự động drop cột",
+        "default": 0.5,
+        "validation": {
+          "min": 0,
+          "max": 1
+        }
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset đầu vào",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset đầu ra",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "RemoveDuplicates",
+    "sourceFile": "preprocessing.block.ts",
+    "id": "remove_duplicates",
+    "code": "remove_duplicates",
+    "name": "Remove Duplicates",
+    "categoryId": "preprocess_data",
+    "description": "Xoá các dòng dữ liệu bị trùng lặp hoàn toàn.",
+    "configSchema": {
+      "subset_columns": {
+        "type": "textarea",
+        "label": "Chỉ xét trùng lặp theo các cột này"
+      },
+      "keep": {
+        "type": "select",
+        "label": "Dòng nào được giữ lại khi phát hiện trùng lặp",
+        "default": "first",
+        "options": [
+          {
+            "label": "Giữ dòng đầu tiên",
+            "value": "first"
+          },
+          {
+            "label": "Giữ dòng cuối cùng",
+            "value": "last"
+          },
+          {
+            "label": "Xoá hết tất cả các dòng trùng",
+            "value": "none"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset đầu vào",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset đầu ra",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "Encoding",
+    "sourceFile": "preprocessing.block.ts",
+    "id": "encoding",
+    "code": "encoding",
+    "name": "Encoding",
+    "categoryId": "preprocess_data",
+    "description": "Mã hoá các cột dạng chữ thành số để mô hình ML có thể hiểu được.",
+    "configSchema": {
+      "method": {
+        "type": "select",
+        "label": "Phương pháp mã hoá",
+        "default": "label_encoding",
+        "options": [
+          {
+            "label": "Label Encoding",
+            "value": "label_encoding"
+          },
+          {
+            "label": "One-Hot Encoding",
+            "value": "one_hot_encoding"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "target_columns": {
+        "type": "textarea",
+        "label": "Danh sách cột cần mã hoá",
+        "validation": {
+          "required": true
+        }
+      },
+      "handle_unknown": {
+        "type": "select",
+        "label": "Cách xử lý giá trị mới chưa từng thấy lúc train",
+        "default": "error",
+        "options": [
+          {
+            "label": "Báo lỗi",
+            "value": "error"
+          },
+          {
+            "label": "Bỏ qua, gán 0",
+            "value": "ignore"
+          }
+        ]
+      },
+      "max_categories": {
+        "type": "number",
+        "label": "Số lượng category tối đa cho phép",
+        "default": 20,
+        "validation": {
+          "min": 2
+        }
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset đầu vào",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset đầu ra",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "Normalization",
+    "sourceFile": "preprocessing.block.ts",
+    "id": "normalization",
+    "code": "normalization",
+    "name": "Normalization",
+    "categoryId": "preprocess_data",
+    "description": "Chuẩn hoá các cột số về cùng 1 thang đo",
+    "configSchema": {
+      "method": {
+        "type": "select",
+        "label": "Phương pháp chuẩn hoá",
+        "default": "min_max",
+        "options": [
+          {
+            "label": "MinMax Scaling",
+            "value": "min_max"
+          },
+          {
+            "label": "Z-score Standardization",
+            "value": "z_score"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "target_columns": {
+        "type": "textarea",
+        "label": "Danh sách cột số cần chuẩn hoá",
+        "validation": {
+          "required": true
+        }
+      },
+      "feature_range_min": {
+        "type": "number",
+        "label": "Giá trị nhỏ nhất sau chuẩn hoá",
+        "default": 0
+      },
+      "feature_range_max": {
+        "type": "number",
+        "label": "Giá trị lớn nhất sau chuẩn hoá",
+        "default": 1
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset đầu vào",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset đầu ra",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "DataTypeConversion",
+    "sourceFile": "preprocessing.block.ts",
+    "id": "data_type_conversion",
+    "code": "data_type_conversion",
+    "name": "Data Type Conversion",
+    "categoryId": "preprocess_data",
+    "description": "Chuyển đổi kiểu dữ liệu của một hoặc nhiều cột.",
+    "configSchema": {
+      "target_columns": {
+        "type": "textarea",
+        "label": "Danh sách cột cần chuyển đổi",
+        "validation": {
+          "required": true
+        }
+      },
+      "target_type": {
+        "type": "select",
+        "label": "Kiểu dữ liệu đích",
+        "default": "string",
+        "options": [
+          {
+            "label": "Số nguyên",
+            "value": "integer"
+          },
+          {
+            "label": "Số thực",
+            "value": "float"
+          },
+          {
+            "label": "Chuỗi",
+            "value": "string"
+          },
+          {
+            "label": "Boolean",
+            "value": "boolean"
+          },
+          {
+            "label": "Ngày giờ",
+            "value": "datetime"
+          },
+          {
+            "label": "Category",
+            "value": "category"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "invalid_value_handling": {
+        "type": "select",
+        "label": "Xử lý giá trị không thể chuyển đổi",
+        "default": "raise",
+        "options": [
+          {
+            "label": "Báo lỗi",
+            "value": "raise"
+          },
+          {
+            "label": "Chuyển thành giá trị thiếu",
+            "value": "coerce"
+          },
+          {
+            "label": "Giữ nguyên giá trị",
+            "value": "ignore"
+          }
+        ]
+      },
+      "datetime_format": {
+        "type": "text",
+        "label": "Định dạng ngày giờ (nếu có)"
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset đầu vào",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset đầu ra",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "RenameColumns",
+    "sourceFile": "preprocessing.block.ts",
+    "id": "rename_columns",
+    "code": "rename_columns",
+    "name": "Rename Columns",
+    "categoryId": "preprocess_data",
+    "description": "Đổi tên một hoặc nhiều cột trong dataset.",
+    "configSchema": {
+      "rename_mapping": {
+        "type": "textarea",
+        "label": "Ánh xạ tên cột (tên_cũ:tên_mới, mỗi dòng một cặp)",
+        "validation": {
+          "required": true
+        }
+      },
+      "trim_names": {
+        "type": "switch",
+        "label": "Xoá khoảng trắng thừa trong tên cột",
+        "default": true
+      },
+      "duplicate_handling": {
+        "type": "select",
+        "label": "Xử lý khi tên mới đã tồn tại",
+        "default": "error",
+        "options": [
+          {
+            "label": "Báo lỗi",
+            "value": "error"
+          },
+          {
+            "label": "Ghi đè",
+            "value": "overwrite"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset đầu vào",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset đầu ra",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "DropColumns",
+    "sourceFile": "preprocessing.block.ts",
+    "id": "drop_columns",
+    "code": "drop_columns",
+    "name": "Drop Columns",
+    "categoryId": "preprocess_data",
+    "description": "Loại bỏ các cột không cần thiết khỏi dataset.",
+    "configSchema": {
+      "target_columns": {
+        "type": "textarea",
+        "label": "Danh sách cột cần xoá",
+        "validation": {
+          "required": true
+        }
+      },
+      "ignore_missing_columns": {
+        "type": "switch",
+        "label": "Bỏ qua cột không tồn tại",
+        "default": false
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset đầu vào",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset đầu ra",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "OutlierHandling",
+    "sourceFile": "preprocessing.block.ts",
+    "id": "outlier_handling",
+    "code": "outlier_handling",
+    "name": "Outlier Handling",
+    "categoryId": "preprocess_data",
+    "description": "Phát hiện và xử lý các giá trị ngoại lệ trong những cột số.",
+    "configSchema": {
+      "target_columns": {
+        "type": "textarea",
+        "label": "Danh sách cột số cần xử lý",
+        "validation": {
+          "required": true
+        }
+      },
+      "detection_method": {
+        "type": "select",
+        "label": "Phương pháp phát hiện",
+        "default": "iqr",
+        "options": [
+          {
+            "label": "IQR",
+            "value": "iqr"
+          },
+          {
+            "label": "Z-score",
+            "value": "z_score"
+          },
+          {
+            "label": "Percentile",
+            "value": "percentile"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "action": {
+        "type": "select",
+        "label": "Cách xử lý ngoại lệ",
+        "default": "cap",
+        "options": [
+          {
+            "label": "Xoá dòng",
+            "value": "remove"
+          },
+          {
+            "label": "Giới hạn về ngưỡng",
+            "value": "cap"
+          },
+          {
+            "label": "Thay bằng trung vị",
+            "value": "replace_median"
+          },
+          {
+            "label": "Thay bằng trung bình",
+            "value": "replace_mean"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "threshold": {
+        "type": "number",
+        "label": "Ngưỡng phát hiện (IQR multiplier hoặc Z-score)",
+        "default": 1.5,
+        "validation": {
+          "min": 0
+        }
+      },
+      "lower_percentile": {
+        "type": "number",
+        "label": "Phân vị dưới",
+        "default": 0.01,
+        "validation": {
+          "min": 0,
+          "max": 1
+        }
+      },
+      "upper_percentile": {
+        "type": "number",
+        "label": "Phân vị trên",
+        "default": 0.99,
+        "validation": {
+          "min": 0,
+          "max": 1
+        }
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset đầu vào",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset đầu ra",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "TextCleaning",
+    "sourceFile": "preprocessing.block.ts",
+    "id": "text_cleaning",
+    "code": "text_cleaning",
+    "name": "Text Cleaning",
+    "categoryId": "preprocess_data",
+    "description": "Làm sạch và chuẩn hoá dữ liệu văn bản trước khi huấn luyện.",
+    "configSchema": {
+      "target_columns": {
+        "type": "textarea",
+        "label": "Danh sách cột văn bản cần làm sạch",
+        "validation": {
+          "required": true
+        }
+      },
+      "lowercase": {
+        "type": "switch",
+        "label": "Chuyển thành chữ thường",
+        "default": true
+      },
+      "trim_whitespace": {
+        "type": "switch",
+        "label": "Xoá khoảng trắng ở đầu và cuối",
+        "default": true
+      },
+      "normalize_whitespace": {
+        "type": "switch",
+        "label": "Chuẩn hoá khoảng trắng liên tiếp",
+        "default": true
+      },
+      "remove_punctuation": {
+        "type": "switch",
+        "label": "Xoá dấu câu",
+        "default": false
+      },
+      "remove_numbers": {
+        "type": "switch",
+        "label": "Xoá chữ số",
+        "default": false
+      },
+      "remove_special_characters": {
+        "type": "switch",
+        "label": "Xoá ký tự đặc biệt",
+        "default": false
+      },
+      "remove_stopwords": {
+        "type": "switch",
+        "label": "Xoá stop words",
+        "default": false
+      },
+      "language": {
+        "type": "select",
+        "label": "Ngôn ngữ dùng cho stop words",
+        "default": "vietnamese",
+        "options": [
+          {
+            "label": "Tiếng Việt",
+            "value": "vietnamese"
+          },
+          {
+            "label": "Tiếng Anh",
+            "value": "english"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset đầu vào",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset đầu ra",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "TrainTestSplitBlock",
+    "sourceFile": "splitting.blocks.ts",
+    "id": "train_test_split",
+    "code": "train_test_split",
+    "name": "Train/Test Split",
+    "categoryId": "split_data",
+    "description": "Chia dataset thành 2 phần Train và Test theo tỉ lệ chỉ định.",
+    "configSchema": {
+      "target_column": {
+        "type": "text",
+        "label": "Cột mục tiêu",
+        "validation": {
+          "required": true
+        }
+      },
+      "train_ratio": {
+        "type": "number",
+        "label": "Tỉ lệ tập Train",
+        "default": 0.8,
+        "validation": {
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        }
+      },
+      "random_state": {
+        "type": "number",
+        "label": "Random State",
+        "default": 42,
+        "validation": {
+          "min": 0
+        }
+      },
+      "shuffle": {
+        "type": "switch",
+        "label": "Xáo trộn dữ liệu trước khi chia",
+        "default": true
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset",
+          "label": "Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "test_dataset",
+          "label": "Test Dataset",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "KFoldSplitBlock",
+    "sourceFile": "splitting.blocks.ts",
+    "id": "k_fold_split",
+    "code": "k_fold_split",
+    "name": "K-Fold Split",
+    "categoryId": "split_data",
+    "description": "Chia dataset thành K phần để phục vụ cho việc đánh giá Cross Validation.",
+    "configSchema": {
+      "target_column": {
+        "type": "text",
+        "label": "Cột mục tiêu",
+        "validation": {
+          "required": true
+        }
+      },
+      "n_splits": {
+        "type": "number",
+        "label": "Số fold",
+        "default": 5,
+        "validation": {
+          "required": true,
+          "min": 2,
+          "max": 50
+        }
+      },
+      "random_state": {
+        "type": "number",
+        "label": "Random State",
+        "default": 42,
+        "validation": {
+          "min": 0
+        }
+      },
+      "shuffle": {
+        "type": "switch",
+        "label": "Xáo trộn dữ liệu trước khi chia",
+        "default": true
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset",
+          "label": "Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "folds",
+          "label": "Folds",
+          "direction": "output",
+          "artifact": "Folds",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "StratifiedSplitBlock",
+    "sourceFile": "splitting.blocks.ts",
+    "id": "stratified_split",
+    "code": "stratified_split",
+    "name": "Stratified Split",
+    "categoryId": "split_data",
+    "description": "Chia dataset thành Train/Test sao cho tỉ lệ các lớp của cột phân loại ở 2 tập vẫn giữ nguyên.",
+    "configSchema": {
+      "stratify_column": {
+        "type": "text",
+        "label": "Cột phân loại",
+        "validation": {
+          "required": true
+        }
+      },
+      "test_ratio": {
+        "type": "number",
+        "label": "Tỉ lệ tập Test",
+        "default": 0.2,
+        "validation": {
+          "min": 0,
+          "max": 1,
+          "step": 0.01
+        }
+      },
+      "random_state": {
+        "type": "number",
+        "label": "Random State",
+        "default": 42,
+        "validation": {
+          "min": 0
+        }
+      },
+      "shuffle": {
+        "type": "switch",
+        "label": "Xáo trộn dữ liệu trước khi chia",
+        "default": true
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset",
+          "label": "Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "train_dataset",
+          "label": "Train Dataset",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        },
+        {
+          "id": "test_dataset",
+          "label": "Test Dataset",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "FeatureSelectionBlock",
+    "sourceFile": "transform.blocks.ts",
+    "id": "feature_selection",
+    "code": "feature_selection",
+    "name": "Feature Selection",
+    "categoryId": "transform",
+    "description": "Chọn lọc các đặc trưng quan trọng nhất dựa trên điểm số thống kê hoặc mô hình.",
+    "configSchema": {
+      "method": {
+        "type": "select",
+        "label": "Phương pháp lựa chọn",
+        "default": "k_best",
+        "options": [
+          {
+            "label": "Select K Best",
+            "value": "k_best"
+          },
+          {
+            "label": "Recursive Feature Elimination (RFE)",
+            "value": "rfe"
+          },
+          {
+            "label": "Lựa chọn theo độ quan trọng đặc trưng",
+            "value": "importance"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      "k_features": {
+        "type": "number",
+        "label": "Số đặc trưng cần giữ lại (k)",
+        "default": 10,
+        "validation": {
+          "min": 1
+        }
+      },
+      "threshold": {
+        "type": "text",
+        "label": "Ngưỡng độ quan trọng tối thiểu",
+        "default": "median"
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "PCABlock",
+    "sourceFile": "transform.blocks.ts",
+    "id": "pca",
+    "code": "pca",
+    "name": "PCA (Principal Component Analysis)",
+    "categoryId": "transform",
+    "description": "Giảm số chiều dữ liệu bằng phương pháp phân tích thành phần chính.",
+    "configSchema": {
+      "n_components": {
+        "type": "number",
+        "label": "Số thành phần chính giữ lại",
+        "default": 2,
+        "validation": {
+          "min": 1
+        }
+      },
+      "whiten": {
+        "type": "switch",
+        "label": "Làm trắng dữ liệu (whitening)",
+        "default": false
+      },
+      "svd_solver": {
+        "type": "select",
+        "label": "Thuật toán SVD",
+        "default": "auto",
+        "options": [
+          {
+            "label": "Tự động",
+            "value": "auto"
+          },
+          {
+            "label": "Full SVD",
+            "value": "full"
+          },
+          {
+            "label": "Randomized SVD",
+            "value": "randomized"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  },
+  {
+    "symbol": "CreateNewFeatureBlock",
+    "sourceFile": "transform.blocks.ts",
+    "id": "create_new_feature",
+    "code": "create_new_feature",
+    "name": "Create New Feature",
+    "categoryId": "transform",
+    "description": "Tạo cột đặc trưng mới bằng cách kết hợp toán học các cột hiện tại.",
+    "configSchema": {
+      "new_column_name": {
+        "type": "text",
+        "label": "Tên cột đặc trưng mới",
+        "validation": {
+          "required": true
+        }
+      },
+      "formula": {
+        "type": "text",
+        "label": "Công thức toán học (ví dụ: col1 * col2 + col3)",
+        "validation": {
+          "required": true
+        }
+      },
+      "error_handling": {
+        "type": "select",
+        "label": "Cách xử lý lỗi tính toán (chia cho 0...)",
+        "default": "null",
+        "options": [
+          {
+            "label": "Gán giá trị Null",
+            "value": "null"
+          },
+          {
+            "label": "Gán bằng 0",
+            "value": "zero"
+          },
+          {
+            "label": "Không xử lý (gây lỗi dừng pipeline)",
+            "value": "error"
+          }
+        ]
+      }
+    },
+    "portSchema": {
+      "ports": [
+        {
+          "id": "dataset_in",
+          "label": "Dataset",
+          "direction": "input",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": false
+        },
+        {
+          "id": "dataset_out",
+          "label": "Dataset",
+          "direction": "output",
+          "artifact": "Dataset",
+          "required": true,
+          "multiple": true
+        }
+      ]
+    }
+  }
+]

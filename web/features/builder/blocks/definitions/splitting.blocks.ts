@@ -1,5 +1,16 @@
-import type { BlockDefinition, BlockInputPort, BlockOutputPort } from '@/lib/models';
+import type { BlockDefinition, BlockPort } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
+
+const splitPorts: BlockPort[] = [
+    { id: 'dataset', label: 'Dataset', direction: 'input', artifact: 'Dataset', required: true, multiple: false },
+    { id: 'train_dataset', label: 'Train Dataset', direction: 'output', artifact: 'Dataset', required: true, multiple: true },
+    { id: 'test_dataset', label: 'Test Dataset', direction: 'output', artifact: 'Dataset', required: true, multiple: true },
+];
+
+const kFoldPorts: BlockPort[] = [
+    { id: 'dataset', label: 'Dataset', direction: 'input', artifact: 'Dataset', required: true, multiple: false },
+    { id: 'folds', label: 'Folds', direction: 'output', artifact: 'Folds', required: true, multiple: true },
+];
 
 export const TrainTestSplitBlock: BlockDefinition = {
     id: "train_test_split",
@@ -8,6 +19,11 @@ export const TrainTestSplitBlock: BlockDefinition = {
     categoryId: "split_data",
     description: "Chia dataset thành 2 phần Train và Test theo tỉ lệ chỉ định.",
     configSchema: {
+        target_column: {
+            type: "text",
+            label: "Cột mục tiêu",
+            validation: { required: true },
+        } satisfies BlockConfigField,
         train_ratio: {
             type: "number",
             label: "Tỉ lệ tập Train",
@@ -25,9 +41,8 @@ export const TrainTestSplitBlock: BlockDefinition = {
             label: "Xáo trộn dữ liệu trước khi chia",
             default: true,
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: splitPorts },
 }
 
 export const KFoldSplitBlock: BlockDefinition = {
@@ -37,6 +52,11 @@ export const KFoldSplitBlock: BlockDefinition = {
     categoryId: "split_data",
     description: "Chia dataset thành K phần để phục vụ cho việc đánh giá Cross Validation.",
     configSchema: {
+        target_column: {
+            type: "text",
+            label: "Cột mục tiêu",
+            validation: { required: true },
+        } satisfies BlockConfigField,
         n_splits: {
             type: "number",
             label: "Số fold",
@@ -54,9 +74,8 @@ export const KFoldSplitBlock: BlockDefinition = {
             label: "Xáo trộn dữ liệu trước khi chia",
             default: true,
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: kFoldPorts },
 }
 
 export const StratifiedSplitBlock: BlockDefinition = {
@@ -88,7 +107,6 @@ export const StratifiedSplitBlock: BlockDefinition = {
             label: "Xáo trộn dữ liệu trước khi chia",
             default: true,
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: [],
-    outputSchema: [],
+    },
+    portSchema: { ports: splitPorts },
 }

@@ -1,9 +1,14 @@
 import type { Edge } from '@xyflow/react';
-import type { SocketType } from '../blocks/socket-types';
+import type { SocketDefinition } from '../blocks/socket-types';
 import type { PipelineNodeData } from './node-factory';
+import { BLOCK_CATEGORIES } from '../blocks';
+import { wouldCreateCycle } from './pipeline-validator';
 
-export function canConnect(sourceType: SocketType, targetType: SocketType): boolean {
-  return sourceType === targetType;
+export function canConnect(sourceSocket: SocketDefinition, targetSocket: SocketDefinition): boolean {
+  if (sourceSocket.direction !== 'output' || targetSocket.direction !== 'input') {
+    return false;
+  }
+  return sourceSocket.artifact === targetSocket.artifact;
 }
 
 export interface ConnectionValidationParams {
@@ -31,12 +36,35 @@ export function isValidNodeConnection(
   const targetSocket = targetNode.data.inputs.find((s) => s.id === targetHandle);
   if (!sourceSocket || !targetSocket) return false;
 
-  if (!canConnect(sourceSocket.type, targetSocket.type)) return false;
+  // 1. Artifact and Direction validation
+  if (!canConnect(sourceSocket, targetSocket)) return false;
 
+  // 2. Order Index validation (Pipeline Stage constraint)
+  const sourceCategory = BLOCK_CATEGORIES.find(c => c.id === sourceNode.data.categoryId);
+  const targetCategory = BLOCK_CATEGORIES.find(c => c.id === targetNode.data.categoryId);
+  
+  if (sourceCategory && targetCategory) {
+    if (sourceCategory.orderIndex > targetCategory.orderIndex) {
+      return false; // Cannot connect backwards in the pipeline
+    }
+  }
+
+  // 3. Duplicate edge validation
   const alreadyConnected = edges.some(
-    (e) => e.target === targetNodeId && e.targetHandle === targetHandle
+    (e) => e.target === targetNodeId && e.targetHandle === targetHandle && e.source === sourceNodeId && e.sourceHandle === sourceHandle
   );
   if (alreadyConnected) return false;
+
+  // 4. The execution graph must remain a DAG, including within one stage.
+  if (wouldCreateCycle(edges, sourceNodeId, targetNodeId)) return false;
+
+  // 5. "multiple" validation for target
+  if (targetSocket.multiple === false) {
+    const isTargetOccupied = edges.some(
+      (e) => e.target === targetNodeId && e.targetHandle === targetHandle
+    );
+    if (isTargetOccupied) return false;
+  }
 
   return true;
 }

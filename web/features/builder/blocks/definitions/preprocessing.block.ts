@@ -1,8 +1,10 @@
-import type { BlockDefinition } from '@/lib/models';
+import type { BlockDefinition, BlockPort } from '@/lib/models';
 import type { BlockConfigField } from '../socket-types';
 
-const commonInputSchema: any[] = [];
-const commonOutputSchema: any[] = [];
+const commonPorts: BlockPort[] = [
+    { id: 'dataset_in', label: 'Dataset đầu vào', direction: 'input', artifact: 'Dataset', required: true, multiple: false },
+    { id: 'dataset_out', label: 'Dataset đầu ra', direction: 'output', artifact: 'Dataset', required: true, multiple: true },
+];
 
 export const HandleMissingValues: BlockDefinition = {
     id: "handle_missing_values",
@@ -39,9 +41,8 @@ export const HandleMissingValues: BlockDefinition = {
             default: 0.5,
             validation: { min: 0, max: 1 },
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const RemoveDuplicates: BlockDefinition = {
@@ -65,9 +66,8 @@ export const RemoveDuplicates: BlockDefinition = {
                 { label: "Xoá hết tất cả các dòng trùng", value: "none" },
             ],
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const Encoding: BlockDefinition = {
@@ -108,9 +108,8 @@ export const Encoding: BlockDefinition = {
             default: 20,
             validation: { min: 2 },
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const Normalization: BlockDefinition = {
@@ -145,9 +144,8 @@ export const Normalization: BlockDefinition = {
             label: "Giá trị lớn nhất sau chuẩn hoá",
             default: 1,
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const DataTypeConversion: BlockDefinition = {
@@ -190,9 +188,8 @@ export const DataTypeConversion: BlockDefinition = {
             type: "text",
             label: "Định dạng ngày giờ (nếu có)",
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const RenameColumns: BlockDefinition = {
@@ -221,9 +218,8 @@ export const RenameColumns: BlockDefinition = {
                 { label: "Ghi đè", value: "overwrite" },
             ],
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const DropColumns: BlockDefinition = {
@@ -243,9 +239,8 @@ export const DropColumns: BlockDefinition = {
             label: "Bỏ qua cột không tồn tại",
             default: false,
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const OutlierHandling: BlockDefinition = {
@@ -301,9 +296,8 @@ export const OutlierHandling: BlockDefinition = {
             default: 0.99,
             validation: { min: 0, max: 1 },
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    },
+    portSchema: { ports: commonPorts },
 }
 
 export const TextCleaning: BlockDefinition = {
@@ -348,7 +342,6 @@ export const TextCleaning: BlockDefinition = {
                 { label: "Tiếng Anh", value: "english" },
             ],
         } satisfies BlockConfigField,
-    } as Record<string, unknown>,
-    inputSchema: commonInputSchema,
-    outputSchema: commonOutputSchema,
+    },
+    portSchema: { ports: commonPorts },
 }
