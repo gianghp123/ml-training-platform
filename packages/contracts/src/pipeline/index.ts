@@ -4,5 +4,6 @@ export * from './ml-task.schema';
 export * from './dataset-role.schema';
 export * from './contract.schema';
 export * from './validation-error.schema';
+export * from './validation-result.schema';
 export * from './config-field.schema';
 export * from './constraint.schema';

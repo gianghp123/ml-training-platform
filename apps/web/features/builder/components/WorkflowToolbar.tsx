@@ -19,6 +19,7 @@ import {
   Save,
   Settings2,
 } from 'lucide-react';
+import { useValidationContext } from '../contexts/validation.context';
 
 interface WorkflowToolbarProps {
   workflowName: string;
@@ -41,6 +42,16 @@ export function WorkflowToolbar({
   edgeStyle,
   onEdgeStyleChange,
 }: WorkflowToolbarProps) {
+  const { isValid } = useValidationContext();
+
+  const handleSave = () => {
+    if (!isValid) {
+      console.warn('Cannot save: workflow has validation errors');
+      return;
+    }
+    onSave();
+  };
+
   return (
     <div className="flex items-center gap-3 px-4 py-2 border-b bg-background">
       <Button variant="ghost" size="icon-sm" asChild>
@@ -76,7 +87,7 @@ export function WorkflowToolbar({
             <Download className="size-4" />
           </Button>
         )}
-        <Button variant="ghost" size="icon-sm" onClick={onSave} title="Save workflow">
+        <Button variant="ghost" size="icon-sm" onClick={handleSave} title="Save workflow">
           <Save className="size-4" />
         </Button>
         <Button variant="default" size="sm" onClick={onRun} className="gap-1.5">

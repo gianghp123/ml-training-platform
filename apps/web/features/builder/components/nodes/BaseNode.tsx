@@ -4,14 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Handle, Position, useReactFlow, type NodeProps } from '@xyflow/react';
 import { memo, useCallback, useMemo } from 'react';
-import { CATEGORY_COLORS } from '../../blocks';
-import type { BlockConfigField } from '../../blocks/socket-types';
+import { getCategoryColor } from '../../blocks';
 import { useBuilderContext } from '../../contexts/builder.context';
-import type { PipelineNode, PipelineNodeData } from '../../utils/node-factory';
-import { findBlockById } from '../../utils/node-factory';
+import type { PipelineNode } from '../../utils/node-factory';
+import { useValidationContext } from '../../contexts/validation.context';
 import { BlockConfigForm } from '../BlockConfigForm';
 
-function getStatusVariant(status: PipelineNodeData['status']) {
+function getStatusVariant(status: PipelineNode['data']['status']) {
   switch (status) {
     case 'success':
       return 'default' as const;
@@ -27,7 +26,7 @@ function getStatusVariant(status: PipelineNodeData['status']) {
 }
 
 function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
-  const dotColor = CATEGORY_COLORS[data.categoryId] ?? 'bg-gray-500';
+  const dotColor = getCategoryColor(data.categoryId).tw;
   const builder = useBuilderContext();
   const rf = useReactFlow();
 
@@ -40,10 +39,13 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
     return pd.suspended === true;
   }, [parentId, rf]);
 
-  const configSchema = useMemo(() => {
-    const block = findBlockById(data.blockId);
-    return (block?.configSchema ?? {}) as Record<string, BlockConfigField>;
-  }, [data.blockId]);
+  const { getNodeErrors } = useValidationContext();
+  const errors = getNodeErrors(id);
+  const hasErrors = errors.length > 0;
+
+  const configFields = useMemo(() => {
+    return data.block.configSchema.fields ?? [];
+  }, [data.block]);
 
   const handleConfigChange = useCallback(
     (key: string, value: string | number | boolean) => {
@@ -60,7 +62,8 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
 
   return (
     <div
-      className={`min-w-50 rounded-lg border bg-card text-card-foreground shadow-sm transition-shadow ${selected ? 'ring-2 ring-ring' : 'ring-1 ring-foreground/10'
+      className={`min-w-50 rounded-lg border bg-card text-card-foreground shadow-sm transition-shadow ${
+          hasErrors ? 'ring-2 ring-destructive' : selected ? 'ring-2 ring-ring' : 'ring-1 ring-foreground/10'
         } ${isParentSuspended ? 'opacity-50 grayscale' : ''}`}
     >
       <div
@@ -96,19 +99,16 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
                       className={`static! ${dotColor} border-2! border-background!`}
                     />
                   </TooltipTrigger>
-                  <TooltipContent side="left">{input.label} ({input.type})</TooltipContent>
+                  <TooltipContent side="left">{input.id} ({input.artifact})</TooltipContent>
                 </Tooltip>
-                <span className="text-xs text-muted-foreground">
-                  {input.label}
-                  {input.optional && <span className="text-[10px]"> (optional)</span>}
-                </span>
+                <span className="text-xs text-muted-foreground">{input.id}</span>
               </div>
             ))}
           </div>
           <div>
             {data.outputs.map((output) => (
               <div key={output.id} className="relative flex items-center justify-end gap-2">
-                <span className="text-xs text-muted-foreground">{output.label}</span>
+                <span className="text-xs text-muted-foreground">{output.id}</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Handle
@@ -126,7 +126,7 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
                       className={`static! ${dotColor} border-2! border-background!`}
                     />
                   </TooltipTrigger>
-                  <TooltipContent side="right">{output.label} ({output.type})</TooltipContent>
+                  <TooltipContent side="right">{output.id} ({output.artifact})</TooltipContent>
                 </Tooltip>
               </div>
             ))}
@@ -134,10 +134,20 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
         </div>
 
         <BlockConfigForm
-          schema={configSchema}
+          fields={configFields}
           values={data.config}
           onChange={handleConfigChange}
         />
+
+        {hasErrors && (
+          <div className="space-y-1 mt-2">
+            {errors.map((err, i) => (
+              <p key={i} className="text-xs text-destructive">
+                {err.message}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

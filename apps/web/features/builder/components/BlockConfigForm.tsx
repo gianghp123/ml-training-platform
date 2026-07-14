@@ -4,11 +4,11 @@ import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
+import type { ConfigField } from '@training-ml/contracts';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -16,48 +16,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import type { BlockConfigField } from '../blocks/socket-types';
 
 interface BlockConfigFormProps {
-  schema: Record<string, BlockConfigField>;
+  fields: ConfigField[];
   values: Record<string, string | number | boolean>;
   onChange: (key: string, value: string | number | boolean) => void;
 }
 
-function buildZodSchema(fields: Record<string, BlockConfigField>): z.ZodObject<Record<string, z.ZodTypeAny>> {
-  const shape: Record<string, z.ZodTypeAny> = {};
+function buildZodSchema(fields: ConfigField[]): z.ZodObject<Record<string, z.ZodType<unknown>>> {
+  const shape: Record<string, z.ZodType<unknown>> = {};
 
-  for (const [key, field] of Object.entries(fields)) {
-    const v = field.validation;
-
+  for (const field of fields) {
     switch (field.type) {
-      case 'number': {
+      case 'Number': {
         let num = z.coerce.number();
-        if (v?.min !== undefined) num = num.min(v.min, `Min ${v.min}`);
-        if (v?.max !== undefined) num = num.max(v.max, `Max ${v.max}`);
-        if (v?.required) num = num.refine((n) => !isNaN(n), 'Required');
-        shape[key] = num;
+        if (field.min !== undefined) num = num.min(field.min, `Min ${field.min}`);
+        if (field.max !== undefined) num = num.max(field.max, `Max ${field.max}`);
+        shape[field.id] = num;
         break;
       }
-      case 'checkbox':
-        shape[key] = z.array(z.string());
+      case 'Boolean': {
+        shape[field.id] = z.boolean();
         break;
-      case 'switch':
-        shape[key] = z.boolean();
-        break;
-      case 'select':
-      case 'radio':
-        shape[key] = v?.required ? z.string().min(1, 'Required') : z.string();
-        break;
-      case 'textarea':
-      case 'text':
+      }
+      case 'Select':
+      case 'Text':
+      case 'FileUpload':
+      case 'ColumnSelector':
+      case 'KeyValueMap':
       default: {
-        let str = z.string();
-        if (v?.minLength !== undefined) str = str.min(v.minLength, `Min ${v.minLength} chars`);
-        if (v?.maxLength !== undefined) str = str.max(v.maxLength, `Max ${v.maxLength} chars`);
-        if (v?.required) str = str.min(1, 'Required');
-        shape[key] = str;
+        shape[field.id] = z.string();
         break;
       }
     }
@@ -67,27 +55,30 @@ function buildZodSchema(fields: Record<string, BlockConfigField>): z.ZodObject<R
 }
 
 function buildDefaultValues(
-  fields: Record<string, BlockConfigField>,
+  fields: ConfigField[],
   values: Record<string, string | number | boolean>,
 ): Record<string, unknown> {
   const defaults: Record<string, unknown> = {};
-  for (const [key, field] of Object.entries(fields)) {
-    const raw = values[key];
-    if (field.type === 'number') {
-      defaults[key] = raw !== undefined ? Number(raw) : (field.default ?? 0);
-    } else if (field.type === 'switch') {
-      defaults[key] = Boolean(raw ?? field.default ?? false);
-    } else if (field.type === 'checkbox') {
-      const parsed = raw ? String(raw).split(',').filter(Boolean) : [];
-      defaults[key] = parsed.length > 0 ? parsed : [];
-    } else {
-      defaults[key] = raw !== undefined ? String(raw) : String(field.default ?? '');
+  for (const field of fields) {
+    const raw = values[field.id];
+    switch (field.type) {
+      case 'Number':
+        defaults[field.id] = raw !== undefined ? Number(raw) : (field.default ?? 0);
+        break;
+      case 'Boolean':
+        defaults[field.id] = Boolean(raw ?? field.default ?? false);
+        break;
+      case 'Select':
+        defaults[field.id] = raw !== undefined ? String(raw) : String(field.default ?? '');
+        break;
+      default:
+        defaults[field.id] = raw !== undefined ? String(raw) : '';
     }
   }
   return defaults;
 }
 
-export function BlockConfigForm({ schema: fields, values, onChange }: BlockConfigFormProps) {
+export function BlockConfigForm({ fields, values, onChange }: BlockConfigFormProps) {
   const zodSchema = useMemo(() => buildZodSchema(fields), [fields]);
 
   const defaultValues = useMemo(
@@ -100,32 +91,28 @@ export function BlockConfigForm({ schema: fields, values, onChange }: BlockConfi
     defaultValues,
   });
 
-  function onSubmit(data: z.infer<typeof zodSchema>) {
-    console.log('Block config submitted:', { key: data, values: form.getValues() });
-  }
-
-  if (Object.keys(fields).length === 0) return null;
+  if (fields.length === 0) return null;
 
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={(e) => e.preventDefault()}
       className="border-t pt-2 mt-2 space-y-2"
     >
-      {Object.entries(fields).map(([key, field]) => (
+      {fields.map((field) => (
         <Controller
-          key={key}
-          name={key}
+          key={field.id}
+          name={field.id}
           control={form.control}
           render={({ field: controllerField, fieldState }) => (
             <Field data-invalid={fieldState.invalid} orientation="vertical">
-              <FieldLabel className="text-[10px]">{field.label}</FieldLabel>
-              {field.type === 'text' && (
+              <FieldLabel className="text-[10px]">{field.id}</FieldLabel>
+              {(field.type === 'Text' || field.type === 'FileUpload' || field.type === 'ColumnSelector' || field.type === 'KeyValueMap') && (
                 <Input
                   value={String(controllerField.value ?? '')}
                   onChange={(e) => {
                     const v = e.target.value;
                     controllerField.onChange(v);
-                    onChange(key, v);
+                    onChange(field.id, v);
                   }}
                   name={controllerField.name}
                   ref={controllerField.ref}
@@ -134,123 +121,34 @@ export function BlockConfigForm({ schema: fields, values, onChange }: BlockConfi
                   aria-invalid={fieldState.invalid}
                 />
               )}
-              {field.type === 'textarea' && (
-                <Textarea
-                  value={String(controllerField.value ?? '')}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    controllerField.onChange(v);
-                    onChange(key, v);
-                  }}
-                  className="text-xs nodrag"
-                  rows={3}
-                  aria-invalid={fieldState.invalid}
-                />
-              )}
-              {field.type === 'number' && (
+              {field.type === 'Number' && (
                 <Input
                   type="number"
                   value={controllerField.value as string | number ?? ''}
                   onChange={(e) => {
                     const raw = e.target.value;
-                    const v = raw === '' ? '' : raw;
-                    controllerField.onChange(v);
+                    controllerField.onChange(raw);
                     if (raw !== '') {
                       const n = Number(raw);
-                      if (!isNaN(n)) onChange(key, n);
+                      if (!isNaN(n)) onChange(field.id, n);
                     }
                   }}
                   name={controllerField.name}
                   ref={controllerField.ref}
                   onBlur={controllerField.onBlur}
-                  min={field.validation?.min}
-                  max={field.validation?.max}
-                  step={field.validation?.step}
+                  min={field.min}
+                  max={field.max}
                   className="h-6 text-xs nodrag"
                   aria-invalid={fieldState.invalid}
                 />
               )}
-              {field.type === 'select' && field.options && (
-                <Select
-                  value={String(controllerField.value)}
-                  onValueChange={(v) => {
-                    controllerField.onChange(v);
-                    onChange(key, v);
-                  }}
-                >
-                  <SelectTrigger
-                    className="h-6 text-xs nodrag"
-                    aria-invalid={fieldState.invalid}
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {field.options.map((opt) => (
-                      <SelectItem key={opt.value} value={String(opt.value)}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              {field.type === 'radio' && field.options && (
-                <RadioGroup
-                  value={String(controllerField.value)}
-                  onValueChange={(v) => {
-                    controllerField.onChange(v);
-                    onChange(key, v);
-                  }}
-                  className="gap-1.5"
-                >
-                  {field.options.map((opt) => (
-                    <div key={opt.value} className="flex items-center gap-2">
-                      <RadioGroupItem value={String(opt.value)} id={`${key}-${opt.value}`} className="nodrag" />
-                      <label htmlFor={`${key}-${opt.value}`} className="text-xs cursor-pointer">
-                        {opt.label}
-                      </label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              )}
-              {field.type === 'checkbox' && field.options && (
-                <div className="flex flex-col gap-1.5">
-                  {field.options.map((opt) => {
-                    const selected = Array.isArray(controllerField.value)
-                      ? controllerField.value.includes(String(opt.value))
-                      : false;
-                    return (
-                      <div key={opt.value} className="flex items-center gap-2">
-                        <Checkbox
-                          id={`${key}-${opt.value}`}
-                          checked={selected}
-                          onCheckedChange={(checked) => {
-                            const arr = (Array.isArray(controllerField.value)
-                              ? [...controllerField.value]
-                              : []) as string[];
-                            const v = String(opt.value);
-                            const next = checked
-                              ? [...arr, v]
-                              : arr.filter((i) => i !== v);
-                            controllerField.onChange(next);
-                            onChange(key, next.join(','));
-                          }}
-                          className="nodrag"
-                        />
-                        <label htmlFor={`${key}-${opt.value}`} className="text-xs cursor-pointer">
-                          {opt.label}
-                        </label>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {field.type === 'switch' && (
+              {field.type === 'Boolean' && (
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={Boolean(controllerField.value)}
                     onCheckedChange={(v) => {
                       controllerField.onChange(v);
-                      onChange(key, v);
+                      onChange(field.id, v);
                     }}
                     className="nodrag"
                     aria-invalid={fieldState.invalid}
@@ -258,6 +156,63 @@ export function BlockConfigForm({ schema: fields, values, onChange }: BlockConfi
                   <span className="text-[10px] text-muted-foreground">
                     {Boolean(controllerField.value) ? 'On' : 'Off'}
                   </span>
+                </div>
+              )}
+              {field.type === 'Select' && (
+                <Select
+                  value={String(controllerField.value)}
+                  onValueChange={(v) => {
+                    controllerField.onChange(v);
+                    onChange(field.id, v);
+                  }}
+                >
+                  <SelectTrigger className="h-6 text-xs nodrag" aria-invalid={fieldState.invalid}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {field.options.map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {field.type === 'MultiSelect' && (
+                <div className="flex flex-col gap-1.5">
+                  {field.options ? (
+                    field.options.map((opt) => {
+                      const selected = Array.isArray(controllerField.value)
+                        ? controllerField.value.includes(opt)
+                        : false;
+                      return (
+                        <div key={opt} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`${field.id}-${opt}`}
+                            checked={selected}
+                            onCheckedChange={(checked) => {
+                              const arr = (Array.isArray(controllerField.value)
+                                ? [...controllerField.value]
+                                : []) as string[];
+                              const next = checked
+                                ? [...arr, opt]
+                                : arr.filter((i) => i !== opt);
+                              controllerField.onChange(next);
+                              onChange(field.id, next.join(','));
+                            }}
+                            className="nodrag"
+                          />
+                          <label htmlFor={`${field.id}-${opt}`} className="text-xs cursor-pointer">
+                            {opt}
+                          </label>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">
+                      Options depend on connected block
+                    </span>
+                  )}
                 </div>
               )}
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

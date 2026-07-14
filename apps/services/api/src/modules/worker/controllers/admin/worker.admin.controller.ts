@@ -11,17 +11,17 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Query,
+  Query
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiTags,
 } from '@nestjs/swagger';
-import { ZodResponse } from "nestjs-zod";
-import { WorkerService } from '../../services/worker.service';
-import { CreateWorkerDto, UpdateWorkerDto, WorkerDto, PaginatedWorkerResponseDto } from '../../dtos/worker.dto';
-import { Roles } from 'src/modules/auth/decorators/role.decorator';
 import { UserRole } from '@training-ml/contracts';
+import { ZodResponse } from "nestjs-zod";
+import { Roles } from 'src/modules/auth/decorators/role.decorator';
+import { CreateWorkerDto, PaginatedWorkerResponseDto, UpdateWorkerDto, WorkerDto } from '../../dtos/worker.dto';
+import { WorkerService } from '../../services/worker.service';
 
 @ApiTags('Admin-Workers')
 @ApiBearerAuth()
@@ -30,7 +30,7 @@ import { UserRole } from '@training-ml/contracts';
 export class WorkerAdminController {
   constructor(
     private readonly workerService: WorkerService,
-  ) {}
+  ) { }
 
   @Get()
   @ZodResponse({ status: HttpStatus.OK, type: PaginatedWorkerResponseDto })

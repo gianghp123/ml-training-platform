@@ -1,5 +1,4 @@
-import type { BlockDefinition, ValidationError } from '@training-ml/contracts';
-import type { Contract } from '@training-ml/contracts';
+import type { BlockDefinition, Contract, ValidationError } from '@training-ml/contracts';
 import type { Graph, GraphEdge, GraphNode, ValidationResult } from './types';
 import { getIncomingEdges, topologicalSort } from './utils/graph-helpers';
 import { validateNode } from './validate-node';
@@ -11,6 +10,7 @@ export function validateGraph(
   const definitionMap = new Map(
     blockDefinitions.map((d) => [`${d.id}@${d.version}`, d]),
   );
+
 
   const errors: ValidationError[] = [];
   const contracts: Record<string, Record<string, Contract>> = {};

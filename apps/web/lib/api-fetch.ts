@@ -3,8 +3,7 @@
 import { auth } from "@clerk/nextjs/server"
 import {
   ApiResponse,
-  PaginatedMeta,
-  PaginatedResponse,
+  PaginatedMeta
 } from "@training-ml/contracts"
 import "server-only"
 
@@ -115,7 +114,7 @@ async function parseJson(response: Response): Promise<unknown> {
 
 function normalizeResponse<T>(
   raw: unknown,
-): ApiResponse<T> | PaginatedResponse<T> {
+): ApiResponse<T> {
   if (!isRecord(raw)) {
     return {
       data: raw as T,
@@ -137,7 +136,7 @@ function normalizeResponse<T>(
 export async function apiFetch<T>(
   url: string,
   options: ApiFetchOptions = {},
-): Promise<ApiResponse<T> | PaginatedResponse<T>> {
+): Promise<ApiResponse<T>> {
   const {
     baseUrl = process.env.API_URL,
     withCredentials = false,

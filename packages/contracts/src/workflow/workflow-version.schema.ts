@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { UuidSchema } from '../shared';
+import { IsoDateCodec, UuidSchema } from '../shared';
+
+import { createPaginatedResponseSchema } from "../response";
 
 export const CreateWorkflowVersionSchema = z.object({
   workflowId: UuidSchema,
@@ -14,12 +16,11 @@ export const WorkflowVersionSchema = z.object({
   workflowId: z.string(),
   version: z.number(),
   graphJson: z.record(z.string(), z.unknown()),
-  createdAt: z.date(),
+  createdAt: IsoDateCodec,
 });
 
 export type CreateWorkflowVersion = z.infer<typeof CreateWorkflowVersionSchema>;
 export type UpdateWorkflowVersion = z.infer<typeof UpdateWorkflowVersionSchema>;
 export type WorkflowVersion = z.infer<typeof WorkflowVersionSchema>;
 
-import { createPaginatedResponseSchema } from "../response";
 export const PaginatedWorkflowVersionResponseSchema = createPaginatedResponseSchema(WorkflowVersionSchema);

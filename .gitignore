@@ -7,3 +7,6 @@ dist
 .env
 .env.local
 .env.prod
+trace.*
+Heap*
+.next

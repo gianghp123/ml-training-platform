@@ -28,7 +28,7 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
                 '{"rules":[
                     {"op":"exists","target":"$config.file","message":"A CSV file must be selected."}
                 ]}',
-                '{"declared":{"artifact":"Dataset","schema":{"columns":"unknown","target":null},"role":"full","task":null},"confirmProvider":"backend"}',
+                '{"declared":{"artifact":"Dataset","schema":{"columns":"unknown"},"role":"full"},"confirmProvider":"backend"}',
                 now()
             ),
             (
@@ -41,7 +41,7 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
                 '{"rules":[
                     {"op":"exists","target":"$config.file","message":"A JSON file must be selected."}
                 ]}',
-                '{"declared":{"artifact":"Dataset","schema":{"columns":"unknown","target":null},"role":"full","task":null},"confirmProvider":"backend"}',
+                '{"declared":{"artifact":"Dataset","schema":{"columns":"unknown"},"role":"full"},"confirmProvider":"backend"}',
                 now()
             ),
             (
@@ -55,7 +55,7 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
                     {"op":"exists","target":"$config.file","message":"An XML file must be selected."},
                     {"op":"exists","target":"$config.recordXPath","message":"An XPath to the repeating record element is required."}
                 ]}',
-                '{"declared":{"artifact":"Dataset","schema":{"columns":"unknown","target":null},"role":"full","task":null},"confirmProvider":"backend"}',
+                '{"declared":{"artifact":"Dataset","schema":{"columns":"unknown"},"role":"full"},"confirmProvider":"backend"}',
                 now()
             ),
             (
@@ -212,7 +212,7 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
                     {"op":"eq","left":"$input.dataset.task","right":"clustering","message":"K-Means requires task: clustering."},
                     {"op":"lte","left":"$config.n_clusters","right":{"count":"$input.dataset.schema.columns","where":{}},"message":"n_clusters should not exceed the number of available columns."}
                 ]}',
-                '{"declared":{"artifact":"Model","algorithm":"KMeans","task":"clustering","featureSchema":"$input.dataset.schema.columns","targetSchema":null}}',
+                '{"declared":{"artifact":"Model","algorithm":"KMeans","task":"clustering","featureSchema":"$input.dataset.schema.columns"}}',
                 now()
             ),
             (

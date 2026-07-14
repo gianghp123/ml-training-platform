@@ -1,20 +1,21 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ZodValidationPipe } from 'nestjs-zod';
+import { NamingStrategyInterface } from 'typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { LoggingZodSerializerInterceptor } from './common/interceptors/logging-zod-serializer';
 import typeormConfig from './configs/typeorm.config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { NamingStrategyInterface } from 'typeorm';
-import { BlockModule } from './modules/block/block.module';
-import { DatasetModule } from './modules/dataset/dataset.module';
-import { WorkerModule } from './modules/worker/worker.module';
-import { ModelRegistryModule } from './modules/model-registry/model-registry.module';
-import { WorkflowModule } from './modules/workflow/workflow.module';
-import { ExecutionModule } from './modules/execution/execution.module';
-import { APP_GUARD, APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClerkAuthGuard } from './modules/auth/guards/clerk-auth.guard';
 import { RolesGuard } from './modules/auth/guards/role.guard';
-import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
+import { BlockModule } from './modules/block/block.module';
+import { DatasetModule } from './modules/dataset/dataset.module';
+import { ExecutionModule } from './modules/execution/execution.module';
+import { ModelRegistryModule } from './modules/model-registry/model-registry.module';
+import { WorkerModule } from './modules/worker/worker.module';
+import { WorkflowModule } from './modules/workflow/workflow.module';
 
 @Module({
   imports: [
@@ -64,8 +65,9 @@ import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: ZodSerializerInterceptor,
+      useClass: LoggingZodSerializerInterceptor,
     },
+
   ],
 })
 export class AppModule { }

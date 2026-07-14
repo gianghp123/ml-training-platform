@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { IPaginationOptions, paginate } from "nestjs-typeorm-paginate";
 import { BlockDefinition } from "src/database/entities/block-definition.entity";
 import { Repository } from "typeorm";
-import { paginate, IPaginationOptions } from "nestjs-typeorm-paginate";
 import { CreateBlockDefinitionDto, UpdateBlockDefinitionDto } from "../dtos/block-definition.dto";
 
 @Injectable()

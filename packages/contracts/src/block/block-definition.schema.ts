@@ -33,7 +33,7 @@ const OutputTransformBodySchema: z.ZodType<unknown> = z.union([
     columnUpdates: z
       .array(
         z.object({
-          columns: z.array(z.string()),
+          columns: z.union([z.array(z.string()), z.string()]),
           primitive: z.string().optional(),
           semantic: z.string().optional(),
           nullable: z.boolean().optional(),
@@ -43,13 +43,13 @@ const OutputTransformBodySchema: z.ZodType<unknown> = z.union([
     set: z.record(z.string(), z.unknown()).optional(),
   }),
   z.object({
-    keepColumns: z.array(z.string()),
+    keepColumns: z.union([z.array(z.string()), z.string()]),
   }),
   z.object({
-    renameColumns: z.record(z.string(), z.string()),
+    renameColumns: z.union([z.record(z.string(), z.string()), z.string()]),
   }),
   z.object({
-    concatColumns: z.array(z.string()),
+    concatColumns: z.union([z.array(z.string()), z.string()]),
   }),
   z.object({
     ports: z.record(z.string(), z.lazy(() => OutputTransformSchema)),
@@ -64,6 +64,8 @@ const OutputTransformBodySchema: z.ZodType<unknown> = z.union([
     sourceModel: z.record(z.string(), z.unknown()).optional(),
     location: z.record(z.string(), z.unknown()).optional(),
     metrics: z.unknown().optional(),
+    schema: z.unknown().optional(),
+    role: z.string().optional(),
   }),
 ]);
 

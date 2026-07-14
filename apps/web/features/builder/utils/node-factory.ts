@@ -1,45 +1,56 @@
-import type { BlockDefinition } from '@training-ml/contracts';
+import type { BlockDefinition, ConfigField, Port } from '@training-ml/contracts';
 import type { Node, XYPosition } from '@xyflow/react';
-import { ALL_BLOCKS } from '../blocks';
-import type { SocketDefinition } from '../blocks/socket-types';
 
 export interface PipelineNodeData extends Record<string, unknown> {
+  block: BlockDefinition;
   blockId: string;
-  blockCode: string;
   blockName: string;
   categoryId: string;
   config: Record<string, string | number | boolean>;
-  inputs: SocketDefinition[];
-  outputs: SocketDefinition[];
+  inputs: Port[];
+  outputs: Port[];
   status: 'idle' | 'queued' | 'running' | 'success' | 'error';
 }
 
 export type PipelineNodeType = 'block';
 export type PipelineNode = Node<PipelineNodeData, PipelineNodeType>;
 
-
 export function createNodeId(): string {
   return `node_${Date.now()}`;
 }
 
-export function parseSocketEntries(
-  schema: Record<string, unknown> | undefined
-): SocketDefinition[] {
-  if (!schema || !Array.isArray((schema as Record<string, unknown>).entries)) {
-    return [];
+function getConfigDefault(field: ConfigField): string | number | boolean | undefined {
+  switch (field.type) {
+    case 'ColumnSelector':
+      return field.multiple ? '' : '';
+    case 'Select':
+      return field.default;
+    case 'Number':
+      return field.default;
+    case 'Boolean':
+      return field.default ?? false;
+    case 'Text':
+      return '';
+    case 'FileUpload':
+      return '';
+    case 'MultiSelect':
+      return '';
+    case 'KeyValueMap':
+      return '';
+    default:
+      return undefined;
   }
-  return (schema as { entries: SocketDefinition[] }).entries;
 }
 
 export function createDefaultConfig(
-  configSchema: Record<string, unknown> | undefined
+  fields: ConfigField[] | undefined
 ): Record<string, string | number | boolean> {
-  if (!configSchema) return {};
+  if (!fields) return {};
   const config: Record<string, string | number | boolean> = {};
-  for (const [key, field] of Object.entries(configSchema)) {
-    const f = field as { default?: string | number | boolean };
-    if (f.default !== undefined) {
-      config[key] = f.default;
+  for (const field of fields) {
+    const defaultValue = getConfigDefault(field);
+    if (defaultValue !== undefined) {
+      config[field.id] = defaultValue;
     }
   }
   return config;
@@ -49,26 +60,26 @@ export function createPipelineNode(
   block: BlockDefinition,
   position: XYPosition
 ): PipelineNode {
-  const inputs = parseSocketEntries(block.inputSchema);
-  const outputs = parseSocketEntries(block.outputSchema);
-
   return {
     id: createNodeId(),
     type: 'block',
     position,
     data: {
+      block,
       blockId: block.id,
-      blockCode: block.code,
       blockName: block.name,
       categoryId: block.categoryId,
-      config: createDefaultConfig(block.configSchema),
-      inputs,
-      outputs,
+      config: createDefaultConfig(block.configSchema.fields),
+      inputs: block.ports.inputs,
+      outputs: block.ports.outputs,
       status: 'idle',
     },
   };
 }
 
-export function findBlockById(blockId: string): BlockDefinition | undefined {
-  return ALL_BLOCKS.find((b) => b.id === blockId);
+export function findBlockById(
+  blockId: string,
+  blocks: BlockDefinition[]
+): BlockDefinition | undefined {
+  return blocks.find((b) => b.id === blockId);
 }

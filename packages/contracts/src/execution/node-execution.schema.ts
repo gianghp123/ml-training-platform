@@ -1,5 +1,7 @@
 import { z } from 'zod';
-import { UuidSchema } from '../shared';
+import { IsoDateCodec, UuidSchema } from '../shared';
+
+import { createPaginatedResponseSchema } from "../response";
 
 export const NodeExecutionStatus = {
   PENDING: 'pending',
@@ -22,8 +24,8 @@ export const CreateNodeExecutionSchema = z.object({
   status: NodeExecutionStatusSchema.optional(),
   workerId: UuidSchema.optional(),
   retryCount: z.number().int().optional(),
-  startedAt: z.coerce.date().optional(),
-  finishedAt: z.coerce.date().optional(),
+  startedAt: IsoDateCodec.optional(),
+  finishedAt: IsoDateCodec.optional(),
 });
 
 export const UpdateNodeExecutionSchema = CreateNodeExecutionSchema.partial();
@@ -36,13 +38,12 @@ export const NodeExecutionSchema = z.object({
   status: NodeExecutionStatusSchema,
   workerId: z.string(),
   retryCount: z.number(),
-  startedAt: z.date(),
-  finishedAt: z.date(),
+  startedAt: IsoDateCodec,
+  finishedAt: IsoDateCodec,
 });
 
 export type CreateNodeExecution = z.infer<typeof CreateNodeExecutionSchema>;
 export type UpdateNodeExecution = z.infer<typeof UpdateNodeExecutionSchema>;
 export type NodeExecution = z.infer<typeof NodeExecutionSchema>;
 
-import { createPaginatedResponseSchema } from "../response";
 export const PaginatedNodeExecutionResponseSchema = createPaginatedResponseSchema(NodeExecutionSchema);

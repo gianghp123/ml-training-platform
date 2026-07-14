@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+import { createPaginatedResponseSchema } from "../response";
+import { IsoDateCodec } from '../shared';
+
 export const WorkerStatus = {
   IDLE: 'idle',
   BUSY: 'busy',
@@ -24,7 +27,7 @@ export const WorkerSchema = z.object({
   id: z.string().uuid(),
   hostname: z.string(),
   status: WorkerStatusSchema,
-  lastHeartbeat: z.date(),
+  lastHeartbeat: IsoDateCodec,
   capability: z.record(z.string(), z.unknown()),
 });
 
@@ -32,5 +35,4 @@ export type CreateWorker = z.infer<typeof CreateWorkerSchema>;
 export type UpdateWorker = z.infer<typeof UpdateWorkerSchema>;
 export type Worker = z.infer<typeof WorkerSchema>;
 
-import { createPaginatedResponseSchema } from "../response";
 export const PaginatedWorkerResponseSchema = createPaginatedResponseSchema(WorkerSchema);

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ValidationSeverity, ValidationSeveritySchema } from './validation-error.schema';
+import { ValidationSeveritySchema } from './validation-error.schema';
 
 export const ConstraintType = {
   REQUIRED: 'required',
@@ -22,7 +22,7 @@ export type Constraint = z.infer<typeof ConstraintSchema>;
 export const BaseConstraintRuleSchema = z.object({
   op: z.string(),
   message: z.string().optional(),
-  severity: ValidationSeveritySchema.default(ValidationSeverity.ERROR),
+  severity: ValidationSeveritySchema,
   condition: z.record(z.string(), z.unknown()).optional(),
 });
 

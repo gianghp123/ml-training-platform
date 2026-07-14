@@ -11,7 +11,10 @@ export interface SerializedNode {
   height?: number;
 }
 
+export const GRAPH_VERSION = 2;
+
 export interface SerializedGraph {
+  version: number;
   nodes: SerializedNode[];
   edges: Array<{
     id: string;
@@ -29,6 +32,7 @@ export function serializeGraph(
   edges: Edge[]
 ): SerializedGraph {
   return {
+    version: GRAPH_VERSION,
     nodes: nodes.map((n) => ({
       id: n.id,
       type: n.type ?? 'block',
@@ -60,6 +64,10 @@ export function deserializeGraph(
     edgeData?: Record<string, unknown>
   ) => Edge
 ): { nodes: (PipelineNode | Node)[]; edges: Edge[] } {
+  if (graph.version !== GRAPH_VERSION) {
+    return { nodes: [], edges: [] };
+  }
+
   const nodes = graph.nodes.map((n) => ({
     id: n.id,
     type: n.type,

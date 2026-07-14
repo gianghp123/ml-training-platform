@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { BlockCategory, BlockDefinition } from '@training-ml/contracts';
 import { GripVertical, Group, Search } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CATEGORY_COLORS } from '../blocks';
+import { getCategoryColor } from '../blocks';
 import { Separator } from '@/components/ui/separator';
 
 interface BlockPaletteContextMenuProps {
@@ -118,7 +118,7 @@ export function BlockPaletteContextMenu({
               <div key={group.category.id}>
                 <div className="flex items-center gap-1.5 px-2 py-1">
                   <div
-                    className={`size-2 rounded-full ${CATEGORY_COLORS[group.category.id] ?? 'bg-gray-500'}`}
+                    className={`size-2 rounded-full ${getCategoryColor(group.category.id).tw}`}
                   />
                   <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                     {group.category.name}
@@ -131,11 +131,6 @@ export function BlockPaletteContextMenu({
                     className="w-full text-left px-4 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
                   >
                     <div className="font-medium text-xs">{block.name}</div>
-                    {block.description && (
-                      <div className="text-[11px] text-muted-foreground truncate">
-                        {block.description}
-                      </div>
-                    )}
                   </button>
                 ))}
               </div>

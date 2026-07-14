@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { UuidSchema } from '../shared';
+import { createPaginatedResponseSchema } from "../response";
+import { IsoDateCodec, UuidSchema } from '../shared';
 
 export const WorkflowRunStatus = {
   PENDING: 'pending',
@@ -19,8 +20,8 @@ export const CreateWorkflowRunSchema = z.object({
   workflowVersionId: UuidSchema,
   datasetId: UuidSchema,
   status: WorkflowRunStatusSchema.optional(),
-  startedAt: z.coerce.date().optional(),
-  finishedAt: z.coerce.date().optional(),
+  startedAt: IsoDateCodec.optional(),
+  finishedAt: IsoDateCodec.optional(),
   userId: z.string().min(1),
 });
 
@@ -31,8 +32,8 @@ export const WorkflowRunSchema = z.object({
   workflowVersionId: z.string(),
   datasetId: z.string(),
   status: WorkflowRunStatusSchema,
-  startedAt: z.date(),
-  finishedAt: z.date(),
+  startedAt: IsoDateCodec,
+  finishedAt: IsoDateCodec,
   userId: z.string(),
 });
 
@@ -40,5 +41,4 @@ export type CreateWorkflowRun = z.infer<typeof CreateWorkflowRunSchema>;
 export type UpdateWorkflowRun = z.infer<typeof UpdateWorkflowRunSchema>;
 export type WorkflowRun = z.infer<typeof WorkflowRunSchema>;
 
-import { createPaginatedResponseSchema } from "../response";
 export const PaginatedWorkflowRunResponseSchema = createPaginatedResponseSchema(WorkflowRunSchema);

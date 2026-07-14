@@ -24,8 +24,5 @@ export type PaginatedMeta = z.infer<typeof PaginatedMetaSchema>;
 
 export interface ApiResponse<T> {
   data: T;
-}
-
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  meta: PaginatedMeta;
+  meta?: PaginatedMeta;
 }

@@ -2,7 +2,11 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import type { BlockDefinition, BlockCategory } from '@training-ml/contracts';
-import { ALL_BLOCKS, BLOCK_CATEGORIES } from '../blocks';
+
+interface UseBlockPaletteProps {
+  blocks: BlockDefinition[];
+  categories: BlockCategory[];
+}
 
 interface UseBlockPaletteReturn {
   searchQuery: string;
@@ -12,29 +16,30 @@ interface UseBlockPaletteReturn {
   getBlockById: (id: string) => BlockDefinition | undefined;
 }
 
-export function useBlockPalette(): UseBlockPaletteReturn {
+export function useBlockPalette({ blocks, categories }: UseBlockPaletteProps): UseBlockPaletteReturn {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredBlocks = useMemo(() => {
-    if (!searchQuery.trim()) return ALL_BLOCKS;
+    if (!searchQuery.trim()) return blocks;
     const q = searchQuery.toLowerCase();
-    return ALL_BLOCKS.filter(
-      (b) =>
-        b.name.toLowerCase().includes(q) ||
-        b.description?.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
+    return blocks.filter((b) => b.name.toLowerCase().includes(q));
+  }, [searchQuery, blocks]);
 
   const blocksByCategory = useMemo(() => {
-    return BLOCK_CATEGORIES.map((cat) => ({
-      category: cat,
-      blocks: filteredBlocks.filter((b) => b.categoryId === cat.id),
-    })).filter((g) => g.blocks.length > 0);
-  }, [filteredBlocks]);
+    return categories
+      .map((cat) => ({
+        category: cat,
+        blocks: filteredBlocks.filter((b) => b.categoryId === cat.id),
+      }))
+      .filter((g) => g.blocks.length > 0);
+  }, [filteredBlocks, categories]);
 
-  const getBlockById = useCallback((id: string): BlockDefinition | undefined => {
-    return ALL_BLOCKS.find((b) => b.id === id);
-  }, []);
+  const getBlockById = useCallback(
+    (id: string): BlockDefinition | undefined => {
+      return blocks.find((b) => b.id === id);
+    },
+    [blocks]
+  );
 
   return { searchQuery, setSearchQuery, filteredBlocks, blocksByCategory, getBlockById };
 }

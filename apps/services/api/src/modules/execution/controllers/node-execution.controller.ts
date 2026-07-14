@@ -1,15 +1,15 @@
 import { Body, Controller, DefaultValuePipe, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { ZodResponse } from "nestjs-zod";
+import { CreateNodeExecutionDto, NodeExecutionDto, PaginatedNodeExecutionResponseDto, UpdateNodeExecutionDto } from '../dtos/node-execution.dto';
 import { NodeExecutionService } from '../services/node-execution.service';
-import { CreateNodeExecutionDto, UpdateNodeExecutionDto, NodeExecutionDto, PaginatedNodeExecutionResponseDto } from '../dtos/node-execution.dto';
 
 @ApiBearerAuth()
 @Controller('node-executions')
 export class NodeExecutionController {
   constructor(
     private readonly nodeExecutionService: NodeExecutionService,
-  ) {}
+  ) { }
 
   @Get()
   @ZodResponse({ status: HttpStatus.OK, type: PaginatedNodeExecutionResponseDto })

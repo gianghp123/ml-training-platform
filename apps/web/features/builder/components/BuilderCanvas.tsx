@@ -14,6 +14,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useBlockPalette } from '../hooks/useBlockPalette';
 import { useBuilder } from '../hooks/useBuilder';
+import type { BlockCategory, BlockDefinition } from '@training-ml/contracts';
 
 import BaseNode from './nodes/BaseNode';
 import GroupNode from './nodes/GroupNode';
@@ -22,6 +23,7 @@ import { BlockPaletteContextMenu } from './BlockPaletteContextMenu';
 import { WorkflowToolbar } from './WorkflowToolbar';
 
 import { BuilderContext, type BuilderContextValue } from '../contexts/builder.context';
+import { ValidationContext } from '../contexts/validation.context';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Pause, Play, Ungroup } from 'lucide-react';
@@ -45,9 +47,14 @@ interface GroupContextMenuState {
   position: { x: number; y: number };
 }
 
-export function BuilderCanvas() {
-  const builder = useBuilder();
-  const palette = useBlockPalette();
+interface BuilderCanvasProps {
+  blocks: BlockDefinition[];
+  categories: BlockCategory[];
+}
+
+export function BuilderCanvas({ blocks, categories }: BuilderCanvasProps) {
+  const { validationResult, getNodeErrors, isValid, ...builder } = useBuilder({ blocks });
+  const palette = useBlockPalette({ blocks, categories });
   const [groupContextMenu, setGroupContextMenu] = useState<GroupContextMenuState | null>(null);
 
   const handlePaneContextMenu = useCallback(
@@ -117,6 +124,7 @@ export function BuilderCanvas() {
   }, [groupContextMenu, builder.nodes]);
 
   return (
+    <ValidationContext.Provider value={{ result: validationResult, getNodeErrors, isValid }}>
     <div className="h-full w-full flex flex-col">
       <WorkflowToolbar
         workflowName={builder.workflowName}
@@ -217,5 +225,6 @@ export function BuilderCanvas() {
         )}
       </div>
     </div>
+    </ValidationContext.Provider>
   );
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import type { BlockDefinition, ValidationError } from '@training-ml/contracts';
+import { type ValidationResult } from '@training-ml/pipeline-engine';
 import {
   addEdge,
   useEdgesState,
@@ -13,19 +15,12 @@ import {
   type XYPosition,
 } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { getCategoryColor } from '../blocks';
 import { createPipelineNode, findBlockById, type PipelineNode } from '../utils/node-factory';
-import { isValidNodeConnection } from '../utils/socket-validator';
+import { useValidation } from './useValidation';
 import { useWorkflowPersistence } from './useWorkflowPersistence';
 
 type EdgeStyle = 'smoothstep' | 'bezier' | 'straight';
-
-const CATEGORY_EDGE_COLORS: Record<string, string> = {
-  data: '#3b82f6',
-  transform: '#f59e0b',
-  model: '#22c55e',
-  evaluate: '#a855f7',
-  export: '#f43f5e',
-};
 
 const GROUP_PADDING = 20;
 const GROUP_HEADER_HEIGHT = 36;
@@ -41,9 +36,13 @@ function buildEdgeData(sourceNodeId: string, nodes: Node[], edgeStyle: EdgeStyle
       ? (node as PipelineNode).data.categoryId
       : undefined;
   return {
-    color: categoryId ? CATEGORY_EDGE_COLORS[categoryId] ?? '#6b7280' : '#6b7280',
+    color: categoryId ? getCategoryColor(categoryId).hex : '#6b7280',
     edgeStyle,
   };
+}
+
+interface UseBuilderProps {
+  blocks: BlockDefinition[];
 }
 
 interface UseBuilderReturn {
@@ -71,9 +70,12 @@ interface UseBuilderReturn {
   groupNodes: (nodeIds: string[]) => void;
   ungroup: (groupId: string) => void;
   toggleSuspend: (groupId: string) => void;
+  validationResult: ValidationResult;
+  getNodeErrors: (nodeId: string) => ValidationError[];
+  isValid: boolean;
 }
 
-export function useBuilder(): UseBuilderReturn {
+export function useBuilder({ blocks }: UseBuilderProps): UseBuilderReturn {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -84,6 +86,8 @@ export function useBuilder(): UseBuilderReturn {
   const { saveWorkflow: persist, loadWorkflow: load, hasSavedWorkflow: hasSavedCheck } =
     useWorkflowPersistence();
 
+  const { result: validationResult, getNodeErrors, isValid } = useValidation(nodes, edges, blocks);
+
   useEffect(() => {
     setEdges((eds) =>
       eds.map((e) => ({
@@ -93,11 +97,6 @@ export function useBuilder(): UseBuilderReturn {
     );
   }, [edgeStyle, setEdges]);
 
-  const pipelineNodes = useMemo(
-    () => nodes.filter((n) => n.type === 'block') as PipelineNode[],
-    [nodes]
-  );
-
   const groupableNodes = useMemo(
     () => nodes.filter((n) => n.selected && n.type === 'block').map((n) => n.id),
     [nodes]
@@ -105,18 +104,6 @@ export function useBuilder(): UseBuilderReturn {
 
   const onConnect: OnConnect = useCallback(
     (connection: Connection) => {
-      if (
-        !isValidNodeConnection({
-          sourceNodeId: connection.source,
-          targetNodeId: connection.target,
-          sourceHandle: connection.sourceHandle ?? null,
-          targetHandle: connection.targetHandle ?? null,
-          nodes: pipelineNodes.map((n) => ({ id: n.id, data: n.data, type: n.type ?? 'block' })),
-          edges,
-        })
-      ) {
-        return;
-      }
       setEdges((eds) =>
         addEdge(
           { ...connection, type: 'pipeline', data: buildEdgeData(connection.source, nodes, edgeStyle) },
@@ -124,18 +111,18 @@ export function useBuilder(): UseBuilderReturn {
         )
       );
     },
-    [nodes, pipelineNodes, edges, edgeStyle, setEdges]
+    [nodes, edgeStyle, setEdges]
   );
 
   const addNode = useCallback(
     (blockId: string, position: XYPosition): PipelineNode | null => {
-      const block = findBlockById(blockId);
+      const block = findBlockById(blockId, blocks);
       if (!block) return null;
       const node = createPipelineNode(block, position);
       setNodes((nds) => [...nds, node]);
       return node;
     },
-    [setNodes]
+    [blocks, setNodes]
   );
 
   const removeNode = useCallback(
@@ -158,11 +145,11 @@ export function useBuilder(): UseBuilderReturn {
     (nodeId: string) => {
       const node = nodes.find((n) => n.id === nodeId);
       if (!node || node.type !== 'block') return;
-      const block = findBlockById((node as PipelineNode).data.blockId);
+      const block = findBlockById((node as PipelineNode).data.blockId, blocks);
       if (!block) return;
       addNode(block.id, { x: node.position.x + 50, y: node.position.y + 50 });
     },
-    [nodes, addNode]
+    [nodes, blocks, addNode]
   );
 
   const updateNodeConfig = useCallback(
@@ -258,6 +245,9 @@ export function useBuilder(): UseBuilderReturn {
     groupNodes,
     ungroup,
     toggleSuspend,
+    validationResult,
+    getNodeErrors,
+    isValid,
   };
 }
 

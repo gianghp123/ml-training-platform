@@ -6,7 +6,7 @@ import {
 } from '@training-ml/contracts';
 import { createZodDto } from 'nestjs-zod';
 
-export class CreateDatasetDto extends createZodDto(CreateDatasetSchema) { }
-export class UpdateDatasetDto extends createZodDto(UpdateDatasetSchema) { }
-export class DatasetDto extends createZodDto(DatasetSchema) { }
-export class PaginatedDatasetResponseDto extends createZodDto(PaginatedDatasetResponseSchema) { }
+export class CreateDatasetDto extends createZodDto(CreateDatasetSchema.meta({ id: 'CreateDataset' }), { codec: true }) { }
+export class UpdateDatasetDto extends createZodDto(UpdateDatasetSchema.meta({ id: 'UpdateDataset' }), { codec: true }) { }
+export class DatasetDto extends createZodDto(DatasetSchema.meta({ id: 'Dataset' }), { codec: true }) { }
+export class PaginatedDatasetResponseDto extends createZodDto(PaginatedDatasetResponseSchema.meta({ id: 'PaginatedDatasetResponse' }), { codec: true }) { }

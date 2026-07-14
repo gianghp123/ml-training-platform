@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { WorkflowTable } from "@/features/workflow/components/WorkflowTable"
 import { ROUTES } from "@/lib/route"
 
+import v8 from "node:v8"
+
 export default async function Home({
   searchParams,
 }: {
@@ -15,6 +17,10 @@ export default async function Home({
   const params = await searchParams;
   const page = Number(params.page) || 1;
   const pageSize = 10;
+  console.log("NEXT", process.memoryUsage());
+
+  console.log('v8', v8.getHeapStatistics());
+  console.log(v8.getHeapSpaceStatistics());
 
   return (
     <PageContainer

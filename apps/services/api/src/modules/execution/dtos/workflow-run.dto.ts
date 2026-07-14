@@ -6,7 +6,7 @@ import {
 } from '@training-ml/contracts';
 import { createZodDto } from 'nestjs-zod';
 
-export class CreateWorkflowRunDto extends createZodDto(CreateWorkflowRunSchema) { }
-export class UpdateWorkflowRunDto extends createZodDto(UpdateWorkflowRunSchema) { }
-export class WorkflowRunDto extends createZodDto(WorkflowRunSchema) { }
-export class PaginatedWorkflowRunResponseDto extends createZodDto(PaginatedWorkflowRunResponseSchema) { }
+export class CreateWorkflowRunDto extends createZodDto(CreateWorkflowRunSchema.meta({ id: 'CreateWorkflowRun' }), { codec: true }) { }
+export class UpdateWorkflowRunDto extends createZodDto(UpdateWorkflowRunSchema.meta({ id: 'UpdateWorkflowRun' }), { codec: true }) { }
+export class WorkflowRunDto extends createZodDto(WorkflowRunSchema.meta({ id: 'WorkflowRun' }), { codec: true }) { }
+export class PaginatedWorkflowRunResponseDto extends createZodDto(PaginatedWorkflowRunResponseSchema.meta({ id: 'PaginatedWorkflowRunResponse' }), { codec: true }) { }

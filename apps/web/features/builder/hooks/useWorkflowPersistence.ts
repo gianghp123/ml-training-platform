@@ -2,7 +2,7 @@
 
 import type { Edge, Node } from '@xyflow/react';
 import { useCallback } from 'react';
-import { deserializeGraph, serializeGraph, type SerializedGraph } from '../utils/graph-serializer';
+import { deserializeGraph, GRAPH_VERSION, serializeGraph, type SerializedGraph } from '../utils/graph-serializer';
 
 const STORAGE_KEY = 'pipeline-builder-workflow';
 
@@ -51,6 +51,10 @@ export function useWorkflowPersistence(): UseWorkflowPersistenceReturn {
         savedAt: string;
       };
       const { nodes, edges } = deserializeGraph(data.graph, createEdge);
+      if (nodes.length === 0 && data.graph.version !== GRAPH_VERSION) {
+        localStorage.removeItem(STORAGE_KEY);
+        return null;
+      }
       return { name: data.name, nodes, edges };
     } catch {
       return null;

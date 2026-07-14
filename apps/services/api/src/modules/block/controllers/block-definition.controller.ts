@@ -10,9 +10,11 @@ import {
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { ZodResponse } from "nestjs-zod";
+import { Public } from "src/modules/auth/decorators/public.decorator";
 import { BlockDefinitionDto, PaginatedBlockDefinitionResponseDto } from "../dtos/block-definition.dto";
 import { BlockDefinitionService } from "../services/block-definition.service";
 
+@Public()
 @ApiTags('BlockDefinition')
 @Controller('block-definitions')
 export class BlockDefinitionController {
