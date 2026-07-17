@@ -69,7 +69,7 @@ export class DatasetService {
     };
   }
 
-  async completeUpload(datasetId: string): Promise<Dataset> {
+  async completeUpload(datasetId: string): Promise<void> {
     const dataset = await this.findOne(datasetId);
     dataset.status = DatasetStatus.QUEUED;
     await this.datasetRepository.save(dataset);
@@ -77,7 +77,6 @@ export class DatasetService {
     await this.queue.add(DatasetUploadJob.VALIDATE_DATASET, {
       datasetId,
     } as DatasetUploadJobPayload);
-    return dataset
   }
 
   async update(id: string, dto: UpdateDatasetDto): Promise<Dataset> {

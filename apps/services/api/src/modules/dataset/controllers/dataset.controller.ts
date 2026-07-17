@@ -33,6 +33,12 @@ export class DatasetController {
     return this.datasetService.createUploadUrl(dto);
   }
 
+  @Post(':id/complete')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async completeUpload(@Param('id', ParseUUIDPipe) id: string) {
+    return this.datasetService.completeUpload(id);
+  }
+
   @Patch(':id')
   @ZodResponse({ status: HttpStatus.OK, type: DatasetDto })
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateDatasetDto) {
