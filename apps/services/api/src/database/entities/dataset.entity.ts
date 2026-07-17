@@ -1,12 +1,12 @@
+import { DatasetFormat, type DatasetProfile, DatasetStatus, type ValidationOptions } from '@training-ml/contracts';
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  Entity,
   OneToMany,
+  PrimaryGeneratedColumn,
   Unique,
 } from 'typeorm';
-import { DatasetFormat } from '@training-ml/contracts';
 import { WorkflowRun } from './workflow-run.entity';
 
 @Entity('datasets')
@@ -38,6 +38,29 @@ export class Dataset {
 
   @Column({ type: 'varchar' })
   userId: string;
+
+
+  @Column({
+    type: 'varchar',
+    enum: DatasetStatus,
+    default: DatasetStatus.UPLOADING,
+  })
+  status: DatasetStatus;
+
+  @Column({
+    type: 'jsonb',
+    nullable: true,
+  })
+  profile: DatasetProfile | null;
+
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
+  validationError: string | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  validationOptions: ValidationOptions | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

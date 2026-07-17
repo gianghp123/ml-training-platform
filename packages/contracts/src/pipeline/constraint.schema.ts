@@ -22,7 +22,7 @@ export type Constraint = z.infer<typeof ConstraintSchema>;
 export const BaseConstraintRuleSchema = z.object({
   op: z.string(),
   message: z.string().optional(),
-  severity: ValidationSeveritySchema,
+  severity: ValidationSeveritySchema.optional(),
   condition: z.record(z.string(), z.unknown()).optional(),
 });
 

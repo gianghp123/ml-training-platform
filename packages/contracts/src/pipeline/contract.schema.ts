@@ -1,17 +1,9 @@
 import { z } from 'zod';
+import { ColumnSchema } from '../dataset/column.schema';
 import { PipelineArtifactType } from './artifact.schema';
 import { DatasetRoleSchema } from './dataset-role.schema';
 import { MlTaskSchema } from './ml-task.schema';
-import { PrimitiveTypeSchema, SemanticTypeSchema } from './primitive.schema';
 
-export const ColumnSchema = z.object({
-  name: z.string(),
-  primitive: PrimitiveTypeSchema,
-  semantic: SemanticTypeSchema.optional(),
-  nullable: z.boolean().optional(),
-});
-
-export type Column = z.infer<typeof ColumnSchema>;
 
 export const UnknownColumnSetSchema = z.literal('unknown');
 

@@ -1,26 +1,15 @@
 import { z } from 'zod';
+import { createPaginatedResponseSchema } from "../response";
+import { DatasetProfileSchema } from './dataset-profile.schema';
+import { DatasetFormatSchema, DatasetStatusSchema } from './dataset.constants';
+import { ValidationOptionsSchema } from './validation-option.schema';
 
-export const DatasetFormat = {
-  CSV: 'csv',
-  JSON: 'json',
-  PARQUET: 'parquet',
-  AVRO: 'avro',
-} as const;
-
-export const DatasetFormatSchema = z.enum(
-  Object.values(DatasetFormat) as [string, ...string[]],
-);
-
-export type DatasetFormat = z.infer<typeof DatasetFormatSchema>;
 
 export const CreateDatasetSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
-  storageUri: z.string().min(1),
   format: DatasetFormatSchema,
-  size: z.number(),
-  checksum: z.string().optional(),
-  version: z.number().optional(),
+  validationOptions: ValidationOptionsSchema.optional(),
   userId: z.string().min(1),
 });
 
@@ -33,6 +22,9 @@ export const DatasetSchema = z.object({
   storageUri: z.string(),
   format: DatasetFormatSchema,
   size: z.number(),
+  status: DatasetStatusSchema,
+  profile: DatasetProfileSchema.nullable(),
+  validationError: z.string().nullable(),
   checksum: z.string(),
   version: z.number(),
   userId: z.string(),
@@ -42,5 +34,12 @@ export type CreateDataset = z.infer<typeof CreateDatasetSchema>;
 export type UpdateDataset = z.infer<typeof UpdateDatasetSchema>;
 export type Dataset = z.infer<typeof DatasetSchema>;
 
-import { createPaginatedResponseSchema } from "../response";
 export const PaginatedDatasetResponseSchema = createPaginatedResponseSchema(DatasetSchema);
+
+export const UploadUrlResponseSchema = z.object({
+  datasetId: z.string().uuid(),
+  url: z.string().url(),
+  objectKey: z.string(),
+});
+
+export type UploadUrlResponse = z.infer<typeof UploadUrlResponseSchema>;

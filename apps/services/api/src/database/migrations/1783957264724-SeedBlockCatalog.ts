@@ -2,8 +2,8 @@ import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class SeedBlockCatalog1783957264724 implements MigrationInterface {
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             INSERT INTO "block_categories" ("id", "name") VALUES
             (uuid_generate_v4(), 'Data Source'),
             (uuid_generate_v4(), 'Preprocessing'),
@@ -13,18 +13,14 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
             (uuid_generate_v4(), 'Model Persistence')
         `);
 
-        const cat = (name: string) => `(SELECT "id" FROM "block_categories" WHERE "name" = '${name}')`;
+    const cat = (name: string) => `(SELECT "id" FROM "block_categories" WHERE "name" = '${name}')`;
 
-        await queryRunner.query(`
+    await queryRunner.query(`
             INSERT INTO "block_definitions" ("id", "version", "status", "name", "category_id", "ports", "config_schema", "constraints", "output_transform", "created_at") VALUES
             (
                 uuid_generate_v4(), 1, 'active', 'Load CSV', ${cat('Data Source')},
                 '{"inputs":[],"outputs":[{"id":"dataset","artifact":"Dataset"}]}',
-                '{"fields":[
-                    {"id":"file","type":"Select","options":[],"label":"Dataset File"},
-                    {"id":"delimiter","type":"Select","options":[",",";","\\\\t"],"default":","},
-                    {"id":"hasHeader","type":"Boolean","default":true}
-                ]}',
+                '{"fields":[]}',
                 '{"rules":[
                     {"op":"exists","target":"$config.file","message":"A CSV file must be selected."}
                 ]}',
@@ -34,10 +30,7 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
             (
                 uuid_generate_v4(), 1, 'active', 'Load JSON', ${cat('Data Source')},
                 '{"inputs":[],"outputs":[{"id":"dataset","artifact":"Dataset"}]}',
-                '{"fields":[
-                    {"id":"file","type":"Select","options":[],"label":"Dataset File"},
-                    {"id":"recordPath","type":"Text","placeholder":"e.g. $.records[*] (optional)"}
-                ]}',
+                '{"fields":[]}',
                 '{"rules":[
                     {"op":"exists","target":"$config.file","message":"A JSON file must be selected."}
                 ]}',
@@ -47,13 +40,9 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
             (
                 uuid_generate_v4(), 1, 'active', 'Load XML', ${cat('Data Source')},
                 '{"inputs":[],"outputs":[{"id":"dataset","artifact":"Dataset"}]}',
-                '{"fields":[
-                    {"id":"file","type":"Select","options":[],"label":"Dataset File"},
-                    {"id":"recordXPath","type":"Text","placeholder":"e.g. /root/records/record"}
-                ]}',
+                '{"fields":[]}',
                 '{"rules":[
-                    {"op":"exists","target":"$config.file","message":"An XML file must be selected."},
-                    {"op":"exists","target":"$config.recordXPath","message":"An XPath to the repeating record element is required."}
+                    {"op":"exists","target":"$config.file","message":"An XML file must be selected."}
                 ]}',
                 '{"declared":{"artifact":"Dataset","schema":{"columns":"unknown"},"role":"full"},"confirmProvider":"backend"}',
                 now()
@@ -244,10 +233,10 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
                 now()
             )
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DELETE FROM "block_definitions"`);
-        await queryRunner.query(`DELETE FROM "block_categories"`);
-    }
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DELETE FROM "block_definitions"`);
+    await queryRunner.query(`DELETE FROM "block_categories"`);
+  }
 }

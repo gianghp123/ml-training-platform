@@ -11,7 +11,6 @@ export function validateGraph(
     blockDefinitions.map((d) => [`${d.id}@${d.version}`, d]),
   );
 
-
   const errors: ValidationError[] = [];
   const contracts: Record<string, Record<string, Contract>> = {};
   const nodeOutputContracts = new Map<string, Record<string, Contract>>();

@@ -15,7 +15,7 @@ services:
       - "${DB_PORT}:5432"
 
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - training_ml_data:/var/lib/postgresql/data
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
@@ -39,8 +39,28 @@ services:
       - "${MINIO_CONSOLE_PORT}:9001"
 
     volumes:
-      - minio_data:/data
+      - training_ml_minio_data:/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: training-ml-redis
+    restart: unless-stopped
+
+    command: redis-server --appendonly yes
+
+    ports:
+      - "${REDIS_PORT}:6379"
+
+    volumes:
+      - training_ml_redis_data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  postgres_data:
-  minio_data:
+  training_ml_data:
+  training_ml_minio_data:
+  training_ml_redis_data:

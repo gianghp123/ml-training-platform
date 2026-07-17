@@ -27,7 +27,7 @@ export const ValidationErrorSchema = z.object({
   scope: ValidationScopeSchema,
   fieldId: z.string().optional(),
   code: z.string(),
-  severity: ValidationSeveritySchema,
+  severity: ValidationSeveritySchema.optional(),
   message: z.string(),
   context: z.record(z.string(), z.unknown()).optional(),
 });

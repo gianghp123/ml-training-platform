@@ -1,3 +1,4 @@
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
@@ -7,6 +8,8 @@ import { NamingStrategyInterface } from 'typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggingZodSerializerInterceptor } from './common/interceptors/logging-zod-serializer';
+import { QueueName } from './common/queue/types';
+import minioConfig from './configs/minio.config';
 import typeormConfig from './configs/typeorm.config';
 import { ClerkAuthGuard } from './modules/auth/guards/clerk-auth.guard';
 import { RolesGuard } from './modules/auth/guards/role.guard';
@@ -14,13 +17,14 @@ import { BlockModule } from './modules/block/block.module';
 import { DatasetModule } from './modules/dataset/dataset.module';
 import { ExecutionModule } from './modules/execution/execution.module';
 import { ModelRegistryModule } from './modules/model-registry/model-registry.module';
+import { StorageModule } from './modules/storage/storage.module';
 import { WorkerModule } from './modules/worker/worker.module';
 import { WorkflowModule } from './modules/workflow/workflow.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [typeormConfig],
+      load: [typeormConfig, minioConfig],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
@@ -41,6 +45,20 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
         ),
       }),
     }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('redis.host'),
+          port: configService.get<number>('redis.port'),
+          password: configService.get<string>('redis.password') || undefined,
+        },
+      }),
+    }),
+    BullModule.registerQueue({
+      name: QueueName.DATASET_UPLOAD
+    }),
+    StorageModule,
     BlockModule,
     DatasetModule,
     WorkerModule,
