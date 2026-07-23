@@ -7,14 +7,14 @@ import { DataTable, type Column } from "@/components/data-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { formatVariant } from "@/features/dataset/utils/dataset.util"
-import { DatasetFormat } from "@training-ml/contracts"
+import { DatasetFormat, DatasetStatus } from "@training-ml/contracts"
 import { Dataset } from "@training-ml/contracts"
 import { formatBytes } from "@/lib/utils/storage.utils"
 
 import { DatasetFileViewer } from "@/features/dataset/components/DatasetFileViewer"
 
 const MOCK_DATASETS: Dataset[] = Array.from({ length: 42 }, (_, i) => ({
-  id: `ds_${String(i + 1).padStart(4, "0")}`,
+  id: `00000000-0000-0000-0000-${String(i + 1).padStart(12, "0")}`,
   name: [
     "Customer Churn Prediction",
     "Fraud Detection Training",
@@ -31,11 +31,14 @@ const MOCK_DATASETS: Dataset[] = Array.from({ length: 42 }, (_, i) => ({
   ][i % 12] + (i >= 12 ? ` (${Math.floor(i / 12) + 1})` : ""),
   description: "Sample dataset for model training and evaluation purposes.",
   storageUri: `s3://datasets/ds_${String(i + 1).padStart(4, "0")}`,
-  format: [DatasetFormat.CSV, DatasetFormat.JSON, DatasetFormat.PARQUET, DatasetFormat.AVRO][i % 4],
+  format: [DatasetFormat.CSV, DatasetFormat.JSON, DatasetFormat.XML][i % 3],
   size: Math.round(Math.random() * 10_000_000_000) + 100_000,
   checksum: `sha256:${Math.random().toString(36).slice(2, 34)}`,
   version: Math.ceil(Math.random() * 10),
   userId: "user_0001",
+  status: DatasetStatus.READY,
+  profile: null,
+  validationError: null,
 }))
 
 export function DatasetTable({ page, pageSize }: { page: number; pageSize: number }) {
