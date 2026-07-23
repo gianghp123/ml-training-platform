@@ -6,7 +6,7 @@ type Condition = { field?: string; equals?: unknown; in?: unknown[] };
 
 export function evaluateCondition(rule: ConstraintRule, ctx: NodeContext): boolean {
   const condition = rule.condition as Condition | undefined;
-  if (!condition || !condition.field) return true;
+  if (!condition || typeof condition.field !== 'string') return true;
 
   const path = condition.field.startsWith('$') ? condition.field : `$config.${condition.field}`;
   const value = resolvePath(path, ctx);
