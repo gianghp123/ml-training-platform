@@ -29,6 +29,9 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@bull-board/api": "^8.1.2",
+    "@bull-board/express": "^8.1.2",
+    "@bull-board/nestjs": "^8.1.2",
     "@clerk/express": "^2.1.35",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.17",

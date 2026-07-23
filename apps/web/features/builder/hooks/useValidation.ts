@@ -1,6 +1,6 @@
 'use client';
 
-import type { BlockDefinition, ValidationError } from '@training-ml/contracts';
+import type { BlockDefinition, Column, Dataset, ValidationError } from '@training-ml/contracts';
 import { validateGraph, type ValidationResult } from '@training-ml/pipeline-engine';
 import type { Edge, Node } from '@xyflow/react';
 import { useCallback, useMemo } from 'react';
@@ -14,13 +14,26 @@ interface UseValidationReturn {
   isValid: boolean;
 }
 
-const emptyResult: ValidationResult = { valid: true, errors: [], contracts: {} };
+const emptyResult: ValidationResult = { valid: true, errors: [], contracts: {}, inputContracts: {} };
 
 export function useValidation(
   nodes: Node[],
   edges: Edge[],
-  blocks: BlockDefinition[]
+  blocks: BlockDefinition[],
+  datasets: Dataset[] = [],
 ): UseValidationReturn {
+
+  const resolveColumns = useCallback(
+    (datasetId: string): Column[] | null => {
+      const dataset = datasets.find((d) => d.id === datasetId);
+      if (!dataset?.profile) return null;
+      const profile = dataset.profile;
+      if (profile.format === 'csv') return profile.columns;
+      if (Array.isArray(profile.schema)) return profile.schema;
+      return null;
+    },
+    [datasets],
+  );
 
   const graph = useMemo(
     () => toValidationGraph(nodes, edges, blocks),
@@ -30,8 +43,8 @@ export function useValidation(
   const stableGraph = useStableValue(graph, isGraphEqual);
 
   const result = useMemo(
-    () => (nodes.length === 0 ? emptyResult : validateGraph(stableGraph, blocks)),
-    [nodes.length, stableGraph, blocks]
+    () => (nodes.length === 0 ? emptyResult : validateGraph(stableGraph, blocks, resolveColumns)),
+    [nodes.length, stableGraph, blocks, resolveColumns]
   );
 
   const errorsByNode = useMemo(() => {

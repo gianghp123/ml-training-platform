@@ -1,10 +1,12 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import type { ValidationError, ValidationResult } from '@training-ml/contracts';
+import type { Contract, ValidationError, ValidationResult } from '@training-ml/contracts';
 
 export interface ValidationContextValue {
   result: ValidationResult;
+  contracts: Record<string, Record<string, Contract>>;
+  inputContracts: Record<string, Record<string, Contract>>;
   getNodeErrors: (nodeId: string) => ValidationError[];
   isValid: boolean;
 }

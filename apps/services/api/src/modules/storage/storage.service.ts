@@ -1,6 +1,7 @@
 import {
   Inject,
   Injectable,
+  OnModuleInit,
 } from '@nestjs/common';
 import {
   ConfigService,
@@ -15,13 +16,17 @@ import {
 } from './minio.provider';
 
 @Injectable()
-export class StorageService {
+export class StorageService implements OnModuleInit {
   constructor(
     @Inject(MINIO_CLIENT)
     private readonly client: Client,
     private readonly config:
       ConfigService,
   ) { }
+
+  async onModuleInit() {
+    await this.ensureBucket();
+  }
 
   async ensureBucket() {
     const bucket =

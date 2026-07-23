@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DatasetStatus, UploadUrlResponse } from "@training-ml/contracts";
 import { Queue } from "bullmq";
+import { randomUUID } from "crypto";
 import { IPaginationOptions, paginate } from "nestjs-typeorm-paginate";
 import { DatasetUploadJob, DatasetUploadJobPayload } from "src/common/queue/jobs";
 import { QueueName } from "src/common/queue/types";
@@ -47,6 +48,7 @@ export class DatasetService {
 
   async createUploadUrl(dto: CreateDatasetDto): Promise<UploadUrlResponse> {
     const dataset = this.datasetRepository.create({
+      id: randomUUID(),
       ...dto,
       status: DatasetStatus.UPLOADING,
       validationOptions: dto.validationOptions ?? null

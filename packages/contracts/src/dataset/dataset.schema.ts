@@ -9,8 +9,9 @@ export const CreateDatasetSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   format: DatasetFormatSchema,
+  size: z.number(),
   validationOptions: ValidationOptionsSchema.optional(),
-  userId: z.string().min(1),
+  userId: z.string().optional(),
 });
 
 export const UpdateDatasetSchema = CreateDatasetSchema.partial();
@@ -18,14 +19,14 @@ export const UpdateDatasetSchema = CreateDatasetSchema.partial();
 export const DatasetSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  description: z.string(),
+  description: z.string().nullable(),
   storageUri: z.string(),
   format: DatasetFormatSchema,
-  size: z.number(),
+  size: z.coerce.number(),
   status: DatasetStatusSchema,
   profile: DatasetProfileSchema.nullable(),
   validationError: z.string().nullable(),
-  checksum: z.string(),
+  checksum: z.string().nullable(),
   version: z.number(),
   userId: z.string(),
 });

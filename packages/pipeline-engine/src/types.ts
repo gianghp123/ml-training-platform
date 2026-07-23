@@ -1,4 +1,4 @@
-import type { Contract, BlockDefinition, ValidationError } from '@training-ml/contracts';
+import type { Contract, BlockDefinition, ValidationError, Column } from '@training-ml/contracts';
 
 export interface GraphNode {
   id: string;
@@ -24,7 +24,10 @@ export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
   contracts: Record<string, Record<string, Contract>>;
+  inputContracts: Record<string, Record<string, Contract>>;
 }
+
+export type ResolveColumnsFn = (datasetId: string) => Column[] | null;
 
 export interface NodeContext {
   node: GraphNode;
@@ -32,4 +35,5 @@ export interface NodeContext {
   inputContracts: Record<string, Contract>;
   outputContracts: Record<string, Contract>;
   errors: ValidationError[];
+  resolveColumns?: ResolveColumnsFn;
 }

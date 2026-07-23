@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Column, DatasetProfile, inferColumns, ValidationOptions } from '@training-ml/contracts';
+import { Column, DatasetFormat, DatasetProfile, inferColumns, ValidationOptions } from '@training-ml/contracts';
 import * as chardet from 'chardet';
 import { XMLParser } from 'fast-xml-parser';
 import * as fs from 'fs';
@@ -22,12 +22,12 @@ export class DatasetValidationService {
    */
   async validate(
     objectKey: string,
+    format: DatasetFormat,
     options?: ValidationOptions,
   ): Promise<DatasetProfile> {
-    const extension = objectKey.split('.').pop()?.toLowerCase();
 
     return this.storageService.withTempFile(objectKey, async (localPath) => {
-      switch (extension) {
+      switch (format) {
         case 'csv':
           return this.validateCsv(localPath, options);
         case 'json':
@@ -35,7 +35,7 @@ export class DatasetValidationService {
         case 'xml':
           return this.validateXml(localPath, options);
         default:
-          throw new Error(`Unsupported file format: ${extension}`);
+          throw new Error(`Unsupported file format: ${format}`);
       }
     });
   }

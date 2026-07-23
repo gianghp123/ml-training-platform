@@ -12,9 +12,9 @@ import {
 } from '@xyflow/react';
 import { useCallback, useMemo, useState } from 'react';
 
+import type { BlockCategory, BlockDefinition, Dataset } from '@training-ml/contracts';
 import { useBlockPalette } from '../hooks/useBlockPalette';
 import { useBuilder } from '../hooks/useBuilder';
-import type { BlockCategory, BlockDefinition } from '@training-ml/contracts';
 
 import BaseNode from './nodes/BaseNode';
 import GroupNode from './nodes/GroupNode';
@@ -24,6 +24,7 @@ import { WorkflowToolbar } from './WorkflowToolbar';
 
 import { BuilderContext, type BuilderContextValue } from '../contexts/builder.context';
 import { ValidationContext } from '../contexts/validation.context';
+import { toValidationGraph } from '../utils/graph-transform';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Pause, Play, Ungroup } from 'lucide-react';
@@ -50,10 +51,11 @@ interface GroupContextMenuState {
 interface BuilderCanvasProps {
   blocks: BlockDefinition[];
   categories: BlockCategory[];
+  datasets: Dataset[];
 }
 
-export function BuilderCanvas({ blocks, categories }: BuilderCanvasProps) {
-  const { validationResult, getNodeErrors, isValid, ...builder } = useBuilder({ blocks });
+export function BuilderCanvas({ blocks, categories, datasets }: BuilderCanvasProps) {
+  const { validationResult, getNodeErrors, isValid, ...builder } = useBuilder({ blocks, datasets });
   const palette = useBlockPalette({ blocks, categories });
   const [groupContextMenu, setGroupContextMenu] = useState<GroupContextMenuState | null>(null);
 
@@ -112,8 +114,8 @@ export function BuilderCanvas({ blocks, categories }: BuilderCanvasProps) {
   );
 
   const contextValue = useMemo<BuilderContextValue>(
-    () => ({ onConfigChange: builder.updateNodeConfig }),
-    [builder.updateNodeConfig]
+    () => ({ datasets, onConfigChange: builder.updateNodeConfig }),
+    [datasets, builder.updateNodeConfig]
   );
 
   const groupNode = useMemo(() => {
@@ -123,108 +125,113 @@ export function BuilderCanvas({ blocks, categories }: BuilderCanvasProps) {
     );
   }, [groupContextMenu, builder.nodes]);
 
+  const handleRun = () => {
+    const graph = toValidationGraph(builder.nodes, builder.edges, blocks);
+    console.log('Pipeline graph:', JSON.stringify(graph, null, 2));
+  };
+
   return (
-    <ValidationContext.Provider value={{ result: validationResult, getNodeErrors, isValid }}>
-    <div className="h-full w-full flex flex-col">
-      <WorkflowToolbar
-        workflowName={builder.workflowName}
-        onWorkflowNameChange={builder.setWorkflowName}
-        onSave={builder.saveWorkflow}
-        onRun={() => { }}
-        hasSavedWorkflow={builder.hasSavedWorkflow()}
-        onLoad={builder.loadWorkflow}
-        edgeStyle={builder.edgeStyle}
-        onEdgeStyleChange={builder.setEdgeStyle}
-      />
-      <div className="flex-1 relative">
-        <BuilderContext.Provider value={contextValue}>
-          <ReactFlow
-            nodes={builder.nodes}
-            edges={builder.edges}
-            onNodesChange={builder.onNodesChange}
-            onEdgesChange={builder.onEdgesChange}
-            onConnect={builder.onConnect}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            connectionLineStyle={{ stroke: '#6b7280', strokeWidth: 6 }}
-            colorMode="dark"
-            fitView
-            onPaneClick={handlePaneClick}
-            onPaneContextMenu={handlePaneContextMenu}
-            onNodeContextMenu={handleNodeContextMenu}
-            onNodesDelete={handleOnNodesDelete}
-          >
-            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-            <Controls />
-            <MiniMap
-              nodeStrokeWidth={3}
-              pannable
-              zoomable
-              className="bg-background/80!"
-            />
-          </ReactFlow>
-        </BuilderContext.Provider>
-
-        {builder.palettePosition && (
-          <BlockPaletteContextMenu
-            key={`${builder.palettePosition.x}-${builder.palettePosition.y}`}
-            position={builder.palettePosition}
-            searchQuery={palette.searchQuery}
-            onSearchChange={palette.setSearchQuery}
-            blocksByCategory={palette.blocksByCategory}
-            onSelectBlock={handleSelectBlock}
-            onClose={() => builder.setPalettePosition(null)}
-            groupableCount={builder.groupableNodes.length}
-            onGroupSelection={handleGroupSelection}
-          />
-        )}
-
-        {groupContextMenu && groupNode && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setGroupContextMenu(null)} />
-            <Card
-              className="fixed z-50 w-44 shadow-lg"
-              style={{
-                left: groupContextMenu.position.x,
-                top: groupContextMenu.position.y,
-              }}
+    <ValidationContext.Provider value={{ result: validationResult, contracts: validationResult.contracts, inputContracts: validationResult.inputContracts, getNodeErrors, isValid }}>
+      <div className="h-full w-full flex flex-col">
+        <WorkflowToolbar
+          workflowName={builder.workflowName}
+          onWorkflowNameChange={builder.setWorkflowName}
+          onSave={builder.saveWorkflow}
+          onRun={handleRun}
+          hasSavedWorkflow={builder.hasSavedWorkflow()}
+          onLoad={builder.loadWorkflow}
+          edgeStyle={builder.edgeStyle}
+          onEdgeStyleChange={builder.setEdgeStyle}
+        />
+        <div className="flex-1 relative">
+          <BuilderContext.Provider value={contextValue}>
+            <ReactFlow
+              nodes={builder.nodes}
+              edges={builder.edges}
+              onNodesChange={builder.onNodesChange}
+              onEdgesChange={builder.onEdgesChange}
+              onConnect={builder.onConnect}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              connectionLineStyle={{ stroke: '#6b7280', strokeWidth: 6 }}
+              colorMode="dark"
+              fitView
+              onPaneClick={handlePaneClick}
+              onPaneContextMenu={handlePaneContextMenu}
+              onNodeContextMenu={handleNodeContextMenu}
+              onNodesDelete={handleOnNodesDelete}
             >
-              <CardContent className="p-1">
-                <button
-                  className="w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded hover:bg-accent text-left"
-                  onClick={() => {
-                    builder.ungroup(groupContextMenu.groupId);
-                    setGroupContextMenu(null);
-                  }}
-                >
-                  <Ungroup className="size-3.5" />
-                  Ungroup
-                </button>
-                <button
-                  className="w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded hover:bg-accent text-left"
-                  onClick={() => {
-                    builder.toggleSuspend(groupContextMenu.groupId);
-                    setGroupContextMenu(null);
-                  }}
-                >
-                  {groupNode.data.suspended ? (
-                    <>
-                      <Play className="size-3.5" />
-                      Unskip
-                    </>
-                  ) : (
-                    <>
-                      <Pause className="size-3.5" />
-                      Skip
-                    </>
-                  )}
-                </button>
-              </CardContent>
-            </Card>
-          </>
-        )}
+              <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+              <Controls />
+              <MiniMap
+                nodeStrokeWidth={3}
+                pannable
+                zoomable
+                className="bg-background/80!"
+              />
+            </ReactFlow>
+          </BuilderContext.Provider>
+
+          {builder.palettePosition && (
+            <BlockPaletteContextMenu
+              key={`${builder.palettePosition.x}-${builder.palettePosition.y}`}
+              position={builder.palettePosition}
+              searchQuery={palette.searchQuery}
+              onSearchChange={palette.setSearchQuery}
+              blocksByCategory={palette.blocksByCategory}
+              onSelectBlock={handleSelectBlock}
+              onClose={() => builder.setPalettePosition(null)}
+              groupableCount={builder.groupableNodes.length}
+              onGroupSelection={handleGroupSelection}
+            />
+          )}
+
+          {groupContextMenu && groupNode && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setGroupContextMenu(null)} />
+              <Card
+                className="fixed z-50 w-44 shadow-lg"
+                style={{
+                  left: groupContextMenu.position.x,
+                  top: groupContextMenu.position.y,
+                }}
+              >
+                <CardContent className="p-1">
+                  <button
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded hover:bg-accent text-left"
+                    onClick={() => {
+                      builder.ungroup(groupContextMenu.groupId);
+                      setGroupContextMenu(null);
+                    }}
+                  >
+                    <Ungroup className="size-3.5" />
+                    Ungroup
+                  </button>
+                  <button
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs rounded hover:bg-accent text-left"
+                    onClick={() => {
+                      builder.toggleSuspend(groupContextMenu.groupId);
+                      setGroupContextMenu(null);
+                    }}
+                  >
+                    {groupNode.data.suspended ? (
+                      <>
+                        <Play className="size-3.5" />
+                        Unskip
+                      </>
+                    ) : (
+                      <>
+                        <Pause className="size-3.5" />
+                        Skip
+                      </>
+                    )}
+                  </button>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </div>
       </div>
-    </div>
     </ValidationContext.Provider>
   );
 }

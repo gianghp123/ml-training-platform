@@ -1,6 +1,8 @@
 import { Body, Controller, DefaultValuePipe, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { ZodResponse } from "nestjs-zod";
+import { CurrentUser } from "src/modules/auth/decorators/current-user.decorator";
+import type { RequestUser } from "src/modules/auth/interfaces/current-user.interface";
 import { CreateDatasetDto, DatasetDto, PaginatedDatasetResponseDto, UpdateDatasetDto, UploadUrlResponseDto } from "../dtos/dataset.dto";
 import { DatasetService } from "../services/dataset.service";
 
@@ -29,7 +31,8 @@ export class DatasetController {
 
   @Post()
   @ZodResponse({ status: HttpStatus.CREATED, type: UploadUrlResponseDto })
-  async create(@Body() dto: CreateDatasetDto) {
+  async create(@Body() dto: CreateDatasetDto, @CurrentUser() user: RequestUser) {
+    dto.userId = user.userId;
     return this.datasetService.createUploadUrl(dto);
   }
 

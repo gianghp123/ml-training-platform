@@ -20,9 +20,11 @@ export class DatasetUploadProcessor extends WorkerHost {
   }
 
   async process(job: Job<DatasetUploadJobPayload>) {
+    console.log(`Validating dataset ${job.data.datasetId}, queue: ${QueueName.DATASET_UPLOAD}`);
     const dataset = await this.updateStatus(job.data.datasetId, DatasetStatus.VALIDATING);
     const profile = await this.datasetValidator.validate(
       dataset.storageUri,
+      dataset.format,
       dataset.validationOptions ?? undefined,
     );
 

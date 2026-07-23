@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MinioProvider } from './minio.provider';
+import { MINIO_CLIENT, MinioProvider } from './minio.provider';
 import { StorageService } from './storage.service';
 
 @Module({
@@ -8,6 +8,7 @@ import { StorageService } from './storage.service';
     StorageService,
   ],
   exports: [
+    MINIO_CLIENT,
     StorageService,
   ],
 })

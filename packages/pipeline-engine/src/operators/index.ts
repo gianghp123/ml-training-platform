@@ -1,5 +1,6 @@
 import type { ConstraintRule, ValidationError } from '@training-ml/contracts';
 import type { NodeContext } from '../types';
+import { evaluateCondition } from './_condition';
 import { disjoint } from './disjoint';
 import { eq } from './eq';
 import { exists } from './exists';
@@ -33,6 +34,9 @@ export function evaluateRule(rule: ConstraintRule, ctx: NodeContext): Validation
         context: { op: rule.op },
       },
     ];
+  }
+  if (!evaluateCondition(rule, ctx)) {
+    return [];
   }
   return op(rule, ctx);
 }

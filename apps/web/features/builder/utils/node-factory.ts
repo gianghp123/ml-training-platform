@@ -36,6 +36,7 @@ function getConfigDefault(field: ConfigField): string | number | boolean | undef
     case 'MultiSelect':
       return '';
     case 'KeyValueMap':
+    case 'DatasetSelector':
       return '';
     default:
       return undefined;

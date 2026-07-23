@@ -9,6 +9,7 @@ export const ConfigFieldType = {
   FILE_UPLOAD: 'FileUpload',
   MULTI_SELECT: 'MultiSelect',
   KEY_VALUE_MAP: 'KeyValueMap',
+  DATASET_SELECTOR: 'DatasetSelector',
 } as const;
 
 export const ConfigFieldTypeSchema = z.enum(
@@ -61,6 +62,11 @@ export const ConfigFieldSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal(ConfigFieldType.KEY_VALUE_MAP),
     id: z.string(),
+  }),
+  z.object({
+    type: z.literal(ConfigFieldType.DATASET_SELECTOR),
+    id: z.string(),
+    format: z.enum(['csv', 'json', 'xml']).optional(),
   }),
 ]);
 

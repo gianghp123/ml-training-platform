@@ -20,9 +20,11 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
             (
                 uuid_generate_v4(), 1, 'active', 'Load CSV', ${cat('Data Source')},
                 '{"inputs":[],"outputs":[{"id":"dataset","artifact":"Dataset"}]}',
-                '{"fields":[]}',
+                '{"fields":[
+                    {"id":"dataset","type":"DatasetSelector","format":"csv"}
+                ]}',
                 '{"rules":[
-                    {"op":"exists","target":"$config.file","message":"A CSV file must be selected."}
+                    {"op":"exists","target":"$config.dataset","message":"A CSV dataset must be selected."}
                 ]}',
                 '{"declared":{"artifact":"Dataset","schema":{"columns":"unknown"},"role":"full"},"confirmProvider":"backend"}',
                 now()
@@ -30,9 +32,11 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
             (
                 uuid_generate_v4(), 1, 'active', 'Load JSON', ${cat('Data Source')},
                 '{"inputs":[],"outputs":[{"id":"dataset","artifact":"Dataset"}]}',
-                '{"fields":[]}',
+                '{"fields":[
+                    {"id":"dataset","type":"DatasetSelector","format":"json"}
+                ]}',
                 '{"rules":[
-                    {"op":"exists","target":"$config.file","message":"A JSON file must be selected."}
+                    {"op":"exists","target":"$config.dataset","message":"A JSON dataset must be selected."}
                 ]}',
                 '{"declared":{"artifact":"Dataset","schema":{"columns":"unknown"},"role":"full"},"confirmProvider":"backend"}',
                 now()
@@ -40,9 +44,11 @@ export class SeedBlockCatalog1783957264724 implements MigrationInterface {
             (
                 uuid_generate_v4(), 1, 'active', 'Load XML', ${cat('Data Source')},
                 '{"inputs":[],"outputs":[{"id":"dataset","artifact":"Dataset"}]}',
-                '{"fields":[]}',
+                '{"fields":[
+                    {"id":"dataset","type":"DatasetSelector","format":"xml"}
+                ]}',
                 '{"rules":[
-                    {"op":"exists","target":"$config.file","message":"An XML file must be selected."}
+                    {"op":"exists","target":"$config.dataset","message":"An XML dataset must be selected."}
                 ]}',
                 '{"declared":{"artifact":"Dataset","schema":{"columns":"unknown"},"role":"full"},"confirmProvider":"backend"}',
                 now()

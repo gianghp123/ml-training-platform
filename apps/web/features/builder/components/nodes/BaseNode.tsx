@@ -134,9 +134,11 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
         </div>
 
         <BlockConfigForm
+          nodeId={id}
           fields={configFields}
           values={data.config}
           onChange={handleConfigChange}
+          datasets={builder.datasets}
         />
 
         {hasErrors && (

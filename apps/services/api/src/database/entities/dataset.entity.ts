@@ -4,15 +4,15 @@ import {
   CreateDateColumn,
   Entity,
   OneToMany,
-  PrimaryGeneratedColumn,
-  Unique,
+  PrimaryColumn,
+  Unique
 } from 'typeorm';
 import { WorkflowRun } from './workflow-run.entity';
 
 @Entity('datasets')
 @Unique('UQ_dataset_user_name_version', ['userId', 'name', 'version'])
 export class Dataset {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string;
 
   @Column({ type: 'varchar' })

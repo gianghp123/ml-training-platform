@@ -1,8 +1,10 @@
 'use client';
 
+import type { Dataset } from '@training-ml/contracts';
 import { createContext, useContext } from 'react';
 
 export interface BuilderContextValue {
+  datasets: Dataset[];
   onConfigChange: (
     nodeId: string,
     key: string,

@@ -1,7 +1,7 @@
 import type { NodeContext } from '../types';
 
 export function resolvePath(path: string, ctx: NodeContext): unknown {
-  if (!path.startsWith('$')) return path;
+  if (typeof path !== 'string' || !path.startsWith('$')) return path;
 
   const parts = path.slice(1).split('.');
   const root = parts[0];
@@ -23,4 +23,21 @@ export function resolvePath(path: string, ctx: NodeContext): unknown {
   }
 
   return value;
+}
+
+export function resolveItems(value: unknown, ctx: NodeContext): string[] {
+  if (typeof value === 'string') {
+    const resolved = resolvePath(value, ctx);
+    if (Array.isArray(resolved)) return resolved as string[];
+    if (typeof resolved === 'string') return [resolved];
+    return [];
+  }
+  if (Array.isArray(value)) {
+    const out: string[] = [];
+    for (const entry of value) {
+      out.push(...resolveItems(entry, ctx));
+    }
+    return out;
+  }
+  return [];
 }

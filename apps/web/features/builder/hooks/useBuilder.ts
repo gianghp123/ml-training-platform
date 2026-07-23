@@ -1,6 +1,6 @@
 'use client';
 
-import type { BlockDefinition, ValidationError } from '@training-ml/contracts';
+import type { BlockDefinition, Dataset, ValidationError } from '@training-ml/contracts';
 import { type ValidationResult } from '@training-ml/pipeline-engine';
 import {
   addEdge,
@@ -43,6 +43,7 @@ function buildEdgeData(sourceNodeId: string, nodes: Node[], edgeStyle: EdgeStyle
 
 interface UseBuilderProps {
   blocks: BlockDefinition[];
+  datasets: Dataset[];
 }
 
 interface UseBuilderReturn {
@@ -75,7 +76,7 @@ interface UseBuilderReturn {
   isValid: boolean;
 }
 
-export function useBuilder({ blocks }: UseBuilderProps): UseBuilderReturn {
+export function useBuilder({ blocks, datasets }: UseBuilderProps): UseBuilderReturn {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -86,7 +87,7 @@ export function useBuilder({ blocks }: UseBuilderProps): UseBuilderReturn {
   const { saveWorkflow: persist, loadWorkflow: load, hasSavedWorkflow: hasSavedCheck } =
     useWorkflowPersistence();
 
-  const { result: validationResult, getNodeErrors, isValid } = useValidation(nodes, edges, blocks);
+  const { result: validationResult, getNodeErrors, isValid } = useValidation(nodes, edges, blocks, datasets);
 
   useEffect(() => {
     setEdges((eds) =>

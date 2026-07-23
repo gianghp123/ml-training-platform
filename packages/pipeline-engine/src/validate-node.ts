@@ -1,5 +1,5 @@
-import type { BlockDefinition, ValidationError } from '@training-ml/contracts';
-import type { GraphEdge, GraphNode, NodeContext } from './types';
+import type { BlockDefinition, Column, ValidationError } from '@training-ml/contracts';
+import type { GraphEdge, GraphNode, NodeContext, ResolveColumnsFn } from './types';
 import { buildOutputContracts } from './phases/build-contract';
 import { validateConfig } from './phases/validate-config';
 import { validateConstraints } from './phases/validate-constraints';
@@ -10,6 +10,7 @@ export function validateNode(
   definition: BlockDefinition,
   inputContracts: Record<string, unknown>,
   allEdges: GraphEdge[],
+  resolveColumns?: ResolveColumnsFn,
 ): {
   errors: ValidationError[];
   outputContracts: Record<string, unknown>;
@@ -20,6 +21,7 @@ export function validateNode(
     inputContracts: inputContracts as NodeContext['inputContracts'],
     outputContracts: {},
     errors: [],
+    resolveColumns,
   };
 
   const errors: ValidationError[] = [];

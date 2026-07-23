@@ -75,9 +75,20 @@ function buildContractFromTransform(
       };
     }
     if (artifact === PipelineArtifactType.DATASET) {
+      let schema = t.schema !== undefined ? t.schema : { columns: 'unknown' as const, target: null };
+
+      // If node has config.dataset, resolve actual columns from dataset profile
+      const datasetId = ctx.node.config?.dataset;
+      if (typeof datasetId === 'string' && datasetId && ctx.resolveColumns) {
+        const columns = ctx.resolveColumns(datasetId);
+        if (columns && columns.length > 0) {
+          schema = { ...schema, columns };
+        }
+      }
+
       return {
         artifact: PipelineArtifactType.DATASET,
-        schema: t.schema !== undefined ? t.schema : { columns: 'unknown' as const, target: null },
+        schema,
         role: t.role !== undefined ? t.role : DatasetRole.FULL,
         task: t.task !== undefined ? t.task : null,
       } as Contract;
@@ -94,9 +105,17 @@ function buildContractFromTransform(
       const cols = columnsUnknown
         ? []
         : (input.schema.columns as Exclude<typeof input.schema.columns, 'unknown'>).map((col) => {
-          const match = (t.columnUpdates as Array<Record<string, unknown>>).find((u) =>
-            (u.columns as string[]).includes(col.name),
-          );
+ const match = (t.columnUpdates as Array<Record<string, unknown>>).find((u) => {
+            const raw = typeof u.columns === 'string' && u.columns.startsWith('$')
+              ? resolvePath(u.columns, ctx)
+              : u.columns;
+            const names = Array.isArray(raw)
+              ? raw
+              : typeof raw === 'string'
+                ? raw.split(',').map((s: string) => s.trim())
+                : [];
+            return names.includes(col.name);
+          });
           if (!match) return col;
           return {
             ...col,
@@ -145,8 +164,16 @@ function buildContractFromTransform(
     };
   }
 
-  if ('keepColumns' in t && Array.isArray(t.keepColumns)) {
-    const keep = t.keepColumns as string[];
+  if ('keepColumns' in t && t.keepColumns) {
+    const raw = t.keepColumns as unknown;
+    const resolved = typeof raw === 'string' && raw.startsWith('$')
+      ? resolvePath(raw, ctx)
+      : raw;
+    const keep = Array.isArray(resolved)
+      ? resolved
+      : typeof resolved === 'string'
+        ? resolved.split(',').map((s: string) => s.trim())
+        : [];
     return {
       artifact: PipelineArtifactType.DATASET,
       schema: {
@@ -161,7 +188,11 @@ function buildContractFromTransform(
   }
 
   if ('renameColumns' in t && t.renameColumns) {
-    const mapping = t.renameColumns as Record<string, string>;
+    const raw = t.renameColumns as unknown;
+    const resolved = typeof raw === 'string' && raw.startsWith('$')
+      ? resolvePath(raw, ctx)
+      : raw;
+    const mapping = (typeof resolved === 'object' && resolved !== null ? resolved : {}) as Record<string, string>;
     return {
       artifact: PipelineArtifactType.DATASET,
       schema: {

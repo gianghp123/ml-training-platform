@@ -1,25 +1,16 @@
-import type { ConstraintRule, Contract, ValidationError } from '@training-ml/contracts';
+import type { ConstraintRule, ValidationError } from '@training-ml/contracts';
 import type { NodeContext } from '../types';
-import { getDatasetColumns } from '../utils/contract-helpers';
-import { resolvePath } from './_resolve-path';
+import { resolveItems, resolvePath } from './_resolve-path';
 
 export function subsetOf(rule: ConstraintRule, ctx: NodeContext): ValidationError[] {
-  const leftRaw = resolvePath(rule.left as string, ctx);
+  const left = resolveItems(rule.left, ctx);
+
   const rightRaw = resolvePath(rule.right as string, ctx);
-
-  let left: string[] = [];
   let right: string[] = [];
-
-  if (Array.isArray(leftRaw)) {
-    left = leftRaw as string[];
-  } else if (typeof leftRaw === 'string') {
-    left = [leftRaw];
-  }
-
   if (Array.isArray(rightRaw)) {
     right = rightRaw as string[];
-  } else if (rightRaw && typeof rightRaw === 'object' && 'artifact' in rightRaw) {
-    right = getDatasetColumns(rightRaw as Contract).map((c) => c.name);
+  } else if (typeof rightRaw === 'string') {
+    right = [rightRaw];
   }
 
   const missing = left.filter((item) => !right.includes(item));

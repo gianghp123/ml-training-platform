@@ -56,6 +56,22 @@ export const selectTargetBlock: BlockDefinition = {
         condition: { field: 'task', in: ['classification', 'regression'] },
         message: 'A target column is required for classification and regression.',
       },
+      {
+        op: 'semantic',
+        target: '$config.targetColumn',
+        severity: 'error',
+        expected: ['categorical'],
+        condition: { field: 'task', equals: 'classification' },
+        message: 'Classification requires a categorical target column.',
+      },
+      {
+        op: 'semantic',
+        target: '$config.targetColumn',
+        severity: 'error',
+        expected: ['numeric'],
+        condition: { field: 'task', equals: 'regression' },
+        message: 'Regression requires a numeric target column.',
+      },
     ],
   },
   outputTransform: {
@@ -182,10 +198,103 @@ export const randomForestBlock: BlockDefinition = {
   },
 };
 
+export const featureSelectionBlock: BlockDefinition = {
+  id: 'feature-selection',
+  version: 1,
+  status: 'active',
+  name: 'Feature Selection',
+  categoryId: 'Preprocessing',
+  ports: {
+    inputs: [{ id: 'dataset', artifact: 'Dataset' }],
+    outputs: [{ id: 'dataset', artifact: 'Dataset' }],
+  },
+  configSchema: {
+    fields: [{ type: 'ColumnSelector', id: 'columns', multiple: true }],
+  },
+  constraints: {
+    rules: [
+      {
+        op: 'subsetOf',
+        left: ['$input.dataset.schema.target'],
+        right: '$config.columns',
+        severity: 'error',
+        message: 'The target column must remain among the kept columns.',
+      },
+    ],
+  },
+  outputTransform: {
+    declared: { keepColumns: '$config.columns' },
+  },
+};
+
+export const evaluationBlock: BlockDefinition = {
+  id: 'evaluation',
+  version: 1,
+  status: 'active',
+  name: 'Evaluation',
+  categoryId: 'Evaluation',
+  ports: {
+    inputs: [
+      { id: 'model', artifact: 'Model' },
+      { id: 'dataset', artifact: 'Dataset' },
+    ],
+    outputs: [{ id: 'metrics', artifact: 'Metrics' }],
+  },
+  configSchema: {
+    fields: [
+      {
+        type: 'MultiSelect',
+        id: 'metrics',
+        optionsFrom: '$input.model.task',
+        optionsMap: {
+          classification: ['accuracy', 'precision', 'recall', 'f1', 'confusionMatrix'],
+          regression: ['mae', 'mse', 'rmse', 'r2'],
+          clustering: ['silhouette', 'inertia'],
+        },
+      },
+    ],
+  },
+  constraints: {
+    rules: [
+      {
+        op: 'eq',
+        left: '$input.dataset.role',
+        right: 'test',
+        severity: 'error',
+        message: 'Evaluation should run against a test-role dataset, not the training data.',
+      },
+      {
+        op: 'eq',
+        left: '$input.model.task',
+        right: '$input.dataset.task',
+        severity: 'error',
+        message: 'Model and dataset task types must match.',
+      },
+      {
+        op: 'subsetOf',
+        left: '$input.model.featureSchema',
+        right: '$input.dataset.schema.columns',
+        severity: 'error',
+        message: 'The dataset must contain every feature column the model was trained on.',
+      },
+    ],
+  },
+  outputTransform: {
+    declared: {
+      artifact: 'Metrics',
+      task: '$input.model.task',
+      metrics: 'unknown',
+    },
+    confirmProvider: 'backend',
+  },
+};
+
 export const v1Catalog: BlockDefinition[] = [
   loadCsvBlock,
   selectTargetBlock,
   normalizationBlock,
+  featureSelectionBlock,
   trainTestSplitBlock,
   randomForestBlock,
+  evaluationBlock,
 ];
