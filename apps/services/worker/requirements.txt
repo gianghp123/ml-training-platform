@@ -1,0 +1,7 @@
+# Python ML Worker Dependencies
+pandas
+numpy
+scikit-learn
+minio
+redis
+psycopg2-binary

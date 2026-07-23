@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button"
 import { Workflow } from "@training-ml/contracts"
 import { ROUTES } from "@/lib/route"
 
+const BASE_TIMESTAMP = 1775000000000;
+
 const MOCK_WORKFLOWS: Workflow[] = Array.from({ length: 42 }, (_, i) => {
-  const daysAgo = Math.floor(Math.random() * 60)
-  const created = new Date(Date.now() - daysAgo * 86_400_000)
-  const updated = new Date(created.getTime() + Math.floor(Math.random() * daysAgo) * 86_400_000)
+  const daysAgo = ((i * 7 + 3) % 50) + 1
+  const created = new Date(BASE_TIMESTAMP - daysAgo * 86_400_000)
+  const updated = new Date(created.getTime() + (((i * 3) % daysAgo) + 1) * 86_400_000)
 
   return {
     id: `wf_${String(i + 1).padStart(4, "0")}`,
@@ -48,11 +50,11 @@ export function WorkflowTable({ page, pageSize }: { page: number; pageSize: numb
     },
     {
       header: "Created",
-      cell: (row) => row.createdAt.toLocaleDateString(),
+      cell: (row) => row.createdAt.toLocaleDateString("en-US"),
     },
     {
       header: "Updated",
-      cell: (row) => row.updatedAt.toLocaleDateString(),
+      cell: (row) => row.updatedAt.toLocaleDateString("en-US"),
     },
     {
       header: "Actions",
