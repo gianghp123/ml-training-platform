@@ -8,12 +8,7 @@
   "devDependencies": {
     "turbo": "latest"
   },
-  "devEngines": {
-    "packageManager": {
-      "name": "npm",
-      "version": "11.6.2"
-    }
-  },
+  "packageManager": "npm@11.6.2",
   "workspaces": [
     "apps/*",
     "apps/services/*",
