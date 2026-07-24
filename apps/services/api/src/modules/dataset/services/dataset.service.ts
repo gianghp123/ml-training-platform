@@ -23,8 +23,12 @@ export class DatasetService {
     private readonly storageService: StorageService,
   ) { }
 
-  async findAll(options: IPaginationOptions) {
-    const { items, meta } = await paginate<Dataset>(this.datasetRepository, options);
+  async findAll(options: IPaginationOptions, userId: string) {
+    const query = this.datasetRepository
+      .createQueryBuilder('dataset')
+      .where('dataset.user_id = :userId', { userId })
+      .orderBy('dataset.created_at', 'DESC');
+    const { items, meta } = await paginate<Dataset>(query, options);
     return {
       data: items,
       meta: {
@@ -36,9 +40,9 @@ export class DatasetService {
     };
   }
 
-  async findOne(id: string): Promise<Dataset> {
+  async findOne(id: string, userId: string): Promise<Dataset> {
     const dataset = await this.datasetRepository.findOne({
-      where: { id },
+      where: { id, userId },
     });
     if (!dataset) {
       throw new NotFoundException(`Dataset #${id} not found`);
@@ -46,10 +50,14 @@ export class DatasetService {
     return dataset;
   }
 
-  async createUploadUrl(dto: CreateDatasetDto): Promise<UploadUrlResponse> {
+  async createUploadUrl(
+    dto: CreateDatasetDto,
+    userId: string,
+  ): Promise<UploadUrlResponse> {
     const dataset = this.datasetRepository.create({
       id: randomUUID(),
       ...dto,
+      userId,
       status: DatasetStatus.UPLOADING,
       validationOptions: dto.validationOptions ?? null
     });
@@ -71,8 +79,8 @@ export class DatasetService {
     };
   }
 
-  async completeUpload(datasetId: string): Promise<void> {
-    const dataset = await this.findOne(datasetId);
+  async completeUpload(datasetId: string, userId: string): Promise<void> {
+    const dataset = await this.findOne(datasetId, userId);
     dataset.status = DatasetStatus.QUEUED;
     await this.datasetRepository.save(dataset);
 
@@ -81,14 +89,20 @@ export class DatasetService {
     } as DatasetUploadJobPayload);
   }
 
-  async update(id: string, dto: UpdateDatasetDto): Promise<Dataset> {
-    const dataset = await this.findOne(id);
-    Object.assign(dataset, dto);
+  async update(
+    id: string,
+    dto: UpdateDatasetDto,
+    userId: string,
+  ): Promise<Dataset> {
+    const dataset = await this.findOne(id, userId);
+    const updates = { ...dto };
+    Reflect.deleteProperty(updates, 'userId');
+    Object.assign(dataset, updates);
     return this.datasetRepository.save(dataset);
   }
 
-  async remove(id: string): Promise<void> {
-    const dataset = await this.findOne(id);
+  async remove(id: string, userId: string): Promise<void> {
+    const dataset = await this.findOne(id, userId);
     await this.datasetRepository.remove(dataset);
   }
 

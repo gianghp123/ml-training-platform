@@ -1,10 +1,11 @@
 "use client"
 
-import { Upload, FileUp, CheckCircle2, Loader2 } from "lucide-react"
+import { Upload, FileUp, CheckCircle2, Loader2, ChevronRight } from "lucide-react"
 import { useCallback, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -211,7 +212,7 @@ export function UploadDatasetModal() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-2">
               {/* Name */}
               <div className="grid gap-2">
                 <Label htmlFor="name">Name</Label>
@@ -258,61 +259,64 @@ export function UploadDatasetModal() {
                 </Select>
               </div>
 
-              {/* Validation Options */}
+              {/* Format-specific & Validation Options */}
               <details className="group">
-                <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
-                  Validation Options
-                  <span className="text-xs group-open:rotate-90 transition-transform">
-                    ▶
-                  </span>
+                <summary className="flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground">
+                  <span>Validation & Format Options</span>
+                  <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
                 </summary>
-                <div className="mt-3 grid gap-3 pl-1">
+                <div className="mt-3 grid gap-3 pl-1 border-l-2 border-muted pl-3">
                   {/* CSV options */}
                   {format === DatasetFormat.CSV && (
-                    <>
-                      <div className="grid gap-2">
-                        <Label htmlFor="csvDelimiter">Delimiter</Label>
-                        <Input
-                          id="csvDelimiter"
-                          name="csvDelimiter"
-                          placeholder=","
-                          maxLength={1}
-                          className="w-20"
-                          disabled={state === "uploading"}
-                        />
+                    <div className="grid gap-3 rounded-lg border bg-muted/30 p-3">
+                      <span className="text-xs font-semibold text-foreground">CSV Options</span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="csvDelimiter" className="text-xs">Delimiter</Label>
+                          <Input
+                            id="csvDelimiter"
+                            name="csvDelimiter"
+                            placeholder=","
+                            maxLength={1}
+                            className="h-8 text-xs"
+                            disabled={state === "uploading"}
+                          />
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="csvEncoding" className="text-xs">Encoding</Label>
+                          <Input
+                            id="csvEncoding"
+                            name="csvEncoding"
+                            placeholder="utf-8"
+                            className="h-8 text-xs"
+                            disabled={state === "uploading"}
+                          />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
+                      <div className="flex items-center gap-2 pt-1">
+                        <Checkbox
                           id="csvHasHeader"
                           name="csvHasHeader"
-                          className="size-4 rounded border-input"
+                          value="on"
+                          defaultChecked
                           disabled={state === "uploading"}
                         />
-                        <Label htmlFor="csvHasHeader" className="cursor-pointer">
+                        <Label htmlFor="csvHasHeader" className="cursor-pointer text-xs">
                           Has header row
                         </Label>
                       </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="csvEncoding">Encoding</Label>
-                        <Input
-                          id="csvEncoding"
-                          name="csvEncoding"
-                          placeholder="utf-8"
-                          disabled={state === "uploading"}
-                        />
-                      </div>
-                    </>
+                    </div>
                   )}
 
                   {/* JSON options */}
                   {format === DatasetFormat.JSON && (
-                    <div className="grid gap-2">
-                      <Label htmlFor="jsonRecordsPath">Records Path</Label>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="jsonRecordsPath" className="text-xs">Records Path</Label>
                       <Input
                         id="jsonRecordsPath"
                         name="jsonRecordsPath"
                         placeholder="data.items"
+                        className="h-8 text-xs"
                         disabled={state === "uploading"}
                       />
                     </div>
@@ -320,38 +324,43 @@ export function UploadDatasetModal() {
 
                   {/* XML options */}
                   {format === DatasetFormat.XML && (
-                    <div className="grid gap-2">
-                      <Label htmlFor="xmlRecordElement">Record Element</Label>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="xmlRecordElement" className="text-xs">Record Element</Label>
                       <Input
                         id="xmlRecordElement"
                         name="xmlRecordElement"
                         placeholder="record"
+                        className="h-8 text-xs"
                         disabled={state === "uploading"}
                       />
                     </div>
                   )}
 
                   {/* Common options */}
-                  <div className="grid gap-2">
-                    <Label htmlFor="sampleSize">Sample Size</Label>
-                    <Input
-                      id="sampleSize"
-                      name="sampleSize"
-                      type="number"
-                      placeholder="500"
-                      min={1}
-                      max={10000}
-                      disabled={state === "uploading"}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="requiredColumns">Required Columns</Label>
-                    <Input
-                      id="requiredColumns"
-                      name="requiredColumns"
-                      placeholder="col1, col2, col3"
-                      disabled={state === "uploading"}
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="sampleSize" className="text-xs">Sample Size</Label>
+                      <Input
+                        id="sampleSize"
+                        name="sampleSize"
+                        type="number"
+                        placeholder="500"
+                        min={1}
+                        max={10000}
+                        className="h-8 text-xs"
+                        disabled={state === "uploading"}
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="requiredColumns" className="text-xs">Required Columns</Label>
+                      <Input
+                        id="requiredColumns"
+                        name="requiredColumns"
+                        placeholder="col1, col2"
+                        className="h-8 text-xs"
+                        disabled={state === "uploading"}
+                      />
+                    </div>
                   </div>
                 </div>
               </details>
@@ -365,7 +374,7 @@ export function UploadDatasetModal() {
                   onDragLeave={handleDragLeave}
                   onClick={() => fileInputRef.current?.click()}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 cursor-pointer transition-colors",
+                    "flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 min-h-[130px] cursor-pointer transition-colors",
                     dragOver
                       ? "border-primary bg-primary/5"
                       : "border-muted-foreground/25 hover:border-muted-foreground/50",
@@ -376,7 +385,7 @@ export function UploadDatasetModal() {
                   {file ? (
                     <>
                       <FileUp className="size-8 text-success" />
-                      <span className="text-sm font-medium">{file.name}</span>
+                      <span className="text-sm font-medium text-foreground">{file.name}</span>
                       <span className="text-xs text-muted-foreground">
                         {(file.size / 1024 / 1024).toFixed(2)} MB
                       </span>
@@ -384,7 +393,7 @@ export function UploadDatasetModal() {
                   ) : (
                     <>
                       <Upload className="size-8 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-muted-foreground font-medium">
                         Drop file here or click to browse
                       </span>
                       <span className="text-xs text-muted-foreground">

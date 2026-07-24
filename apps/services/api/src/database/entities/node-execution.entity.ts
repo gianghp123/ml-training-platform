@@ -31,16 +31,22 @@ export class NodeExecution {
   status: NodeExecutionStatus;
 
   @Column({ type: 'uuid', nullable: true })
-  workerId: string;
+  workerId: string | null;
 
   @Column({ type: 'int', default: 0 })
   retryCount: number;
 
   @Column({ type: 'timestamptz', nullable: true })
-  startedAt: Date;
+  startedAt: Date | null;
 
   @Column({ type: 'timestamptz', nullable: true })
-  finishedAt: Date;
+  finishedAt: Date | null;
+
+  @Column({ type: 'text', nullable: true })
+  errorMessage: string | null;
+
+  @Column({ type: 'jsonb', nullable: true })
+  outputSummary: Record<string, unknown> | null;
 
   @ManyToOne(() => WorkflowRun, (run) => run.nodeExecutions)
   @JoinColumn({ name: 'workflow_run_id' })

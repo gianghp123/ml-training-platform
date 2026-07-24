@@ -8,7 +8,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggingZodSerializerInterceptor } from './common/interceptors/logging-zod-serializer';
 import { AppBullModule } from './common/queue/bullmq.module';
+import { RedisStreamsModule } from './common/redis/redis-streams.module';
 import minioConfig from './configs/minio.config';
+import redisConfig from './configs/redis.config';
 import typeormConfig from './configs/typeorm.config';
 import { ClerkAuthGuard } from './modules/auth/guards/clerk-auth.guard';
 import { RolesGuard } from './modules/auth/guards/role.guard';
@@ -23,7 +25,7 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [typeormConfig, minioConfig],
+      load: [typeormConfig, minioConfig, redisConfig],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
@@ -45,6 +47,7 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
       }),
     }),
     AppBullModule,
+    RedisStreamsModule,
     StorageModule,
     BlockModule,
     DatasetModule,

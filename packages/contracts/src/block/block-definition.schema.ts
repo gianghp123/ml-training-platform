@@ -83,6 +83,7 @@ export const BlockDefinitionSchema = z.object({
   id: z.string(),
   version: z.number().int().positive(),
   status: BlockStatusSchema,
+  executorKey: z.string().min(1),
 
   name: z.string(),
   categoryId: z.string(),

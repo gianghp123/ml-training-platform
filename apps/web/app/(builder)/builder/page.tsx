@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { BuilderCanvas } from "@/features/builder/components/BuilderCanvas";
 import {
   getBlockCategories,

@@ -4,10 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev -p 3001 --webpack",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-strip-types --test components/**/*.test.ts",
+    "test": "jest --runInBand",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",

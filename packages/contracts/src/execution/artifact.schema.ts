@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UuidSchema } from '../shared';
+import { IsoDateCodec, UuidSchema } from '../shared';
 
 export const ArtifactType = {
   MODEL: 'model',
@@ -28,14 +28,15 @@ export const CreateArtifactSchema = z.object({
 export const UpdateArtifactSchema = CreateArtifactSchema.partial();
 
 export const ArtifactSchema = z.object({
-  id: z.string().uuid(),
-  workflowRunId: z.string(),
-  nodeExecutionId: z.string(),
+  id: UuidSchema,
+  workflowRunId: UuidSchema,
+  nodeExecutionId: UuidSchema,
   name: z.string(),
   artifactType: ArtifactTypeSchema,
   mimeType: z.string(),
   storageUri: z.string(),
-  metadata: z.record(z.string(), z.unknown()),
+  metadata: z.record(z.string(), z.unknown()).nullable(),
+  createdAt: IsoDateCodec,
 });
 
 export type CreateArtifact = z.infer<typeof CreateArtifactSchema>;

@@ -1,19 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { paginate, IPaginationOptions } from 'nestjs-typeorm-paginate';
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { NodeExecution } from 'src/database/entities/node-execution.entity';
-import { CreateNodeExecutionDto, UpdateNodeExecutionDto } from '../dtos/node-execution.dto';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class NodeExecutionService {
   constructor(
     @InjectRepository(NodeExecution)
-    private nodeExecutionRepository: Repository<NodeExecution>,
+    private readonly nodeExecutionRepository: Repository<NodeExecution>,
   ) {}
 
-  async findAll(options: IPaginationOptions) {
-    const { items, meta } = await paginate<NodeExecution>(this.nodeExecutionRepository, options);
+  async findAll(options: IPaginationOptions, userId: string) {
+    const query = this.nodeExecutionRepository
+      .createQueryBuilder('execution')
+      .innerJoin('execution.workflowRun', 'run')
+      .where('run.user_id = :userId', { userId })
+      .orderBy('execution.started_at', 'DESC', 'NULLS LAST');
+    const { items, meta } = await paginate<NodeExecution>(query, options);
     return {
       data: items,
       meta: {
@@ -25,27 +29,16 @@ export class NodeExecutionService {
     };
   }
 
-  async findOne(id: string): Promise<NodeExecution> {
-    const nodeExecution = await this.nodeExecutionRepository.findOne({ where: { id } });
+  async findOne(id: string, userId: string): Promise<NodeExecution> {
+    const nodeExecution = await this.nodeExecutionRepository
+      .createQueryBuilder('execution')
+      .innerJoin('execution.workflowRun', 'run')
+      .where('execution.id = :id', { id })
+      .andWhere('run.user_id = :userId', { userId })
+      .getOne();
     if (!nodeExecution) {
       throw new NotFoundException(`NodeExecution #${id} not found`);
     }
     return nodeExecution;
-  }
-
-  async create(dto: CreateNodeExecutionDto): Promise<NodeExecution> {
-    const nodeExecution = this.nodeExecutionRepository.create(dto);
-    return this.nodeExecutionRepository.save(nodeExecution);
-  }
-
-  async update(id: string, dto: UpdateNodeExecutionDto): Promise<NodeExecution> {
-    const nodeExecution = await this.findOne(id);
-    Object.assign(nodeExecution, dto);
-    return this.nodeExecutionRepository.save(nodeExecution);
-  }
-
-  async remove(id: string): Promise<void> {
-    const nodeExecution = await this.findOne(id);
-    await this.nodeExecutionRepository.remove(nodeExecution);
   }
 }

@@ -36,7 +36,7 @@ export class Artifact {
   storageUri: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  metadata: Record<string, unknown>;
+  metadata: Record<string, unknown> | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

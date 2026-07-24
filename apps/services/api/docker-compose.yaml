@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -18,7 +16,7 @@ services:
       - training_ml_data:/var/lib/postgresql/data
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,6 +31,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+      MINIO_API_CORS_ALLOW_ORIGIN: ${MINIO_CORS_ALLOW_ORIGIN:-http://localhost:3000}
 
     ports:
       - "${MINIO_PORT}:9000"
@@ -40,6 +39,32 @@ services:
 
     volumes:
       - training_ml_minio_data:/data
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+
+    depends_on:
+      minio:
+        condition: service_healthy
+
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mc alias set local http://minio:9000 "$${MINIO_ACCESS_KEY}" "$${MINIO_SECRET_KEY}"
+        mc mb --ignore-existing "local/$${MINIO_BUCKET}"
 
   redis:
     image: redis:7-alpine
@@ -59,6 +84,45 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  worker:
+    build:
+      context: ../worker
+      dockerfile: Dockerfile
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: ${REDIS_DB:-0}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      WORKFLOW_JOB_STREAM: ${WORKFLOW_JOB_STREAM:-ml:workflow:jobs}
+      WORKFLOW_CONSUMER_GROUP: ${WORKFLOW_CONSUMER_GROUP:-python-workers}
+      WORKFLOW_EVENT_STREAM_PREFIX: ${WORKFLOW_EVENT_STREAM_PREFIX:-ml:workflow:runs}
+      WORKER_POLL_MS: ${WORKER_POLL_MS:-5000}
+      EVENT_STREAM_MAXLEN: ${EVENT_STREAM_MAXLEN:-10000}
+      EVENT_STREAM_TTL_SECONDS: ${EVENT_STREAM_TTL_SECONDS:-86400}
 
 volumes:
   training_ml_data:
