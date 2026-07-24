@@ -18,39 +18,52 @@ export class DatasetController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @CurrentUser() user: RequestUser,
   ) {
     limit = limit > 100 ? 100 : limit;
-    return this.datasetService.findAll({ page, limit });
+    return this.datasetService.findAll({ page, limit }, user.userId);
   }
 
   @Get(':id')
   @ZodResponse({ status: HttpStatus.OK, type: DatasetDto })
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.datasetService.findOne(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.datasetService.findOne(id, user.userId);
   }
 
   @Post()
   @ZodResponse({ status: HttpStatus.CREATED, type: UploadUrlResponseDto })
   async create(@Body() dto: CreateDatasetDto, @CurrentUser() user: RequestUser) {
-    dto.userId = user.userId;
-    return this.datasetService.createUploadUrl(dto);
+    return this.datasetService.createUploadUrl(dto, user.userId);
   }
 
   @Post(':id/complete')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async completeUpload(@Param('id', ParseUUIDPipe) id: string) {
-    return this.datasetService.completeUpload(id);
+  async completeUpload(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.datasetService.completeUpload(id, user.userId);
   }
 
   @Patch(':id')
   @ZodResponse({ status: HttpStatus.OK, type: DatasetDto })
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateDatasetDto) {
-    return this.datasetService.update(id, dto);
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateDatasetDto,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.datasetService.update(id, dto, user.userId);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    await this.datasetService.remove(id);
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    await this.datasetService.remove(id, user.userId);
   }
 }

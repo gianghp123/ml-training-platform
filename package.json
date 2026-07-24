@@ -3,7 +3,10 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "check-types": "turbo run check-types",
+    "test": "turbo run test",
+    "test:worker": "cd apps/services/worker && python -m pytest tests"
   },
   "devDependencies": {
     "turbo": "latest"

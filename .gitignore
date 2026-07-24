@@ -10,3 +10,8 @@ dist
 trace.*
 Heap*
 .next
+.pytest_cache
+__pycache__
+*.py[cod]
+.venv
+coverage

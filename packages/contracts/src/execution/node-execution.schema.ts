@@ -22,10 +22,12 @@ export const CreateNodeExecutionSchema = z.object({
   nodeId: z.string().min(1),
   nodeType: z.string().min(1),
   status: NodeExecutionStatusSchema.optional(),
-  workerId: UuidSchema.optional(),
+  workerId: UuidSchema.nullable().optional(),
   retryCount: z.number().int().optional(),
-  startedAt: IsoDateCodec.optional(),
-  finishedAt: IsoDateCodec.optional(),
+  startedAt: IsoDateCodec.nullable().optional(),
+  finishedAt: IsoDateCodec.nullable().optional(),
+  errorMessage: z.string().nullable().optional(),
+  outputSummary: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const UpdateNodeExecutionSchema = CreateNodeExecutionSchema.partial();
@@ -36,10 +38,12 @@ export const NodeExecutionSchema = z.object({
   nodeId: z.string(),
   nodeType: z.string(),
   status: NodeExecutionStatusSchema,
-  workerId: z.string(),
+  workerId: UuidSchema.nullable(),
   retryCount: z.number(),
-  startedAt: IsoDateCodec,
-  finishedAt: IsoDateCodec,
+  startedAt: IsoDateCodec.nullable(),
+  finishedAt: IsoDateCodec.nullable(),
+  errorMessage: z.string().nullable(),
+  outputSummary: z.record(z.string(), z.unknown()).nullable(),
 });
 
 export type CreateNodeExecution = z.infer<typeof CreateNodeExecutionSchema>;

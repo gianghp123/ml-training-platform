@@ -1,7 +1,21 @@
-import { Body, Controller, DefaultValuePipe, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import {
+  Controller,
+  DefaultValuePipe,
+  Get,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { ZodResponse } from "nestjs-zod";
-import { CreateNodeExecutionDto, NodeExecutionDto, PaginatedNodeExecutionResponseDto, UpdateNodeExecutionDto } from '../dtos/node-execution.dto';
+import { ZodResponse } from 'nestjs-zod';
+import { CurrentUser } from 'src/modules/auth/decorators/current-user.decorator';
+import type { RequestUser } from 'src/modules/auth/interfaces/current-user.interface';
+import {
+  NodeExecutionDto,
+  PaginatedNodeExecutionResponseDto,
+} from '../dtos/node-execution.dto';
 import { NodeExecutionService } from '../services/node-execution.service';
 
 @ApiBearerAuth()
@@ -9,39 +23,31 @@ import { NodeExecutionService } from '../services/node-execution.service';
 export class NodeExecutionController {
   constructor(
     private readonly nodeExecutionService: NodeExecutionService,
-  ) { }
+  ) {}
 
   @Get()
-  @ZodResponse({ status: HttpStatus.OK, type: PaginatedNodeExecutionResponseDto })
+  @ZodResponse({
+    status: HttpStatus.OK,
+    type: PaginatedNodeExecutionResponseDto,
+  })
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @CurrentUser() user: RequestUser,
   ) {
     limit = limit > 100 ? 100 : limit;
-    return this.nodeExecutionService.findAll({ page, limit });
+    return this.nodeExecutionService.findAll(
+      { page, limit },
+      user.userId,
+    );
   }
 
   @Get(':id')
   @ZodResponse({ status: HttpStatus.OK, type: NodeExecutionDto })
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.nodeExecutionService.findOne(id);
-  }
-
-  @Post()
-  @ZodResponse({ status: HttpStatus.CREATED, type: NodeExecutionDto })
-  async create(@Body() dto: CreateNodeExecutionDto) {
-    return this.nodeExecutionService.create(dto);
-  }
-
-  @Patch(':id')
-  @ZodResponse({ status: HttpStatus.OK, type: NodeExecutionDto })
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateNodeExecutionDto) {
-    return this.nodeExecutionService.update(id, dto);
-  }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id', ParseUUIDPipe) id: string) {
-    await this.nodeExecutionService.remove(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.nodeExecutionService.findOne(id, user.userId);
   }
 }

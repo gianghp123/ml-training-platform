@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 import type {
   BlockStatus,
@@ -16,6 +17,7 @@ import type {
 import { BlockCategory } from './block-category.entity';
 
 @Entity('block_definitions')
+@Unique('UQ_block_definition_executor_version', ['executorKey', 'version'])
 export class BlockDefinition {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -25,6 +27,9 @@ export class BlockDefinition {
 
   @Column({ type: 'varchar' })
   status: BlockStatus;
+
+  @Column({ type: 'varchar' })
+  executorKey: string;
 
   @Column({ type: 'varchar' })
   name: string;

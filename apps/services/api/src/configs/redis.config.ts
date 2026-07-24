@@ -6,9 +6,10 @@ dotenvConfig({
 });
 
 const config = {
-  host: `${process.env.REDIS_HOST}`,
-  port: `${process.env.REDIS_PORT}`,
-  password: `${process.env.REDIS_PASSWORD}`,
+  host: process.env.REDIS_HOST ?? 'localhost',
+  port: Number(process.env.REDIS_PORT ?? 6379),
+  password: process.env.REDIS_PASSWORD || undefined,
+  db: Number(process.env.REDIS_DB ?? 0),
 };
 
 export default registerAs('redis', () => config);

@@ -1,7 +1,11 @@
-# Python ML Worker Dependencies
-pandas
-numpy
-scikit-learn
-minio
-redis
-psycopg2-binary
+# Runtime dependencies are pinned so the worker image is reproducible.
+joblib==1.5.1
+lxml==6.0.0
+minio==7.2.16
+numpy==2.2.6
+onnx==1.18.0
+pandas==2.3.1
+psycopg2-binary==2.9.10
+redis==6.2.0
+scikit-learn==1.7.1
+skl2onnx==1.19.1

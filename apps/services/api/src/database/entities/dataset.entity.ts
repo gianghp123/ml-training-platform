@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToMany,
   OneToMany,
   PrimaryColumn,
   Unique
@@ -67,4 +68,7 @@ export class Dataset {
 
   @OneToMany(() => WorkflowRun, (run) => run.dataset)
   runs: WorkflowRun[];
+
+  @ManyToMany(() => WorkflowRun, (run) => run.datasets)
+  workflowRuns: WorkflowRun[];
 }

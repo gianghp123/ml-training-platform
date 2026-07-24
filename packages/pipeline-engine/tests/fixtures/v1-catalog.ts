@@ -2,6 +2,7 @@ import type { BlockDefinition } from '@training-ml/contracts';
 
 export const loadCsvBlock: BlockDefinition = {
   id: 'load-csv',
+  executorKey: 'load_csv',
   version: 1,
   status: 'active',
   name: 'Load CSV',
@@ -33,6 +34,7 @@ export const loadCsvBlock: BlockDefinition = {
 
 export const selectTargetBlock: BlockDefinition = {
   id: 'select-target',
+  executorKey: 'select_target',
   version: 1,
   status: 'active',
   name: 'Select Target',
@@ -84,6 +86,7 @@ export const selectTargetBlock: BlockDefinition = {
 
 export const normalizationBlock: BlockDefinition = {
   id: 'normalization',
+  executorKey: 'normalize',
   version: 1,
   status: 'active',
   name: 'Normalization',
@@ -119,6 +122,7 @@ export const normalizationBlock: BlockDefinition = {
 
 export const trainTestSplitBlock: BlockDefinition = {
   id: 'train-test-split',
+  executorKey: 'train_test_split',
   version: 1,
   status: 'active',
   name: 'Train/Test Split',
@@ -156,6 +160,7 @@ export const trainTestSplitBlock: BlockDefinition = {
 
 export const randomForestBlock: BlockDefinition = {
   id: 'random-forest',
+  executorKey: 'random_forest',
   version: 1,
   status: 'active',
   name: 'Random Forest',
@@ -200,6 +205,7 @@ export const randomForestBlock: BlockDefinition = {
 
 export const featureSelectionBlock: BlockDefinition = {
   id: 'feature-selection',
+  executorKey: 'feature_select',
   version: 1,
   status: 'active',
   name: 'Feature Selection',
@@ -229,6 +235,7 @@ export const featureSelectionBlock: BlockDefinition = {
 
 export const evaluationBlock: BlockDefinition = {
   id: 'evaluation',
+  executorKey: 'evaluate',
   version: 1,
   status: 'active',
   name: 'Evaluation',

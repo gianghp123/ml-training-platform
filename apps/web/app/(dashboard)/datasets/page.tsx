@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { PageContainer } from "@/components/layouts/PageContainer";
 import { DatasetTable } from "@/features/dataset/components/DatasetTable";
 import { UploadDatasetModal } from "@/features/dataset/components/UploadDatasetModal";

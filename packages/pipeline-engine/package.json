@@ -9,7 +9,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json && node -e \"const engine = require('./dist/index.js'); if (typeof engine.validateGraph !== 'function') throw new Error('pipeline-engine runtime export is invalid')\"",
     "check-types": "tsc --noEmit",
     "dev": "tsc --watch",
     "test": "jest",

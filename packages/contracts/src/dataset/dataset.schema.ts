@@ -11,10 +11,14 @@ export const CreateDatasetSchema = z.object({
   format: DatasetFormatSchema,
   size: z.number(),
   validationOptions: ValidationOptionsSchema.optional(),
-  userId: z.string().optional(),
 });
 
-export const UpdateDatasetSchema = CreateDatasetSchema.partial();
+export const UpdateDatasetSchema = CreateDatasetSchema.pick({
+  name: true,
+  description: true,
+})
+  .partial()
+  .strict();
 
 export const DatasetSchema = z.object({
   id: z.string().uuid(),
