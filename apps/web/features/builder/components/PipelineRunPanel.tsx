@@ -30,7 +30,7 @@ function logColor(level: PipelineLogEntry["level"]): string {
   if (level === "error") return "text-destructive"
   if (level === "warning") return "text-warning"
   if (level === "debug") return "text-muted-foreground"
-  return "text-foreground"
+  return "text-warning"
 }
 
 function formatMetric(value: number): string {
@@ -91,7 +91,7 @@ function MetricsView({ metrics }: { metrics: PipelineMetrics | null }) {
                         className={cn(
                           "p-2",
                           rowIndex === columnIndex &&
-                            "bg-success/10 font-semibold"
+                          "bg-success/10 font-semibold"
                         )}
                       >
                         {value}

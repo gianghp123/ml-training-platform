@@ -42,7 +42,7 @@ function DatasetSelectorField({
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="nodrag nopan h-8 w-full text-xs px-2.5 font-medium truncate" aria-invalid={invalid}>
+      <SelectTrigger className="h-6 text-xs nodrag nopan" aria-invalid={invalid}>
         <SelectValue placeholder="Select dataset" />
       </SelectTrigger>
       <SelectContent>
@@ -151,7 +151,7 @@ function ColumnSelectorField({
 
   return (
     <Select value={value} onValueChange={onChange} disabled={disabled}>
-      <SelectTrigger className="nodrag nopan h-8 w-full text-xs px-2.5 font-medium" aria-invalid={invalid}>
+      <SelectTrigger className="h-6 text-xs nodrag nopan" aria-invalid={invalid}>
         <SelectValue placeholder="Select column" />
       </SelectTrigger>
       <SelectContent>
@@ -416,7 +416,7 @@ export function BlockConfigForm({
                   name={controllerField.name}
                   ref={controllerField.ref}
                   onBlur={controllerField.onBlur}
-                  className="nodrag nopan h-8 text-xs"
+                  className="h-6 text-xs nodrag nopan"
                   aria-invalid={fieldState.invalid}
                 />
               )}
@@ -448,7 +448,7 @@ export function BlockConfigForm({
                   onBlur={controllerField.onBlur}
                   min={field.min}
                   max={field.max}
-                  className="nodrag nopan h-8 text-xs"
+                  className="h-6 text-xs nodrag nopan"
                   aria-invalid={fieldState.invalid}
                 />
               )}
@@ -479,7 +479,7 @@ export function BlockConfigForm({
                   }}
                 >
                   <SelectTrigger
-                    className="nodrag nopan h-8 w-full text-xs px-2.5 font-medium"
+                    className="h-6 text-xs nodrag nopan"
                     aria-invalid={fieldState.invalid}
                   >
                     <SelectValue />

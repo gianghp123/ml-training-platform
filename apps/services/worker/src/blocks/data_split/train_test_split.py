@@ -77,8 +77,16 @@ class TrainTestSplitBlock(Block):
             "task": dataset.task,
             "target": dataset.target,
         }
+        info_logs: list[tuple[str, str]] = [
+            ("info", f"test_size={test_size:.2f}"),
+            ("info", f"stratify={'yes' if stratify is not None else 'no'}"),
+            ("info", f"Train rows: {len(train_frame)}"),
+            ("info", f"Test rows: {len(test_frame)}"),
+            ("info", f"Train columns: {len(train_frame.columns)}"),
+            ("info", f"Test columns: {len(test_frame.columns)}"),
+        ]
         return BlockResult(
             outputs={"train": train_value, "test": test_value},
             summary=summary,
-            logs=tuple(logs),
+            logs=tuple(info_logs + logs),
         )

@@ -1,5 +1,6 @@
 import type { BlockDefinition, ConfigField, Dataset, Port } from "@training-ml/contracts"
 import type { Edge } from "@xyflow/react"
+import { getCategoryColor } from "../blocks"
 import { createDefaultConfig, type PipelineNode } from "./node-factory"
 
 export const IRIS_EXECUTOR_KEYS = [
@@ -114,7 +115,10 @@ function makeEdge(
     target: target.id,
     targetHandle: targetPortId,
     type: "pipeline",
-    data: { edgeStyle: "smoothstep" },
+    data: {
+      edgeStyle: "smoothstep",
+      color: getCategoryColor(source.data.categoryId).hex,
+    },
   }
 }
 

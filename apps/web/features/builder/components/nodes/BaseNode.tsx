@@ -6,13 +6,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import type { ConfigField } from "@training-ml/contracts"
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react"
 import { memo, useCallback, useMemo } from "react"
 import { getCategoryColor } from "../../blocks"
 import { useBuilderContext } from "../../contexts/builder.context"
-import type { PipelineNode } from "../../utils/node-factory"
 import { useValidationContext } from "../../contexts/validation.context"
-import type { ConfigField } from "@training-ml/contracts"
+import type { PipelineNode } from "../../utils/node-factory"
 import { BlockConfigForm } from "../BlockConfigForm"
 
 function getStatusVariant(status: PipelineNode["data"]["status"]) {
@@ -102,18 +102,17 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
 
   return (
     <div
-      className={`w-64 min-w-[240px] rounded-lg border bg-card text-card-foreground shadow-sm transition-shadow ${
-        hasErrors
+      className={`min-w-50 rounded-lg border bg-card text-card-foreground shadow-sm transition-shadow ${hasErrors
           ? "ring-2 ring-destructive"
           : selected
             ? "ring-2 ring-ring"
             : "ring-1 ring-foreground/10"
-      } ${isParentSuspended ? "opacity-50 grayscale" : ""}`}
+        } ${isParentSuspended ? "opacity-50 grayscale" : ""}`}
     >
       <div
         className={`flex items-center gap-2 rounded-t-lg px-3 py-2 ${dotColor} text-white`}
       >
-        <span className="flex-1 truncate text-sm font-medium">
+        <span className="text-sm font-medium truncate flex-1">
           {data.blockName}
         </span>
         {data.status !== "idle" && (
@@ -126,11 +125,11 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
         )}
       </div>
 
-      <div className="space-y-2 p-3">
+      <div className="p-3 space-y-2">
         <div className="flex items-start justify-between">
           <div>
             {data.inputs.map((input) => (
-              <div key={input.id} className="relative flex items-center gap-2 pl-2">
+              <div key={input.id} className="relative flex items-center gap-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Handle
@@ -141,11 +140,11 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
                         ...handleStyle,
                         top: "auto",
                         bottom: "auto",
-                        left: -17,
+                        left: -5,
                         position: "absolute",
                         transform: "none",
                       }}
-                      className={`${dotColor} border-2! border-background!`}
+                      className={`static! ${dotColor} border-2! border-background!`}
                     />
                   </TooltipTrigger>
                   <TooltipContent side="left">
@@ -162,9 +161,9 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
             {data.outputs.map((output) => (
               <div
                 key={output.id}
-                className="relative flex items-center justify-end gap-2 pr-2"
+                className="relative flex items-center justify-end gap-2"
               >
-                <span className="text-xs text-muted-foreground mr-1">
+                <span className="text-xs text-muted-foreground">
                   {output.id}
                 </span>
                 <Tooltip>
@@ -177,11 +176,11 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
                         ...handleStyle,
                         top: "auto",
                         bottom: "auto",
-                        right: -17,
+                        right: -5,
                         position: "absolute",
                         transform: "none",
                       }}
-                      className={`${dotColor} border-2! border-background!`}
+                      className={`static! ${dotColor} border-2! border-background!`}
                     />
                   </TooltipTrigger>
                   <TooltipContent side="right">
@@ -203,7 +202,7 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
         />
 
         {hasErrors && (
-          <div className="mt-2 space-y-1">
+          <div className="space-y-1 mt-2">
             {errors.map((err, i) => (
               <p key={i} className="text-xs text-destructive">
                 {err.message}

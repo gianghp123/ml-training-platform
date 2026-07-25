@@ -27,8 +27,11 @@ from ..utils import (
 )
 
 
-def _dataset_result(value: DatasetValue) -> BlockResult:
-    return BlockResult(outputs={"dataset": value}, summary=value.summary())
+def _dataset_result(
+    value: DatasetValue,
+    logs: tuple[tuple[str, str], ...] = (),
+) -> BlockResult:
+    return BlockResult(outputs={"dataset": value}, summary=value.summary(), logs=logs)
 
 
 class NormalizeBlock(Block):
@@ -254,7 +257,16 @@ class FeatureSelectBlock(Block):
             frame=dataset.frame.loc[:, columns].copy(),
             lineage_node=context.node_id,
         )
-        return _dataset_result(value)
+        removed = [c for c in dataset.frame.columns if c not in columns]
+        logs: tuple[tuple[str, str], ...] = (
+            ("info", f"Kept {len(columns)} of {len(dataset.frame.columns)} columns"),
+            ("info", f"Selected: {', '.join(columns)}"),
+        )
+        if removed:
+            logs = logs + (("info", f"Dropped: {', '.join(removed)}"),)
+        if value.target:
+            logs = logs + (("info", f"Target preserved: {value.target!r}"),)
+        return _dataset_result(value, logs)
 
 
 class SelectTargetBlock(Block):
@@ -287,7 +299,18 @@ class SelectTargetBlock(Block):
             task=task,
             lineage_node=context.node_id,
         )
-        return _dataset_result(value)
+        logs: tuple[tuple[str, str], ...] = (
+            ("info", f"Task: {task}"),
+            ("info", f"Shape preserved: {len(value.frame)} rows x {len(value.frame.columns)} columns"),
+        )
+        if target is not None:
+            logs = logs + (
+                ("info", f"Target column: {target!r}"),
+                ("info", f"Unique target values: {value.frame[target].nunique()}"),
+            )
+        else:
+            logs = logs + (("info", "Target column: <none> (clustering)"),)
+        return _dataset_result(value, logs)
 
 
 class RenameColumnsBlock(Block):
