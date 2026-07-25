@@ -11,11 +11,10 @@ export class NodeExecutionService {
     private readonly nodeExecutionRepository: Repository<NodeExecution>,
   ) {}
 
-  async findAll(options: IPaginationOptions, userId: string) {
+  async findAll(options: IPaginationOptions) {
     const query = this.nodeExecutionRepository
       .createQueryBuilder('execution')
       .innerJoin('execution.workflowRun', 'run')
-      .where('run.user_id = :userId', { userId })
       .orderBy('execution.started_at', 'DESC', 'NULLS LAST');
     const { items, meta } = await paginate<NodeExecution>(query, options);
     return {
@@ -29,12 +28,11 @@ export class NodeExecutionService {
     };
   }
 
-  async findOne(id: string, userId: string): Promise<NodeExecution> {
+  async findOne(id: string): Promise<NodeExecution> {
     const nodeExecution = await this.nodeExecutionRepository
       .createQueryBuilder('execution')
       .innerJoin('execution.workflowRun', 'run')
       .where('execution.id = :id', { id })
-      .andWhere('run.user_id = :userId', { userId })
       .getOne();
     if (!nodeExecution) {
       throw new NotFoundException(`NodeExecution #${id} not found`);

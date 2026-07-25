@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { NamingStrategyInterface } from 'typeorm';
@@ -12,8 +12,6 @@ import { RedisStreamsModule } from './common/redis/redis-streams.module';
 import minioConfig from './configs/minio.config';
 import redisConfig from './configs/redis.config';
 import typeormConfig from './configs/typeorm.config';
-import { ClerkAuthGuard } from './modules/auth/guards/clerk-auth.guard';
-import { RolesGuard } from './modules/auth/guards/role.guard';
 import { BlockModule } from './modules/block/block.module';
 import { DatasetModule } from './modules/dataset/dataset.module';
 import { ExecutionModule } from './modules/execution/execution.module';
@@ -24,10 +22,7 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      load: [typeormConfig, minioConfig, redisConfig],
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot({ load: [typeormConfig, minioConfig, redisConfig], isGlobal: true }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -41,9 +36,7 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
         migrations: configService.get<string[]>('typeorm.migrations'),
         synchronize: configService.get<boolean>('typeorm.synchronize'),
         logging: configService.get<boolean>('typeorm.logging'),
-        namingStrategy: configService.get<NamingStrategyInterface>(
-          'typeorm.namingStrategy',
-        ),
+        namingStrategy: configService.get<NamingStrategyInterface>('typeorm.namingStrategy'),
       }),
     }),
     AppBullModule,
@@ -59,23 +52,8 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: ClerkAuthGuard
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard
-    },
-    {
-      provide: APP_PIPE,
-      useClass: ZodValidationPipe,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggingZodSerializerInterceptor,
-    },
-
+    { provide: APP_PIPE, useClass: ZodValidationPipe },
+    { provide: APP_INTERCEPTOR, useClass: LoggingZodSerializerInterceptor },
   ],
 })
 export class AppModule { }

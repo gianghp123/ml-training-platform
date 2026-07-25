@@ -26,7 +26,6 @@ export const CreateWorkflowRunSchema = z.object({
   status: WorkflowRunStatusSchema.optional(),
   startedAt: IsoDateCodec.nullable().optional(),
   finishedAt: IsoDateCodec.nullable().optional(),
-  userId: z.string().min(1),
 });
 
 export const UpdateWorkflowRunSchema = CreateWorkflowRunSchema.partial();
@@ -45,7 +44,6 @@ export const WorkflowRunSchema = z.object({
   status: WorkflowRunStatusSchema,
   startedAt: IsoDateCodec.nullable(),
   finishedAt: IsoDateCodec.nullable(),
-  userId: z.string(),
 });
 
 export const WorkflowRunDetailSchema = WorkflowRunSchema.extend({

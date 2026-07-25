@@ -49,7 +49,6 @@ export const WorkflowExecutionDatasetSchema = z.object({
 export const WorkflowExecutionJobSchema = z.object({
   schemaVersion: z.literal(1),
   runId: UuidSchema,
-  userId: z.string().min(1),
   graph: PipelineGraphSchema,
   blocks: z.record(z.string(), WorkflowExecutionBlockSchema),
   datasets: z.record(z.string(), WorkflowExecutionDatasetSchema),

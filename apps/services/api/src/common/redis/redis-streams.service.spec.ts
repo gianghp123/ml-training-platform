@@ -12,7 +12,6 @@ const blockId = 'f0b692a6-73df-4e01-a535-75e262898e83';
 const job: WorkflowExecutionJob = {
   schemaVersion: 1,
   runId,
-  userId: 'user_123',
   graph: {
     nodes: [
       {

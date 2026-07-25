@@ -6,12 +6,10 @@ import {
   ManyToMany,
   OneToMany,
   PrimaryColumn,
-  Unique
 } from 'typeorm';
 import { WorkflowRun } from './workflow-run.entity';
 
 @Entity('datasets')
-@Unique('UQ_dataset_user_name_version', ['userId', 'name', 'version'])
 export class Dataset {
   @PrimaryColumn('uuid')
   id: string;
@@ -36,10 +34,6 @@ export class Dataset {
 
   @Column({ type: 'int', default: 1 })
   version: number;
-
-  @Column({ type: 'varchar' })
-  userId: string;
-
 
   @Column({
     type: 'varchar',

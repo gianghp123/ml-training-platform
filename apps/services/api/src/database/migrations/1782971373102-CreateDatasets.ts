@@ -14,7 +14,6 @@ export class CreateDatasets1782971373102 implements MigrationInterface {
         "size" bigint NOT NULL,
         "checksum" character varying,
         "version" integer NOT NULL DEFAULT 1,
-        "user_id" character varying NOT NULL,
 
         "status" character varying NOT NULL DEFAULT 'UPLOADING',
         "profile" jsonb,
@@ -24,8 +23,8 @@ export class CreateDatasets1782971373102 implements MigrationInterface {
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
 
         CONSTRAINT "PK_datasets" PRIMARY KEY ("id"),
-        CONSTRAINT "UQ_dataset_user_name_version"
-          UNIQUE ("user_id", "name", "version")
+        CONSTRAINT "UQ_dataset_name_version"
+          UNIQUE ("name", "version")
       )
     `);
   }

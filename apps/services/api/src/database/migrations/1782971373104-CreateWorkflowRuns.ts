@@ -12,7 +12,6 @@ export class CreateWorkflowRuns1782971373104 implements MigrationInterface {
                 "status" character varying NOT NULL DEFAULT 'pending',
                 "started_at" TIMESTAMP WITH TIME ZONE,
                 "finished_at" TIMESTAMP WITH TIME ZONE,
-                "user_id" character varying NOT NULL,
                 CONSTRAINT "PK_workflow_runs" PRIMARY KEY ("id")
             )
         `);

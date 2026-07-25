@@ -71,10 +71,9 @@ export class WorkflowRunService {
     private readonly redisStreams: RedisStreamsService,
   ) {}
 
-  async findAll(options: IPaginationOptions, userId: string) {
+  async findAll(options: IPaginationOptions) {
     const query = this.workflowRunRepository
       .createQueryBuilder('run')
-      .where('run.user_id = :userId', { userId })
       .orderBy('run.id', 'DESC');
     const { items, meta } = await paginate<WorkflowRun>(query, options);
     return {
@@ -88,9 +87,9 @@ export class WorkflowRunService {
     };
   }
 
-  async findOne(id: string, userId: string): Promise<WorkflowRunDetail> {
+  async findOne(id: string): Promise<WorkflowRunDetail> {
     const run = await this.workflowRunRepository.findOne({
-      where: { id, userId },
+      where: { id },
       relations: {
         datasets: true,
         nodeExecutions: true,
@@ -119,7 +118,6 @@ export class WorkflowRunService {
       status: run.status,
       startedAt: run.startedAt,
       finishedAt: run.finishedAt,
-      userId: run.userId,
       datasetIds: run.datasets.map((dataset) => dataset.id),
       nodeExecutions: run.nodeExecutions,
       artifacts: run.artifacts,
@@ -128,13 +126,9 @@ export class WorkflowRunService {
 
   async execute(
     request: ExecuteWorkflowRun,
-    userId: string,
   ): Promise<WorkflowRunAccepted> {
     if (request.workflowVersionId) {
-      await this.assertWorkflowVersionOwnership(
-        request.workflowVersionId,
-        userId,
-      );
+      await this.assertWorkflowVersionExists(request.workflowVersionId);
     }
 
     const definitions = await this.loadDefinitions(request.graph.nodes);
@@ -155,7 +149,6 @@ export class WorkflowRunService {
     const datasets = await this.loadAndValidateDatasets(
       request.graph.nodes,
       definitionByNode,
-      userId,
     );
 
     const datasetById = new Map(datasets.map((dataset) => [dataset.id, dataset]));
@@ -180,7 +173,6 @@ export class WorkflowRunService {
         status: WorkflowRunStatus.PENDING,
         startedAt: null,
         finishedAt: null,
-        userId,
       });
       const savedRun = await manager.save(WorkflowRun, createdRun);
 
@@ -212,7 +204,6 @@ export class WorkflowRunService {
 
     const job = this.buildJob(
       run.id,
-      userId,
       request,
       definitions,
       datasets,
@@ -261,15 +252,14 @@ export class WorkflowRunService {
     };
   }
 
-  private async assertWorkflowVersionOwnership(
+  private async assertWorkflowVersionExists(
     workflowVersionId: string,
-    userId: string,
   ): Promise<void> {
     const version = await this.workflowVersionRepository.findOne({
       where: { id: workflowVersionId },
       relations: { workflow: true },
     });
-    if (!version || version.workflow.userId !== userId) {
+    if (!version) {
       throw new NotFoundException(
         `WorkflowVersion #${workflowVersionId} not found`,
       );
@@ -381,7 +371,6 @@ export class WorkflowRunService {
   private async loadAndValidateDatasets(
     nodes: PipelineGraphNode[],
     definitionByNode: Map<string, BlockDefinition>,
-    userId: string,
   ): Promise<Dataset[]> {
     const references: Array<{
       node: PipelineGraphNode;
@@ -432,7 +421,7 @@ export class WorkflowRunService {
 
     for (const reference of references) {
       const dataset = datasetById.get(reference.datasetId);
-      if (!dataset || dataset.userId !== userId) {
+      if (!dataset) {
         errors.push({
           nodeId: reference.node.id,
           scope: 'config',
@@ -491,7 +480,6 @@ export class WorkflowRunService {
 
   private buildJob(
     runId: string,
-    userId: string,
     request: ExecuteWorkflowRun,
     definitions: BlockDefinition[],
     datasets: Dataset[],
@@ -499,7 +487,6 @@ export class WorkflowRunService {
     return {
       schemaVersion: 1,
       runId,
-      userId,
       graph: request.graph,
       blocks: Object.fromEntries(
         definitions.map((definition) => [

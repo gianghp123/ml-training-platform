@@ -17,7 +17,6 @@ const MOCK_WORKFLOWS: Workflow[] = Array.from({ length: 42 }, (_, i) => {
 
   return {
     id: `wf_${String(i + 1).padStart(4, "0")}`,
-    userId: "user_0001",
     name: [
       "Customer Churn Classifier",
       "Fraud Detection Pipeline",

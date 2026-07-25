@@ -1,59 +1,34 @@
-import { auth } from "@clerk/nextjs/server"
-
-export const runtime = "nodejs"
-export const dynamic = "force-dynamic"
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function apiUrl(path: string): string {
-  const baseUrl = process.env.API_URL
-  if (!baseUrl) throw new Error("API_URL environment variable is missing.")
-  return `${baseUrl.replace(/\/$/, "")}${path}`
+  const baseUrl = process.env.API_URL;
+  if (!baseUrl) throw new Error("API_URL environment variable is missing.");
+  return `${baseUrl.replace(/\/$/, "")}${path}`;
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const session = await auth()
-  if (!session.userId) {
-    return Response.json(
-      { message: "Authentication required." },
-      { status: 401 }
-    )
-  }
-
   try {
-    const token = await session.getToken()
-    if (!token) {
-      return Response.json(
-        { message: "Authentication required." },
-        { status: 401 }
-      )
-    }
-
     const headers = new Headers({
       Accept: "application/json",
       "Content-Type": request.headers.get("content-type") ?? "application/json",
-      Authorization: `Bearer ${token}`,
-    })
-    if (process.env.API_KEY) headers.set("apikey", process.env.API_KEY)
-
+    });
+    if (process.env.API_KEY) headers.set("apikey", process.env.API_KEY);
     const upstream = await fetch(apiUrl("/workflow-runs/execute"), {
       method: "POST",
       headers,
       body: await request.text(),
       cache: "no-store",
       signal: request.signal,
-    })
-
+    });
     return new Response(upstream.body, {
       status: upstream.status,
       headers: {
-        "Content-Type":
-          upstream.headers.get("content-type") ?? "application/json",
+        "Content-Type": upstream.headers.get("content-type") ?? "application/json",
         "Cache-Control": "no-store",
       },
-    })
+    });
   } catch {
-    return Response.json(
-      { message: "The workflow execution service is unavailable." },
-      { status: 502 }
-    )
+    return Response.json({ message: "The workflow execution service is unavailable." }, { status: 502 });
   }
 }

@@ -4,7 +4,6 @@ import { createPaginatedResponseSchema } from "../response";
 import { IsoDateCodec } from '../shared';
 
 export const CreateWorkflowSchema = z.object({
-  userId: z.string().min(1),
   name: z.string().min(1),
   description: z.string().optional(),
 });
@@ -13,7 +12,6 @@ export const UpdateWorkflowSchema = CreateWorkflowSchema.partial();
 
 export const WorkflowSchema = z.object({
   id: z.string().uuid(),
-  userId: z.string(),
   name: z.string(),
   description: z.string(),
   createdAt: IsoDateCodec,

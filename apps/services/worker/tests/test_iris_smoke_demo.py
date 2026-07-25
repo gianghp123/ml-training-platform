@@ -50,7 +50,6 @@ def test_builds_canonical_six_node_job(tmp_path):
     )
     job = build_job(
         run_id=str(uuid.uuid4()),
-        user_id="smoke-user",
         dataset_id=dataset_id,
         dataset_object_key="smoke-tests/abc/Iris.csv",
         fixture=fixture,

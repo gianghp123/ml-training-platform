@@ -35,7 +35,7 @@ Các kiểm tra local hiện tại:
   accuracy **0.933333**, confusion matrix **3 x 3**, metrics artifact persisted.
 
 Smoke CLI cũng đã xác minh cleanup không để lại run, dataset, artifact,
-Redis event stream hoặc MinIO object. Browser-to-API flow có Clerk auth cần
+Redis event stream hoặc MinIO object.
 development keys của người chạy và được mô tả bên dưới.
 
 ## 1. Target architecture
@@ -111,12 +111,11 @@ interface ExecuteWorkflowRunRequest {
 
 Frontend không được gửi:
 
-- `userId`;
 - run status;
 - node status;
 - artifact metadata do hệ thống quản lý.
 
-API lấy user hiện tại từ Clerk và luôn lưu một immutable graph snapshot, kể cả khi request có `workflowVersionId`.
+API luôn lưu một immutable graph snapshot, kể cả khi request có `workflowVersionId`.
 
 ### Accepted response
 
@@ -257,7 +256,7 @@ POST /v1/workflow-runs/execute
 
 Processing order:
 
-1. Xác thực Clerk và lấy `userId`.
+1. Nhận request và validate graph.
 2. Parse request bằng Zod.
 3. Load tất cả block definitions theo `(blockId, blockVersion)`.
 4. Load các dataset được tham chiếu bởi source nodes.
@@ -322,9 +321,8 @@ Giới hạn khoảng 10.000 event và TTL 24 giờ.
 
 - Client không được tự tạo hoặc sửa NodeExecution và Artifact.
 - Các mutation controller hiện có cho execution entities chuyển thành internal/admin-only.
-- `DatasetController` phải lấy `userId` từ `@CurrentUser`.
 - Dataset list/read/update/delete phải scope theo owner.
-- Client-provided `userId` không được override Clerk identity.
+- Client-provided data được validate qua Zod schema.
 
 ## 6. Redis integration
 
@@ -653,7 +651,7 @@ GET  /api/workflow-runs/[runId]/events
 
 Các route:
 
-- lấy Clerk token server-side;
+- proxy request đến NestJS API;
 - forward token sang Nest API;
 - không expose internal API URL cho browser;
 - proxy SSE body bằng `ReadableStream`;
@@ -719,7 +717,7 @@ Không để worker download Kaggle khi chạy. Kaggle chỉ là nguồn fixture
 
 ### Local quick start
 
-Yêu cầu: Node.js 20+, npm 10+, Docker Desktop và Clerk development keys.
+Yêu cầu: Node.js 20+, npm 10+, Docker Desktop.
 
 Từ thư mục root:
 
@@ -771,7 +769,7 @@ npm run dev -w apps/web
 ### Headless infrastructure smoke
 
 Sau khi infrastructure và worker đã chạy, có thể kiểm tra PostgreSQL, Redis,
-MinIO và toàn bộ sáu Python blocks mà không cần Clerk:
+MinIO và toàn bộ sáu Python blocks:
 
 ```powershell
 docker compose --env-file apps/services/api/.env -f apps/services/api/docker-compose.yaml run --rm --no-deps --volume "${PWD}/examples/iris/Iris.csv:/tmp/Iris.csv:ro" worker python scripts/iris_smoke_demo.py /tmp/Iris.csv --cleanup --timeout 120
@@ -780,7 +778,7 @@ docker compose --env-file apps/services/api/.env -f apps/services/api/docker-com
 Script in toàn bộ structured events, metrics và confusion matrix. Cleanup chỉ
 nhắm đúng UUID/object key do invocation hiện tại tạo và được bật mặc định; dùng
 `--keep` nếu cần giữ kết quả để debug. Smoke CLI cố ý đi thẳng qua canonical
-Redis job contract, nên không thay thế bước browser/API có Clerk ở phần tiếp theo.
+Redis job contract.
 
 ### Demo preparation
 

@@ -6,7 +6,6 @@ export const CreateModelRegistrySchema = z.object({
   name: z.string().min(1),
   version: z.string().min(1),
   description: z.string().optional(),
-  userId: z.string().min(1),
 });
 
 export const UpdateModelRegistrySchema = CreateModelRegistrySchema.partial();
@@ -17,7 +16,6 @@ export const ModelRegistrySchema = z.object({
   name: z.string(),
   version: z.string(),
   description: z.string(),
-  userId: z.string(),
 });
 
 export type CreateModelRegistry = z.infer<typeof CreateModelRegistrySchema>;

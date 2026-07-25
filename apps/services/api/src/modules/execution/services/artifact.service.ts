@@ -11,11 +11,10 @@ export class ArtifactService {
     private readonly artifactRepository: Repository<Artifact>,
   ) {}
 
-  async findAll(options: IPaginationOptions, userId: string) {
+  async findAll(options: IPaginationOptions) {
     const query = this.artifactRepository
       .createQueryBuilder('artifact')
       .innerJoin('artifact.workflowRun', 'run')
-      .where('run.user_id = :userId', { userId })
       .orderBy('artifact.created_at', 'DESC');
     const { items, meta } = await paginate<Artifact>(query, options);
     return {
@@ -29,12 +28,11 @@ export class ArtifactService {
     };
   }
 
-  async findOne(id: string, userId: string): Promise<Artifact> {
+  async findOne(id: string): Promise<Artifact> {
     const artifact = await this.artifactRepository
       .createQueryBuilder('artifact')
       .innerJoin('artifact.workflowRun', 'run')
       .where('artifact.id = :id', { id })
-      .andWhere('run.user_id = :userId', { userId })
       .getOne();
     if (!artifact) {
       throw new NotFoundException(`Artifact #${id} not found`);

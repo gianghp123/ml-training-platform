@@ -37,9 +37,6 @@ export class WorkflowRun {
   @Column({ type: 'timestamptz', nullable: true })
   finishedAt: Date | null;
 
-  @Column({ type: 'varchar' })
-  userId: string;
-
   @ManyToOne(() => WorkflowVersion, (version) => version.runs, {
     nullable: true,
   })

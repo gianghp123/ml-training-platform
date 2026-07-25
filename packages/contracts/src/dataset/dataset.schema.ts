@@ -32,7 +32,6 @@ export const DatasetSchema = z.object({
   validationError: z.string().nullable(),
   checksum: z.string().nullable(),
   version: z.number(),
-  userId: z.string(),
 });
 
 export type CreateDataset = z.infer<typeof CreateDatasetSchema>;

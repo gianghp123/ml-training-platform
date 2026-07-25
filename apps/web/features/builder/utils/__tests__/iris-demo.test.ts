@@ -111,7 +111,6 @@ describe("getReadyCsvDatasets", () => {
     validationError: null,
     checksum: null,
     version: 1,
-    userId: "user-1",
   })
 
   it("only returns CSV datasets that finished validation", () => {

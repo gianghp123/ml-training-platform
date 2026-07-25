@@ -161,7 +161,6 @@ def iris_job() -> dict[str, Any]:
     return {
         "schemaVersion": 1,
         "runId": "run-iris",
-        "userId": "user-1",
         "graph": {"nodes": nodes, "edges": edges},
         "blocks": {
             f"{block_id}@{version}": {

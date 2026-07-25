@@ -27,9 +27,6 @@ export class ModelRegistry {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'varchar' })
-  userId: string;
-
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 

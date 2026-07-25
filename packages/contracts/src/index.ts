@@ -1,4 +1,3 @@
-export * from './auth';
 export * from './block';
 export * from './dataset';
 export * from './execution';

@@ -11,7 +11,6 @@ export class CreateModelRegistries1782971373107 implements MigrationInterface {
                 "name" character varying NOT NULL,
                 "version" character varying NOT NULL,
                 "description" text,
-                "user_id" character varying NOT NULL,
                 "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 CONSTRAINT "PK_model_registries" PRIMARY KEY ("id"),
                 CONSTRAINT "UQ_model_registries_name_version" UNIQUE ("name", "version"),

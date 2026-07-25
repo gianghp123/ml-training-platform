@@ -17,7 +17,6 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import {
-  ApiBearerAuth,
   ApiBody,
   ApiResponse,
 } from '@nestjs/swagger';
@@ -30,8 +29,6 @@ import {
 import type { Request, Response } from 'express';
 import { ZodResponse } from 'nestjs-zod';
 import { RedisStreamsService } from 'src/common/redis/redis-streams.service';
-import { CurrentUser } from 'src/modules/auth/decorators/current-user.decorator';
-import type { RequestUser } from 'src/modules/auth/interfaces/current-user.interface';
 import {
   ExecuteWorkflowRunDto,
   PaginatedWorkflowRunResponseDto,
@@ -41,7 +38,6 @@ import {
 } from '../dtos/workflow-run.dto';
 import { WorkflowRunService } from '../services/workflow-run.service';
 
-@ApiBearerAuth()
 @Controller('workflow-runs')
 export class WorkflowRunController {
   private readonly logger = new Logger(WorkflowRunController.name);
@@ -59,7 +55,7 @@ export class WorkflowRunController {
     type: WorkflowRunValidationErrorResponseDto,
   })
   @ZodResponse({ status: HttpStatus.ACCEPTED, type: WorkflowRunAcceptedDto })
-  async execute(@Body() body: unknown, @CurrentUser() user: RequestUser) {
+  async execute(@Body() body: unknown) {
     const result = ExecuteWorkflowRunSchema.safeParse(body);
     if (!result.success) {
       const graph = this.graphValue(body);
@@ -87,7 +83,7 @@ export class WorkflowRunController {
       });
     }
 
-    return this.workflowRunService.execute(result.data, user.userId);
+    return this.workflowRunService.execute(result.data);
   }
 
   @Get()
@@ -98,10 +94,9 @@ export class WorkflowRunController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @CurrentUser() user: RequestUser,
   ) {
     limit = limit > 100 ? 100 : limit;
-    return this.workflowRunService.findAll({ page, limit }, user.userId);
+    return this.workflowRunService.findAll({ page, limit });
   }
 
   @Get(':id/events')
@@ -109,11 +104,10 @@ export class WorkflowRunController {
     @Param('id', ParseUUIDPipe) id: string,
     @Query('after') after: string | undefined,
     @Headers('last-event-id') lastEventId: string | undefined,
-    @CurrentUser() user: RequestUser,
     @Req() request: Request,
     @Res() response: Response,
   ): Promise<void> {
-    const detail = await this.workflowRunService.findOne(id, user.userId);
+    const detail = await this.workflowRunService.findOne(id);
     const cursor = this.redisCursor(after ?? lastEventId);
 
     response.status(HttpStatus.OK);
@@ -208,9 +202,8 @@ export class WorkflowRunController {
   @ZodResponse({ status: HttpStatus.OK, type: WorkflowRunDetailDto })
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: RequestUser,
   ) {
-    return this.workflowRunService.findOne(id, user.userId);
+    return this.workflowRunService.findOne(id);
   }
 
   private writeEvent(

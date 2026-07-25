@@ -109,7 +109,6 @@ def _port_ids(raw: Any) -> tuple[str, ...]:
 @dataclass(frozen=True)
 class PipelineJob:
     run_id: str
-    user_id: str | None
     nodes: tuple[GraphNode, ...]
     edges: tuple[GraphEdge, ...]
     blocks: Mapping[tuple[str, int], BlockDescriptor]
@@ -218,7 +217,6 @@ class PipelineJob:
 
         job = cls(
             run_id=run_id,
-            user_id=str(payload.get("userId") or "").strip() or None,
             nodes=tuple(nodes),
             edges=tuple(edges),
             blocks=blocks,

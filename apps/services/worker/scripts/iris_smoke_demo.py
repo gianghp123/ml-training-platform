@@ -74,7 +74,6 @@ class CreatedResources:
     session_id: str
     run_id: str
     dataset_id: str
-    user_id: str
     dataset_object_key: str
     event_stream: str
     job_stream: str
@@ -274,7 +273,6 @@ def build_graph(
 def build_job(
     *,
     run_id: str,
-    user_id: str,
     dataset_id: str,
     dataset_object_key: str,
     fixture: IrisFixture,
@@ -298,7 +296,6 @@ def build_job(
     return {
         "schemaVersion": 1,
         "runId": run_id,
-        "userId": user_id,
         "graph": graph,
         "blocks": blocks,
         "datasets": {
@@ -329,11 +326,11 @@ def seed_database(
                 """
                 INSERT INTO datasets (
                     id, name, description, storage_uri, format, size,
-                    checksum, version, user_id, status, profile,
+                    checksum, version, status, profile,
                     validation_error, validation_options
                 )
                 VALUES (
-                    %s, %s, %s, %s, 'csv', %s, %s, 1, %s, 'ready',
+                    %s, %s, %s, %s, 'csv', %s, %s, 1, 'ready',
                     %s, NULL, %s
                 )
                 """,
@@ -344,7 +341,6 @@ def seed_database(
                     resources.dataset_object_key,
                     len(fixture.content),
                     checksum,
-                    resources.user_id,
                     Json(fixture.profile),
                     Json(fixture.validation_options),
                 ),
@@ -353,15 +349,14 @@ def seed_database(
                 """
                 INSERT INTO workflow_runs (
                     id, workflow_version_id, dataset_id, graph_snapshot,
-                    status, started_at, finished_at, user_id
+                    status, started_at, finished_at
                 )
-                VALUES (%s, NULL, %s, %s, 'pending', NULL, NULL, %s)
+                VALUES (%s, NULL, %s, %s, 'pending', NULL, NULL)
                 """,
                 (
                     resources.run_id,
                     resources.dataset_id,
                     Json(graph),
-                    resources.user_id,
                 ),
             )
             cursor.execute(
@@ -621,7 +616,7 @@ def cleanup_created_resources(
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT status, user_id
+                SELECT status
                 FROM workflow_runs
                 WHERE id = %s
                 FOR UPDATE
@@ -629,11 +624,6 @@ def cleanup_created_resources(
                 (resources.run_id,),
             )
             run = cursor.fetchone()
-            if run is not None and run[1] != resources.user_id:
-                raise DemoError(
-                    "Refusing cleanup because the run owner does not match "
-                    "this smoke session"
-                )
             if run is not None and run[0] == "pending":
                 cursor.execute(
                     """
@@ -643,7 +633,7 @@ def cleanup_created_resources(
                     """,
                     (resources.run_id,),
                 )
-                run = ("cancelled", resources.user_id)
+                run = ("cancelled",)
             if run is not None and run[0] == "running":
                 print(
                     "Cleanup deferred: the worker is still running this exact "
@@ -707,16 +697,16 @@ def cleanup_created_resources(
             cursor.execute(
                 """
                 DELETE FROM workflow_runs
-                WHERE id = %s AND user_id = %s
+                WHERE id = %s
                 """,
-                (resources.run_id, resources.user_id),
+                (resources.run_id,),
             )
             cursor.execute(
                 """
                 DELETE FROM datasets
-                WHERE id = %s AND user_id = %s
+                WHERE id = %s
                 """,
-                (resources.dataset_id, resources.user_id),
+                (resources.dataset_id,),
             )
 
     if resources.job_id:
@@ -776,7 +766,6 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
     session_id = uuid.uuid4().hex[:12]
     run_id = str(uuid.uuid4())
     dataset_id = str(uuid.uuid4())
-    user_id = f"worker-smoke-{session_id}"
     dataset_object_key = (
         f"smoke-tests/{session_id}/datasets/{dataset_id}/Iris.csv"
     )
@@ -784,7 +773,6 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         session_id=session_id,
         run_id=run_id,
         dataset_id=dataset_id,
-        user_id=user_id,
         dataset_object_key=dataset_object_key,
         event_stream=f"{settings.event_stream_prefix}:{run_id}:events",
         job_stream=settings.job_stream,
@@ -817,7 +805,6 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         )
         job = build_job(
             run_id=run_id,
-            user_id=user_id,
             dataset_id=dataset_id,
             dataset_object_key=dataset_object_key,
             fixture=fixture,
