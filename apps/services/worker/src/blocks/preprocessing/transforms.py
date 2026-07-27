@@ -15,6 +15,7 @@ from sklearn.preprocessing import (
     StandardScaler,
 )
 
+from ...dsl.expression import cast_to_output_type, evaluate_expression
 from ...runtime import BlockContext, BlockExecutionError, BlockResult, DatasetValue
 from ..base import Block
 from ..utils import (
@@ -393,3 +394,271 @@ class ConcatFeaturesBlock(Block):
             lineage=lineage,
         )
         return _dataset_result(value)
+
+
+class FilterRowsBlock(Block):
+    executor_key = "filter_rows"
+    version = 1
+
+    _NO_VALUE_OPS = {"isNull", "isNotNull"}
+
+    def execute(
+        self,
+        context: BlockContext,
+        inputs: Mapping[str, Any],
+        config: Mapping[str, Any],
+    ) -> BlockResult:
+        dataset = require_dataset(inputs)
+        conditions = config.get("conditions")
+        if not isinstance(conditions, list) or len(conditions) == 0:
+            raise BlockExecutionError("At least one filter condition is required.")
+        combinator = enum_value(
+            config.get("combinator"),
+            field_name="combinator",
+            choices=("AND", "OR"),
+            default="AND",
+        )
+        invert = bool(config.get("invert", False))
+        frame = dataset.frame
+
+        masks: list[pd.Series] = []
+        for index, raw in enumerate(conditions):
+            label = f"Condition {index + 1}"
+            if not isinstance(raw, Mapping):
+                raise BlockExecutionError(f"{label}: must be an object.")
+            column = str(raw.get("column") or "").strip()
+            if not column:
+                raise BlockExecutionError(f"{label}: 'column' is required.")
+            if column not in frame.columns:
+                raise BlockExecutionError(
+                    f"{label}: column {column!r} does not exist in the input dataset."
+                )
+            op = str(raw.get("op") or "").strip()
+            mask = self._apply_condition(frame[column], column, op, raw.get("value"), label)
+            masks.append(mask)
+
+        joined = masks[0]
+        for mask in masks[1:]:
+            joined = joined & mask if combinator == "AND" else joined | mask
+        if invert:
+            joined = ~joined
+        result = frame.loc[joined].copy()
+        value = dataset.derive(frame=result, lineage_node=context.node_id)
+        return _dataset_result(
+            value,
+            (
+                ("info", f"Rows in: {len(frame)}"),
+                ("info", f"Rows out: {len(result)}"),
+            ),
+        )
+
+    def _apply_condition(
+        self, series: pd.Series, column: str, op: str, value: Any, label: str
+    ) -> pd.Series:
+        if op == "isNull":
+            return series.isna()
+        if op == "isNotNull":
+            return series.notna()
+        if op == "eq":
+            return series == value
+        if op == "ne":
+            return series != value
+        if op == "gt":
+            return series > value
+        if op == "gte":
+            return series >= value
+        if op == "lt":
+            return series < value
+        if op == "lte":
+            return series <= value
+        if op == "contains":
+            if not pd.api.types.is_string_dtype(series):
+                raise BlockExecutionError(
+                    f"{label}: 'contains' requires a string column; {column!r} is not text."
+                )
+            return series.astype(str).str.contains(str(value), na=False)
+        if op == "in":
+            if not isinstance(value, (list, tuple)):
+                raise BlockExecutionError(f"{label}: 'in' requires an array value.")
+            return series.isin(list(value))
+        raise BlockExecutionError(f"{label}: unsupported operator {op!r}.")
+
+
+class CustomFeatureFormulaBlock(Block):
+    executor_key = "custom_feature_formula"
+    version = 1
+
+    _OUTPUT_TYPES = ("float", "int", "boolean")
+
+    def execute(
+        self,
+        context: BlockContext,
+        inputs: Mapping[str, Any],
+        config: Mapping[str, Any],
+    ) -> BlockResult:
+        dataset = require_dataset(inputs)
+        output_column = str(config.get("outputColumn") or "").strip()
+        if not output_column:
+            raise BlockExecutionError("outputColumn is required.")
+        if output_column in dataset.frame.columns:
+            raise BlockExecutionError(
+                f"Output column {output_column!r} already exists in the input dataset (collision)."
+            )
+        expression = config.get("expression")
+        if not isinstance(expression, str) or not expression.strip():
+            raise BlockExecutionError("expression is required.")
+        output_type = str(config.get("outputType") or "float").strip()
+        if output_type not in self._OUTPUT_TYPES:
+            raise BlockExecutionError(
+                f"outputType must be one of: {', '.join(self._OUTPUT_TYPES)}."
+            )
+
+        evaluated = evaluate_expression(expression, dataset.frame)
+        appended = cast_to_output_type(evaluated, output_type)
+        appended.name = output_column
+        new_frame = dataset.frame.copy()
+        new_frame[output_column] = appended
+        value = dataset.derive(frame=new_frame, lineage_node=context.node_id)
+        return _dataset_result(
+            value,
+            (("info", f"Added column {output_column!r} ({output_type}) via formula"),),
+        )
+
+
+class FeatureUnionBlock(Block):
+    executor_key = "feature_union"
+    version = 1
+
+    _PORT_ORDER = ("datasetA", "datasetB", "datasetC", "datasetD")
+
+    def execute(
+        self,
+        context: BlockContext,
+        inputs: Mapping[str, Any],
+        config: Mapping[str, Any],
+    ) -> BlockResult:
+        connected: list[DatasetValue] = []
+        for port in self._PORT_ORDER:
+            value = inputs.get(port)
+            if isinstance(value, DatasetValue):
+                connected.append(value)
+
+        if len(connected) < 2:
+            raise BlockExecutionError(
+                "Feature Union requires at least 2 connected inputs; got "
+                f"{len(connected)}."
+            )
+
+        first = connected[0]
+        expected_rows = len(first.frame)
+        for dataset in connected[1:]:
+            if len(dataset.frame) != expected_rows:
+                raise BlockExecutionError(
+                    "Feature Union input datasets must have matching row counts: "
+                    f"{expected_rows} vs {len(dataset.frame)}."
+                )
+
+        seen_columns: set[str] = set()
+        for dataset in connected:
+            collisions = sorted(set(dataset.frame.columns) & seen_columns)
+            if collisions:
+                raise BlockExecutionError(
+                    "Feature Union column names collide across branches: "
+                    + ", ".join(repr(c) for c in collisions)
+                )
+            seen_columns.update(dataset.frame.columns)
+
+        frames = [dataset.frame.reset_index(drop=True) for dataset in connected]
+        merged = pd.concat(frames, axis=1)
+
+        target = next(
+            (d.target for d in connected if d.target is not None),
+            None,
+        )
+        task = next(
+            (d.task for d in connected if d.task is not None),
+            None,
+        )
+        role = first.role
+        all_lineage: list[str] = []
+        for d in connected:
+            all_lineage.extend(d.lineage)
+        all_lineage.append(context.node_id)
+        lineage = tuple(dict.fromkeys(all_lineage))
+        value = DatasetValue(
+            frame=merged,
+            target=target,
+            task=task,
+            role=role,
+            lineage=lineage,
+        )
+        return _dataset_result(
+            value,
+            (
+                ("info", f"Merged {len(connected)} branches"),
+                ("info", f"Columns: {', '.join(merged.columns)}"),
+                ("info", f"Rows: {len(merged)}"),
+            ),
+        )
+
+
+class JoinDatasetsBlock(Block):
+    executor_key = "join_datasets"
+    version = 1
+
+    _STRATEGIES = ("inner", "left", "right", "full")
+
+    def execute(
+        self,
+        context: BlockContext,
+        inputs: Mapping[str, Any],
+        config: Mapping[str, Any],
+    ) -> BlockResult:
+        left = require_dataset(inputs, "left")
+        right = require_dataset(inputs, "right")
+        keys = parse_string_list(config.get("keys"), field_name="keys")
+        if not keys:
+            raise BlockExecutionError("At least one join key is required.")
+        strategy = enum_value(
+            config.get("strategy"),
+            field_name="strategy",
+            choices=self._STRATEGIES,
+            default="inner",
+        )
+
+        for key in keys:
+            if key not in left.frame.columns:
+                raise BlockExecutionError(
+                    f"Join key {key!r} is missing from the left input."
+                )
+            if key not in right.frame.columns:
+                raise BlockExecutionError(
+                    f"Join key {key!r} is missing from the right input."
+                )
+        non_key_left = [c for c in left.frame.columns if c not in keys]
+        collisions = [c for c in non_key_left if c in right.frame.columns]
+        if collisions:
+            raise BlockExecutionError(
+                "Non-key columns collide between the two inputs: "
+                + ", ".join(repr(c) for c in collisions)
+                + ". Rename them before joining."
+            )
+
+        merged = pd.merge(
+            left.frame, right.frame, on=keys, how=strategy
+        )
+        value = DatasetValue(
+            frame=merged,
+            target=left.target,
+            task=left.task,
+            role=left.role,
+            lineage=tuple(dict.fromkeys((*left.lineage, *right.lineage, context.node_id))),
+        )
+        return _dataset_result(
+            value,
+            (
+                ("info", f"Joined on {', '.join(keys)} using {strategy} strategy"),
+                ("info", f"Rows in: left={len(left.frame)} right={len(right.frame)}"),
+                ("info", f"Rows out: {len(merged)}"),
+            ),
+        )

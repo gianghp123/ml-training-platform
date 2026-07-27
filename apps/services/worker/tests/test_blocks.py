@@ -18,13 +18,17 @@ from src.blocks.models import (
 )
 from src.blocks.preprocessing import (
     ConcatFeaturesBlock,
+    CustomFeatureFormulaBlock,
     EncodeBlock,
     FeatureSelectBlock,
+    FilterRowsBlock,
     ImputeMissingBlock,
+    JoinDatasetsBlock,
     NormalizeBlock,
     RenameColumnsBlock,
     SelectTargetBlock,
 )
+from src.dsl.expression import ExpressionError
 from src.runtime import BlockExecutionError, DatasetValue, ModelValue
 
 
@@ -347,6 +351,112 @@ def test_evaluate_regression_and_clustering(
     assert set(clustering.summary["metrics"]) == {"silhouette", "inertia"}
 
 
+def test_filter_rows_basic_and_invert(context_factory):
+    block = FilterRowsBlock()
+    frame = pd.DataFrame({"age": [10, 20, 30, 40], "country": ["US", "US", "CA", "US"]})
+    dataset = DatasetValue(frame=frame)
+    result = block.execute(
+        context_factory(),
+        {"dataset": dataset},
+        {
+            "conditions": [{"column": "age", "op": "gte", "value": 18}],
+            "combinator": "AND",
+            "invert": False,
+        },
+    )
+    assert result.outputs["dataset"].frame["age"].tolist() == [20, 30, 40]
+
+    result_inverted = block.execute(
+        context_factory(),
+        {"dataset": dataset},
+        {
+            "conditions": [{"column": "age", "op": "gte", "value": 18}],
+            "combinator": "AND",
+            "invert": True,
+        },
+    )
+    assert result_inverted.outputs["dataset"].frame["age"].tolist() == [10]
+
+
+def test_filter_rows_or_combinator(context_factory):
+    block = FilterRowsBlock()
+    frame = pd.DataFrame({"a": [1, 2, 3, 4]})
+    result = block.execute(
+        context_factory(),
+        {"dataset": DatasetValue(frame=frame)},
+        {
+            "conditions": [
+                {"column": "a", "op": "eq", "value": 1},
+                {"column": "a", "op": "eq", "value": 4},
+            ],
+            "combinator": "OR",
+        },
+    )
+    assert result.outputs["dataset"].frame["a"].tolist() == [1, 4]
+
+
+def test_filter_rows_is_null_and_in_ops(context_factory):
+    block = FilterRowsBlock()
+    frame = pd.DataFrame({"a": [1.0, None, 3.0, None], "b": ["x", "y", "z", "w"]})
+    result = block.execute(
+        context_factory(),
+        {"dataset": DatasetValue(frame=frame)},
+        {
+            "conditions": [{"column": "a", "op": "isNull"}],
+            "combinator": "AND",
+        },
+    )
+    assert len(result.outputs["dataset"].frame) == 2
+
+    result_in = block.execute(
+        context_factory(),
+        {"dataset": DatasetValue(frame=frame)},
+        {
+            "conditions": [{"column": "b", "op": "in", "value": ["x", "z"]}],
+            "combinator": "AND",
+        },
+    )
+    assert sorted(result_in.outputs["dataset"].frame["b"].tolist()) == ["x", "z"]
+
+
+def test_filter_rows_preserves_target_and_role(context_factory):
+    block = FilterRowsBlock()
+    frame = pd.DataFrame({"a": [1, 2, 3], "y": [0, 1, 0]})
+    dataset = DatasetValue(frame=frame, target="y", task="classification", role="train")
+    result = block.execute(
+        context_factory(),
+        {"dataset": dataset},
+        {
+            "conditions": [{"column": "a", "op": "gte", "value": 2}],
+        },
+    )
+    out = result.outputs["dataset"]
+    assert out.target == "y"
+    assert out.task == "classification"
+    assert out.role == "train"
+    assert out.frame["y"].tolist() == [1, 0]
+
+
+def test_filter_rows_rejects_empty_conditions(context_factory):
+    block = FilterRowsBlock()
+    with pytest.raises(BlockExecutionError, match="[Aa]t least one"):
+        block.execute(
+            context_factory(),
+            {"dataset": DatasetValue(frame=pd.DataFrame({"a": [1]}))},
+            {"conditions": []},
+        )
+
+
+def test_filter_rows_rejects_unknown_column_at_runtime(context_factory):
+    block = FilterRowsBlock()
+    with pytest.raises(BlockExecutionError, match="[Cc]olumn"):
+        block.execute(
+            context_factory(),
+            {"dataset": DatasetValue(frame=pd.DataFrame({"a": [1]}))},
+            {"conditions": [{"column": "Nope", "op": "eq", "value": 1}]},
+        )
+
+
 def test_save_model_success_and_invalid_onnx(
     classification_dataset, context_factory, storage
 ):
@@ -374,4 +484,264 @@ def test_save_model_success_and_invalid_onnx(
             context_factory(),
             {"model": kmeans},
             {"format": "onnx", "name": "cluster"},
+        )
+
+
+def test_custom_feature_formula_basic_float(context_factory):
+    block = CustomFeatureFormulaBlock()
+    frame = pd.DataFrame({"a": [10.0, 20.0, 30.0]})
+    dataset = DatasetValue(frame=frame)
+    result = block.execute(
+        context_factory(),
+        {"dataset": dataset},
+        {"outputColumn": "ratio", "outputType": "float", "expression": "a / 2"},
+    )
+    assert "ratio" in result.outputs["dataset"].frame.columns
+    assert result.outputs["dataset"].frame["ratio"].tolist() == pytest.approx([5.0, 10.0, 15.0])
+
+
+def test_custom_feature_formula_boolean_column(context_factory):
+    block = CustomFeatureFormulaBlock()
+    frame = pd.DataFrame({"age": [10, 20, 30]})
+    result = block.execute(
+        context_factory(),
+        {"dataset": DatasetValue(frame=frame)},
+        {"outputColumn": "is_adult", "outputType": "boolean", "expression": "age >= 18"},
+    )
+    assert result.outputs["dataset"].frame["is_adult"].tolist() == [False, True, True]
+
+
+def test_custom_feature_formula_int_with_nulls_uses_nullable_int(context_factory):
+    block = CustomFeatureFormulaBlock()
+    frame = pd.DataFrame({"a": [1, 2, 3, 4]})
+    result = block.execute(
+        context_factory(),
+        {"dataset": DatasetValue(frame=frame)},
+        {"outputColumn": "a2", "outputType": "int", "expression": "a ** 2"},
+    )
+    series = result.outputs["dataset"].frame["a2"]
+    assert series.tolist() == [1, 4, 9, 16]
+
+
+def test_custom_feature_formula_rejects_missing_output_column(context_factory):
+    block = CustomFeatureFormulaBlock()
+    with pytest.raises(BlockExecutionError, match="outputColumn"):
+        block.execute(
+            context_factory(),
+            {"dataset": DatasetValue(frame=pd.DataFrame({"a": [1]}))},
+            {"outputColumn": "", "expression": "a + 1"},
+        )
+
+
+def test_custom_feature_formula_rejects_collision(context_factory):
+    block = CustomFeatureFormulaBlock()
+    frame = pd.DataFrame({"a": [1, 2]})
+    with pytest.raises(BlockExecutionError, match="[Cc]ollision|[Ee]xists"):
+        block.execute(
+            context_factory(),
+            {"dataset": DatasetValue(frame=frame)},
+            {"outputColumn": "a", "expression": "a + 1"},
+        )
+
+
+def test_custom_feature_formula_rejects_unknown_column(context_factory):
+    block = CustomFeatureFormulaBlock()
+    with pytest.raises(ExpressionError, match="[Cc]olumn"):
+        block.execute(
+            context_factory(),
+            {"dataset": DatasetValue(frame=pd.DataFrame({"a": [1]}))},
+            {"outputColumn": "x", "expression": "Salary * 2"},
+        )
+
+
+def _build_dataset(name: str, other_col: str = "Age") -> DatasetValue:
+    frame = pd.DataFrame(
+        {
+            "CustomerID": [1, 2, 3, 4],
+            other_col: [25, 30, 35, 40],
+            name: list(range(4)),
+        }
+    )
+    return DatasetValue(frame=frame, target=None, role="full")
+
+
+def test_join_datasets_inner_basic(context_factory):
+    block = JoinDatasetsBlock()
+    left = _build_dataset("LSpent")
+    right = _build_dataset("RSpent", other_col="Income")
+    result = block.execute(
+        context_factory(),
+        {"left": left, "right": right},
+        {"keys": ["CustomerID"], "strategy": "inner"},
+    )
+    out = result.outputs["dataset"]
+    assert "CustomerID" in out.frame.columns
+    assert "LSpent" in out.frame.columns
+    assert "RSpent" in out.frame.columns
+    assert len(out.frame) == 4
+
+
+def test_join_datasets_left_keeps_unmatched_left_rows(context_factory):
+    block = JoinDatasetsBlock()
+    left_frame = pd.DataFrame({"CustomerID": [1, 2, 3], "Age": [25, 30, 35]})
+    right_frame = pd.DataFrame({"CustomerID": [1, 2], "Total": [100, 200]})
+    result = block.execute(
+        context_factory(),
+        {"left": DatasetValue(frame=left_frame), "right": DatasetValue(frame=right_frame)},
+        {"keys": ["CustomerID"], "strategy": "left"},
+    )
+    assert len(result.outputs["dataset"].frame) == 3
+    row3 = result.outputs["dataset"].frame.iloc[2]
+    assert pd.isna(row3["Total"])
+
+
+def test_join_datasets_multiple_keys(context_factory):
+    block = JoinDatasetsBlock()
+    left = pd.DataFrame(
+        {"A": [1, 1, 2, 2], "B": ["x", "y", "x", "y"], "v1": [10, 20, 30, 40]}
+    )
+    right = pd.DataFrame(
+        {"A": [1, 1, 2], "B": ["x", "y", "x"], "v2": [100, 200, 300]}
+    )
+    result = block.execute(
+        context_factory(),
+        {"left": DatasetValue(frame=left), "right": DatasetValue(frame=right)},
+        {"keys": ["A", "B"], "strategy": "inner"},
+    )
+    assert len(result.outputs["dataset"].frame) == 3
+
+
+def test_join_datasets_inherits_left_metadata(context_factory):
+    block = JoinDatasetsBlock()
+    left = DatasetValue(frame=pd.DataFrame({"k": [1, 2], "a": [10, 20]}), target="a", task="regression", role="train")
+    right = DatasetValue(frame=pd.DataFrame({"k": [1, 2], "b": [100, 200]}), target="b", task="classification", role="test")
+    result = block.execute(
+        context_factory(),
+        {"left": left, "right": right},
+        {"keys": ["k"], "strategy": "inner"},
+    )
+    out = result.outputs["dataset"]
+    assert out.target == "a"
+    assert out.task == "regression"
+    assert out.role == "train"
+
+
+def test_join_datasets_rejects_missing_keys(context_factory):
+    block = JoinDatasetsBlock()
+    with pytest.raises(BlockExecutionError, match="[Kk]ey|[Rr]equired"):
+        block.execute(
+            context_factory(),
+            {
+                "left": DatasetValue(frame=pd.DataFrame({"a": [1]})),
+                "right": DatasetValue(frame=pd.DataFrame({"a": [1]})),
+            },
+            {"keys": [], "strategy": "inner"},
+        )
+
+
+def test_join_datasets_rejects_key_missing_from_right(context_factory):
+    block = JoinDatasetsBlock()
+    left = DatasetValue(frame=pd.DataFrame({"a": [1, 2], "b": [10, 20]}))
+    right = DatasetValue(frame=pd.DataFrame({"c": [1, 2], "d": [100, 200]}))
+    with pytest.raises(BlockExecutionError, match="[Cc]olumn|[Kk]ey"):
+        block.execute(
+            context_factory(),
+            {"left": left, "right": right},
+            {"keys": ["a"], "strategy": "inner"},
+        )
+
+
+def test_join_datasets_rejects_non_key_collision(context_factory):
+    block = JoinDatasetsBlock()
+    left = DatasetValue(frame=pd.DataFrame({"a": [1], "b": [10]}))
+    right = DatasetValue(frame=pd.DataFrame({"a": [1], "b": [100]}))
+    with pytest.raises(BlockExecutionError, match="[Cc]ollid|[Cc]olumn"):
+        block.execute(
+            context_factory(),
+            {"left": left, "right": right},
+            {"keys": ["a"], "strategy": "inner"},
+        )
+
+
+def test_join_datasets_rejects_full_strategy_collision(context_factory):
+    block = JoinDatasetsBlock()
+    left = DatasetValue(frame=pd.DataFrame({"a": [1, 2], "b": [10, 20]}))
+    right = DatasetValue(frame=pd.DataFrame({"a": [1, 2], "b": [100, 200]}))
+    with pytest.raises(BlockExecutionError):
+        block.execute(
+            context_factory(),
+            {"left": left, "right": right},
+            {"keys": ["a"], "strategy": "full"},
+        )
+
+
+from src.blocks.preprocessing import FeatureUnionBlock
+
+
+def _make_dataset(name: str) -> DatasetValue:
+    return DatasetValue(frame=pd.DataFrame({name: [1, 2, 3]}))
+
+
+def test_feature_union_two_inputs_succeeds(context_factory):
+    block = FeatureUnionBlock()
+    a = _make_dataset("a")
+    b = _make_dataset("b")
+    result = block.execute(
+        context_factory(),
+        {"datasetA": a, "datasetB": b},
+        {},
+    )
+    out = result.outputs["dataset"]
+    assert set(out.frame.columns) == {"a", "b"}
+    assert len(out.frame) == 3
+
+
+def test_feature_union_optional_unconnected_inputs_succeeds(context_factory):
+    block = FeatureUnionBlock()
+    a = _make_dataset("a")
+    b = _make_dataset("b")
+    result = block.execute(
+        context_factory(),
+        {"datasetA": a, "datasetB": b},
+        {},
+    )
+    assert "dataset" in result.outputs
+
+
+def test_feature_union_target_inherited_from_first_with_target(context_factory):
+    block = FeatureUnionBlock()
+    a = DatasetValue(frame=pd.DataFrame({"x": [1, 2]}), target=None)
+    b = DatasetValue(frame=pd.DataFrame({"y": [3, 4]}), target="y", task="regression", role="train")
+    result = block.execute(
+        context_factory(),
+        {"datasetA": a, "datasetB": b},
+        {},
+    )
+    out = result.outputs["dataset"]
+    assert out.target == "y"
+    assert out.task == "regression"
+    assert out.role == "full"  # first input's role
+
+
+def test_feature_union_rejects_row_count_mismatch(context_factory):
+    block = FeatureUnionBlock()
+    a = DatasetValue(frame=pd.DataFrame({"x": [1, 2, 3]}))
+    b = DatasetValue(frame=pd.DataFrame({"y": [4, 5]}))
+    with pytest.raises(BlockExecutionError, match="[Rr]ows|[Cc]ount"):
+        block.execute(
+            context_factory(),
+            {"datasetA": a, "datasetB": b},
+            {},
+        )
+
+
+def test_feature_union_rejects_duplicate_columns(context_factory):
+    block = FeatureUnionBlock()
+    a = DatasetValue(frame=pd.DataFrame({"x": [1, 2]}))
+    b = DatasetValue(frame=pd.DataFrame({"x": [3, 4]}))
+    with pytest.raises(BlockExecutionError, match="[Cc]ollid"):
+        block.execute(
+            context_factory(),
+            {"datasetA": a, "datasetB": b},
+            {},
         )

@@ -106,6 +106,18 @@ def _port_ids(raw: Any) -> tuple[str, ...]:
     return tuple(result)
 
 
+def _optional_input_port_ids(raw: Any) -> set[str]:
+    if not isinstance(raw, Sequence) or isinstance(raw, (str, bytes, bytearray)):
+        return set()
+    optional: set[str] = set()
+    for port in raw:
+        if isinstance(port, Mapping) and port.get("optional") is True:
+            port_id = str(port.get("id") or "").strip()
+            if port_id:
+                optional.add(port_id)
+    return optional
+
+
 @dataclass(frozen=True)
 class PipelineJob:
     run_id: str
@@ -384,8 +396,16 @@ class PipelineRunner:
                             f"Runtime output {edge.source_node_id}."
                             f"{edge.source_port_id} is missing"
                         ) from exc
+                optional_input_ports = _optional_input_port_ids(
+                    current_descriptor.ports.get("inputs")
+                )
                 missing_inputs = sorted(
-                    set(current_descriptor.input_ports()) - set(resolved_inputs)
+                    {
+                        port
+                        for port in set(current_descriptor.input_ports())
+                        - set(resolved_inputs)
+                        if port not in optional_input_ports
+                    }
                 )
                 if missing_inputs:
                     raise GraphValidationError(

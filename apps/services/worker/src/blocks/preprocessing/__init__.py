@@ -1,8 +1,12 @@
 from .transforms import (
     ConcatFeaturesBlock,
+    CustomFeatureFormulaBlock,
     EncodeBlock,
     FeatureSelectBlock,
+    FeatureUnionBlock,
+    FilterRowsBlock,
     ImputeMissingBlock,
+    JoinDatasetsBlock,
     NormalizeBlock,
     RenameColumnsBlock,
     SelectTargetBlock,
@@ -10,9 +14,13 @@ from .transforms import (
 
 __all__ = [
     "ConcatFeaturesBlock",
+    "CustomFeatureFormulaBlock",
     "EncodeBlock",
     "FeatureSelectBlock",
+    "FeatureUnionBlock",
+    "FilterRowsBlock",
     "ImputeMissingBlock",
+    "JoinDatasetsBlock",
     "NormalizeBlock",
     "RenameColumnsBlock",
     "SelectTargetBlock",
