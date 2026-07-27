@@ -20,9 +20,10 @@ export function useBlockPalette({ blocks, categories }: UseBlockPaletteProps): U
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredBlocks = useMemo(() => {
-    if (!searchQuery.trim()) return blocks;
+    const active = blocks.filter((b) => b.status !== "deprecated");
+    if (!searchQuery.trim()) return active;
     const q = searchQuery.toLowerCase();
-    return blocks.filter((b) => b.name.toLowerCase().includes(q));
+    return active.filter((b) => b.name.toLowerCase().includes(q));
   }, [searchQuery, blocks]);
 
   const blocksByCategory = useMemo(() => {

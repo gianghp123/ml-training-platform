@@ -4,7 +4,9 @@ import { useEffect, useMemo } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
-import type { ConfigField, Dataset } from "@training-ml/contracts"
+import type { ConfigField, Dataset, FilterCondition } from "@training-ml/contracts"
+import { ConditionListEditor } from "./ConditionListEditor"
+import { ExpressionInput } from "./ExpressionInput"
 import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -311,6 +313,20 @@ function buildZodSchema(
         shape[field.id] = z.record(z.string(), z.string())
         break
       }
+      case "ConditionList": {
+        shape[field.id] = z.array(
+          z.object({
+            column: z.string().min(1),
+            op: z.string().min(1),
+            value: z.union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))]).optional(),
+          }),
+        )
+        break
+      }
+      case "Expression": {
+        shape[field.id] = z.string()
+        break
+      }
       case "Select":
       case "Text":
       case "FileUpload":
@@ -358,6 +374,18 @@ function buildDefaultValues(
       case "KeyValueMap":
         defaults[field.id] = normalizeStringMap(raw)
         break
+      case "ConditionList":
+        defaults[field.id] = Array.isArray(raw)
+          ? (raw as FilterCondition[]).map((c: FilterCondition) => ({
+              column: String(c.column ?? ""),
+              op: String(c.op ?? "eq"),
+              value: c.value,
+            }))
+          : []
+        break
+      case "Expression":
+        defaults[field.id] = raw !== undefined ? String(raw) : ""
+        break
       default:
         defaults[field.id] = raw !== undefined ? String(raw) : ""
     }
@@ -379,6 +407,23 @@ export function BlockConfigForm({
     () => buildDefaultValues(fields, values),
     [fields, values]
   )
+
+  const { inputContracts, getNodeErrors } = useValidationContext()
+  const nodeErrors = getNodeErrors(nodeId)
+
+  const inputColumns = useMemo(() => {
+    const nodeInputs = inputContracts[nodeId] ?? {}
+    const all: string[] = []
+    for (const portId of Object.keys(nodeInputs)) {
+      const contract = nodeInputs[portId]
+      if (contract?.artifact === "Dataset" && contract.schema.columns !== "unknown") {
+        for (const col of contract.schema.columns) {
+          if (!all.includes(col.name)) all.push(col.name)
+        }
+      }
+    }
+    return all
+  }, [nodeId, inputContracts])
 
   const form = useForm<z.infer<typeof zodSchema>>({
     resolver: zodResolver(zodSchema),
@@ -563,6 +608,29 @@ export function BlockConfigForm({
                     </span>
                   )}
                 </div>
+              )}
+              {field.type === "ConditionList" && (
+                <ConditionListEditor
+                  value={Array.isArray(controllerField.value) ? (controllerField.value as FilterCondition[]) : []}
+                  onChange={(next) => {
+                    controllerField.onChange(next)
+                    onChange(field.id, next)
+                  }}
+                  ops={field.ops as string[]}
+                  columns={inputColumns}
+                  disabled={disabled}
+                />
+              )}
+              {field.type === "Expression" && (
+                <ExpressionInput
+                  value={String(controllerField.value ?? "")}
+                  onChange={(v) => {
+                    controllerField.onChange(v)
+                    onChange(field.id, v)
+                  }}
+                  disabled={disabled}
+                  error={nodeErrors.find((e) => e.fieldId === field.id)?.message}
+                />
               )}
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>

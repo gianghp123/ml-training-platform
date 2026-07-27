@@ -144,15 +144,19 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
                         position: "absolute",
                         transform: "none",
                       }}
-                      className={`static! ${dotColor} border-2! border-background!`}
+                      className={`static! border-2! border-background! ${dotColor} ${
+                        input.optional ? "ring-1 ring-dashed ring-foreground/40" : ""
+                      }`}
                     />
                   </TooltipTrigger>
                   <TooltipContent side="left">
                     {input.id} ({input.artifact})
+                    {input.optional ? " · optional" : ""}
                   </TooltipContent>
                 </Tooltip>
                 <span className="text-xs text-muted-foreground">
                   {input.id}
+                  {input.optional ? " (optional)" : ""}
                 </span>
               </div>
             ))}
