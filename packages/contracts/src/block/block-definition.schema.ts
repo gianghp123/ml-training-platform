@@ -17,6 +17,7 @@ export type BlockStatus = z.infer<typeof BlockStatusSchema>;
 export const PortSchema = z.object({
   id: z.string(),
   artifact: PipelineArtifactTypeSchema,
+  optional: z.boolean().optional(),
 });
 
 export type Port = z.infer<typeof PortSchema>;
@@ -40,6 +41,9 @@ const OutputTransformBodySchema: z.ZodType<unknown> = z.union([
         }),
       )
       .optional(),
+    addColumns: z
+      .array(z.object({ name: z.string(), primitive: z.string() }))
+      .optional(),
     set: z.record(z.string(), z.unknown()).optional(),
   }),
   z.object({
@@ -50,6 +54,13 @@ const OutputTransformBodySchema: z.ZodType<unknown> = z.union([
   }),
   z.object({
     concatColumns: z.union([z.array(z.string()), z.string()]),
+  }),
+  z.object({
+    joinColumns: z.object({
+      left: z.string(),
+      right: z.string(),
+      keys: z.string(),
+    }),
   }),
   z.object({
     ports: z.record(z.string(), z.lazy(() => OutputTransformSchema)),

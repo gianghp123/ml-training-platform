@@ -7,6 +7,7 @@ import { exists } from './exists';
 import { lte } from './lte';
 import { rowCountMatches } from './row-count-matches';
 import { semantic } from './semantic';
+import { columnsExist } from './columns-exist';
 import { subsetOf } from './subset-of';
 
 export type OperatorFn = (rule: ConstraintRule, ctx: NodeContext) => ValidationError[];
@@ -19,6 +20,7 @@ export const operators: Record<string, OperatorFn> = {
   disjoint,
   subsetOf,
   rowCountMatches,
+  columnsExist,
 };
 
 export function evaluateRule(rule: ConstraintRule, ctx: NodeContext): ValidationError[] {

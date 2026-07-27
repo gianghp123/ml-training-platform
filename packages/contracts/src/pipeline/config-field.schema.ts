@@ -1,6 +1,9 @@
 import { z } from 'zod';
+import { FilterOpSchema } from './filter-condition.schema';
 
 export const ConfigFieldType = {
+  CONDITION_LIST: 'ConditionList',
+  EXPRESSION: 'Expression',
   COLUMN_SELECTOR: 'ColumnSelector',
   SELECT: 'Select',
   NUMBER: 'Number',
@@ -67,6 +70,16 @@ export const ConfigFieldSchema = z.discriminatedUnion('type', [
     type: z.literal(ConfigFieldType.DATASET_SELECTOR),
     id: z.string(),
     format: z.enum(['csv', 'json', 'xml']).optional(),
+  }),
+  z.object({
+    type: z.literal(ConfigFieldType.CONDITION_LIST),
+    id: z.string(),
+    ops: z.array(FilterOpSchema),
+  }),
+  z.object({
+    type: z.literal(ConfigFieldType.EXPRESSION),
+    id: z.string(),
+    placeholder: z.string().optional(),
   }),
 ]);
 

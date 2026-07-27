@@ -1,10 +1,12 @@
 import {
   DatasetRole,
   PipelineArtifactType,
+  type Column,
   type Contract,
+  type DatasetContract,
   type ValidationError,
 } from '@training-ml/contracts';
-import { resolvePath } from '../operators/_resolve-path';
+import { resolveItems, resolvePath } from '../operators/_resolve-path';
 import type { NodeContext } from '../types';
 import { isDatasetContract } from '../utils/contract-helpers';
 
@@ -101,11 +103,13 @@ function buildContractFromTransform(
   const columnsUnknown = input.schema.columns === 'unknown';
 
   if ('copyInput' in t && t.copyInput) {
+    let base: Contract;
+
     if ('columnUpdates' in t && Array.isArray(t.columnUpdates)) {
-      const cols = columnsUnknown
+      const updatedCols = columnsUnknown
         ? []
         : (input.schema.columns as Exclude<typeof input.schema.columns, 'unknown'>).map((col) => {
- const match = (t.columnUpdates as Array<Record<string, unknown>>).find((u) => {
+          const match = (t.columnUpdates as Array<Record<string, unknown>>).find((u) => {
             const raw = typeof u.columns === 'string' && u.columns.startsWith('$')
               ? resolvePath(u.columns, ctx)
               : u.columns;
@@ -124,25 +128,20 @@ function buildContractFromTransform(
             nullable: (match.nullable as boolean | undefined) ?? col.nullable,
           };
         });
-      return {
+      base = {
         artifact: PipelineArtifactType.DATASET,
-        schema: {
-          columns: columnsUnknown ? 'unknown' : cols,
-          target: input.schema.target,
-        },
+        schema: { columns: columnsUnknown ? 'unknown' : updatedCols, target: input.schema.target },
         role: input.role,
         task: input.task,
       };
-    }
-
-    if ('set' in t && t.set) {
+    } else if ('set' in t && t.set) {
       const set = t.set as Record<string, unknown>;
       const resolveSetValue = (val: unknown): unknown =>
         typeof val === 'string' && val.startsWith('$') ? resolvePath(val, ctx) : val;
       const task = resolveSetValue(set['task']) as string | undefined;
       const target = resolveSetValue(set['schema.target']) as string | undefined;
       const role = resolveSetValue(set['role']) as string | undefined;
-      return {
+      base = {
         artifact: PipelineArtifactType.DATASET,
         schema: {
           columns: columnsUnknown ? 'unknown' : input.schema.columns,
@@ -151,17 +150,19 @@ function buildContractFromTransform(
         role: role ?? input.role,
         task: task ?? input.task,
       };
+    } else {
+      base = {
+        artifact: PipelineArtifactType.DATASET,
+        schema: {
+          columns: columnsUnknown ? 'unknown' : input.schema.columns,
+          target: input.schema.target,
+        },
+        role: input.role,
+        task: input.task,
+      };
     }
 
-    return {
-      artifact: PipelineArtifactType.DATASET,
-      schema: {
-        columns: columnsUnknown ? 'unknown' : input.schema.columns,
-        target: input.schema.target,
-      },
-      role: input.role,
-      task: input.task,
-    };
+    return applyAddColumns(base, t, ctx, _errors);
   }
 
   if ('keepColumns' in t && t.keepColumns) {
@@ -209,19 +210,112 @@ function buildContractFromTransform(
     };
   }
 
-  if ('concatColumns' in t && Array.isArray(t.concatColumns)) {
+  if ('joinColumns' in t && t.joinColumns && typeof t.joinColumns === 'object') {
+    const spec = t.joinColumns as Record<string, unknown>;
+    const leftRaw = typeof spec.left === 'string' ? resolvePath(spec.left, ctx) : undefined;
+    const rightRaw = typeof spec.right === 'string' ? resolvePath(spec.right, ctx) : undefined;
+    if (!leftRaw || !rightRaw || !isDatasetContract(leftRaw as Contract) || !isDatasetContract(rightRaw as Contract)) {
+      return null;
+    }
+    const left = leftRaw as DatasetContract;
+    const right = rightRaw as DatasetContract;
+    const keys = resolveItems(spec.keys, ctx);
+
+    if (left.schema.columns === 'unknown' || right.schema.columns === 'unknown') {
+      return {
+        artifact: PipelineArtifactType.DATASET,
+        schema: { columns: 'unknown', target: left.schema.target },
+        role: left.role,
+        task: left.task,
+      };
+    }
+
+    const leftCols = left.schema.columns as Column[];
+    const rightCols = (right.schema.columns as Column[]).filter((c) => !keys.includes(c.name));
+    const leftNames = new Set(leftCols.map((c) => c.name));
+    const dupes = rightCols.filter((c) => leftNames.has(c.name)).map((c) => c.name);
+    if (dupes.length > 0) {
+      _errors.push({
+        nodeId: ctx.node.id,
+        scope: 'contract',
+        code: 'COLUMN_COLLISION',
+        severity: 'error',
+        message: `Columns exist in both join inputs: ${dupes.join(', ')}. Rename them before joining.`,
+        context: { overlap: dupes },
+      });
+      return null;
+    }
+
     return {
       artifact: PipelineArtifactType.DATASET,
-      schema: {
-        columns: columnsUnknown ? 'unknown' : input.schema.columns,
-        target: input.schema.target,
-      },
-      role: input.role,
-      task: input.task,
+      schema: { columns: [...leftCols, ...rightCols], target: left.schema.target },
+      role: left.role,
+      task: left.task,
+    };
+  }
+
+  if ('concatColumns' in t && Array.isArray(t.concatColumns)) {
+    const inputs = (t.concatColumns as unknown[])
+      .map((p) => (typeof p === 'string' && p.startsWith('$') ? resolvePath(p, ctx) : p))
+      .filter(
+        (v): v is DatasetContract =>
+          v !== null && typeof v === 'object' && isDatasetContract(v as Contract),
+      );
+    if (inputs.length === 0) return null;
+    const anyUnknown = inputs.some((c) => c.schema.columns === 'unknown');
+    const columns = anyUnknown
+      ? ('unknown' as const)
+      : inputs.flatMap((c) => c.schema.columns as Column[]);
+    const withTarget = inputs.find((c) => c.schema.target != null);
+    const withTask = inputs.find((c) => c.task != null);
+    return {
+      artifact: PipelineArtifactType.DATASET,
+      schema: { columns, target: withTarget?.schema.target ?? null },
+      role: inputs[0].role,
+      task: withTask?.task ?? null,
     };
   }
 
   return null;
+}
+
+function applyAddColumns(
+  base: Contract,
+  t: Record<string, unknown>,
+  ctx: NodeContext,
+  errors: ValidationError[],
+): Contract {
+  if (!Array.isArray(t.addColumns) || !isDatasetContract(base) || base.schema.columns === 'unknown') {
+    return base;
+  }
+  const existing = base.schema.columns as Column[];
+  const additions: Column[] = [];
+  for (const raw of t.addColumns as Array<Record<string, unknown>>) {
+    const nameRaw = typeof raw.name === 'string' && raw.name.startsWith('$') ? resolvePath(raw.name, ctx) : raw.name;
+    const primRaw =
+      typeof raw.primitive === 'string' && raw.primitive.startsWith('$') ? resolvePath(raw.primitive, ctx) : raw.primitive;
+    if (typeof nameRaw !== 'string' || nameRaw === '') continue;
+    if (existing.some((c) => c.name === nameRaw) || additions.some((c) => c.name === nameRaw)) {
+      errors.push({
+        nodeId: ctx.node.id,
+        scope: 'contract',
+        code: 'COLUMN_COLLISION',
+        severity: 'error',
+        message: `Column "${nameRaw}" already exists.`,
+        context: { column: nameRaw },
+      });
+      continue;
+    }
+    const primitive = typeof primRaw === 'string' ? primRaw : 'float';
+    additions.push({
+      name: nameRaw,
+      primitive: primitive as Column['primitive'],
+      semantic: primitive === 'boolean' ? 'categorical' : 'numeric',
+      nullable: true,
+    });
+  }
+  if (additions.length === 0) return base;
+  return { ...base, schema: { ...base.schema, columns: [...existing, ...additions] } };
 }
 
 function unwrapDeclared(transform: unknown): unknown {

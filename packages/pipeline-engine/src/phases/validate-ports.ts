@@ -9,6 +9,9 @@ export function validatePorts(ctx: NodeContext, allEdges: GraphEdge[]): Validati
   for (const port of inputPorts) {
     const edgesToPort = incoming.filter((e) => e.targetPortId === port.id);
     if (edgesToPort.length === 0) {
+      if (port.optional) {
+        continue;
+      }
       errors.push({
         nodeId: ctx.node.id,
         scope: 'port',

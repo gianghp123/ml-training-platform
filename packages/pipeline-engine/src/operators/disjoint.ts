@@ -1,19 +1,33 @@
 import type { ConstraintRule, Contract, ValidationError } from '@training-ml/contracts';
 import type { NodeContext } from '../types';
 import { getDatasetColumns } from '../utils/contract-helpers';
-import { resolvePath } from './_resolve-path';
+import { resolveItems, resolvePath } from './_resolve-path';
 
 export function disjoint(rule: ConstraintRule, ctx: NodeContext): ValidationError[] {
-  const leftContract = resolvePath(rule.left as string, ctx);
-  const rightContract = resolvePath(rule.right as string, ctx);
+  const excluded = new Set(rule.exclude !== undefined ? resolveItems(rule.exclude, ctx) : []);
 
-  if (!leftContract || !rightContract || typeof leftContract !== 'object' || typeof rightContract !== 'object') {
-    return [];
+  const namesOf = (value: unknown): string[] => {
+    if (!value || typeof value !== 'object') return [];
+    return getDatasetColumns(value as Contract)
+      .map((c) => c.name)
+      .filter((name) => !excluded.has(name));
+  };
+
+  let sets: string[][];
+  if (Array.isArray(rule.targets)) {
+    sets = rule.targets
+      .map((p) => resolvePath(String(p), ctx))
+      .filter((v) => v !== undefined && v !== null)
+      .map(namesOf);
+  } else {
+    sets = [namesOf(resolvePath(rule.left as string, ctx)), namesOf(resolvePath(rule.right as string, ctx))];
   }
 
-  const leftNames = getDatasetColumns(leftContract as Contract).map((c) => c.name);
-  const rightNames = getDatasetColumns(rightContract as Contract).map((c) => c.name);
-  const overlap = leftNames.filter((name) => rightNames.includes(name));
+  const counts = new Map<string, number>();
+  for (const names of sets) {
+    for (const name of names) counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  const overlap = [...counts.entries()].filter(([, c]) => c > 1).map(([n]) => n);
 
   if (overlap.length === 0) return [];
 
