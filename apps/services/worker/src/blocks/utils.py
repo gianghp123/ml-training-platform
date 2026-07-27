@@ -90,6 +90,21 @@ def require_numeric(frame: pd.DataFrame, columns: Sequence[str]) -> None:
         )
 
 
+def require_no_nulls(
+    frame: pd.DataFrame,
+    columns: Sequence[str],
+    *,
+    block_name: str,
+) -> None:
+    require_columns(frame, columns)
+    missing = [column for column in columns if frame[column].isnull().any()]
+    if missing:
+        raise BlockExecutionError(
+            f"Column(s) {', '.join(repr(c) for c in missing)} contain missing values. "
+            f"Apply an Impute Missing Values block or upload a cleaned dataset before {block_name}."
+        )
+
+
 def enum_value(
     value: Any,
     *,
@@ -168,13 +183,9 @@ def supervised_training_data(
         raise BlockExecutionError("Dataset has no feature columns")
     features = dataset.frame.loc[:, list(feature_columns)]
     require_numeric(features, feature_columns)
-    if features.isnull().any().any():
-        raise BlockExecutionError(
-            "Model features contain missing values; add an imputation block"
-        )
+    require_no_nulls(features, list(feature_columns), block_name="Model training")
     target = dataset.frame[dataset.target]
-    if target.isnull().any():
-        raise BlockExecutionError("Target column contains missing values")
+    require_no_nulls(target.to_frame(), [dataset.target], block_name="Model training")
     return features, target, feature_columns
 
 

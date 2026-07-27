@@ -23,6 +23,7 @@ from ..utils import (
     parse_string_list,
     require_columns,
     require_dataset,
+    require_no_nulls,
     require_numeric,
 )
 
@@ -47,6 +48,7 @@ class NormalizeBlock(Block):
         dataset = require_dataset(inputs)
         columns = parse_string_list(config.get("columns"), field_name="columns")
         require_numeric(dataset.frame, columns)
+        require_no_nulls(dataset.frame, columns, block_name="Normalization")
         method = enum_value(
             config.get("method"),
             field_name="method",
@@ -82,10 +84,7 @@ class EncodeBlock(Block):
 
     @staticmethod
     def _deterministic_categories(series: pd.Series, column: str) -> list[Any]:
-        if series.isnull().any():
-            raise BlockExecutionError(
-                f"Column {column!r} contains missing values; impute it before encoding"
-            )
+        require_no_nulls(series.to_frame(), [column], block_name="Encoding")
         try:
             return sorted(series.unique().tolist())
         except TypeError:

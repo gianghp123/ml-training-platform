@@ -8,7 +8,7 @@ from sklearn.cluster import KMeans
 
 from ...runtime import BlockContext, BlockExecutionError, BlockResult, ModelValue
 from ..base import Block
-from ..utils import positive_int, require_dataset, require_numeric
+from ..utils import positive_int, require_dataset, require_no_nulls, require_numeric
 
 
 class KMeansBlock(Block):
@@ -30,10 +30,7 @@ class KMeansBlock(Block):
         if not feature_columns:
             raise BlockExecutionError("Dataset has no feature columns")
         require_numeric(dataset.frame, feature_columns)
-        if dataset.frame.isnull().any().any():
-            raise BlockExecutionError(
-                "K-Means features contain missing values; add an imputation block"
-            )
+        require_no_nulls(dataset.frame, feature_columns, block_name="K-Means")
         n_clusters = positive_int(
             config.get("n_clusters"), field_name="n_clusters", default=3
         )
