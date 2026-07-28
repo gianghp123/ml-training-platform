@@ -41,7 +41,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Pause, Play, Ungroup } from "lucide-react"
 import PipelineEdge from "./edges/PipelineEdge"
 import { usePipelineRun } from "../hooks/usePipelineRun"
-import { createIrisDemoGraph, getReadyCsvDatasets } from "../utils/iris-demo"
+import { getReadyCsvDatasets } from "../utils/iris-demo"
+import { DEMOS, getDemo, getDefaultDemo } from "../utils/demos"
 import { toast } from "sonner"
 
 const nodeTypes = {
@@ -97,6 +98,11 @@ export function BuilderCanvas({
   )
     ? demoDatasetId
     : (readyCsvDatasets[0]?.id ?? "")
+
+  const [demoId, setDemoId] = useState(() => getDefaultDemo().id)
+  const activeDemoId = DEMOS.some((demo) => demo.id === demoId)
+    ? demoId
+    : getDefaultDemo().id
 
   useEffect(() => {
     setNodeRunStatuses(pipelineRun.state.nodeStatuses)
@@ -213,30 +219,29 @@ export function BuilderCanvas({
     }
   }
 
-  const handleLoadIrisDemo = () => {
+  const handleLoadDemo = () => {
     if (pipelineRun.isActive) return
+    const demo = getDemo(activeDemoId) ?? getDefaultDemo()
     const dataset = readyCsvDatasets.find(
       (candidate) => candidate.id === activeDemoDatasetId
     )
     if (!dataset) {
-      toast.error("Select a READY CSV dataset before loading the Iris demo.")
+      toast.error(`Select a READY CSV dataset before loading the ${demo.name} demo.`)
       return
     }
 
     try {
-      const graph = createIrisDemoGraph(blocks, dataset.id)
+      const graph = demo.create(blocks, dataset.id)
       pipelineRun.reset()
       builder.replaceGraph(graph.nodes, graph.edges)
-      builder.setWorkflowName("Iris Random Forest Demo")
+      builder.setWorkflowName(demo.workflowName)
       window.requestAnimationFrame(() => {
         void reactFlowRef.current?.fitView({ padding: 0.15, duration: 400 })
       })
-      toast.success(
-        "Iris demo graph loaded. Review validation, then click Run."
-      )
+      toast.success(`${demo.name} graph loaded. Review validation, then click Run.`)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Unable to load Iris demo."
+        error instanceof Error ? error.message : `Unable to load ${demo.name} demo.`
       )
     }
   }
@@ -265,7 +270,10 @@ export function BuilderCanvas({
           readyCsvDatasets={readyCsvDatasets}
           demoDatasetId={activeDemoDatasetId}
           onDemoDatasetChange={setDemoDatasetId}
-          onLoadIrisDemo={handleLoadIrisDemo}
+          demoId={activeDemoId}
+          onDemoIdChange={setDemoId}
+          demos={DEMOS}
+          onLoadDemo={handleLoadDemo}
         />
         <div className="flex min-h-0 flex-1">
           <div className="relative min-w-0 flex-1">

@@ -1,15 +1,11 @@
-"""Branched Iris pipeline exercising the 4 new feature blocks.
+"""Iris pipeline demonstrating first-occurrence-wins Feature Union.
 
 Topology:
-  Iris CSV
-    -> Impute (fill missing values)
-    -> Feature Select (sepal cols + Species)  ─┐
-    -> Feature Select (petal cols)            ─┤
-                                                ├─ Feature Union
-    -> Custom Feature Formula (PetalArea = SepalLengthCm * SepalWidthCm)
-    -> Filter Rows (SepalLengthCm > 4.5)
-    -> Custom Feature Formula (SepalArea = PetalLengthCm * PetalWidthCm)
-    -> Select Target
+  Iris CSV -> Impute -> Filter Rows (SepalLengthCm > 4.5)
+    ├── union.datasetA  (filtered imputed data, 5 cols)
+    ├── formula1 (PetalArea = PetalLengthCm * PetalWidthCm) -> union.datasetB  (5 + 1 cols)
+    └── formula2 (SepalArea = SepalLengthCm * SepalWidthCm) -> union.datasetC  (5 + 1 cols)
+  union (first-occurrence-wins dedup → 7 cols) -> Select Target
     -> Train/Test Split
     -> Random Forest -> Save Model
     -> Evaluation (test split, accuracy)
@@ -30,12 +26,10 @@ def build_job(run_id: str, dataset_id: str) -> dict:
             "nodes": [
                 {"id": "load", "blockId": "load-csv", "blockVersion": 1, "config": {"dataset": dataset_id}},
                 {"id": "impute", "blockId": "impute-missing", "blockVersion": 1, "config": {"columns": "SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm", "strategy": "Mean"}},
-                {"id": "selectA", "blockId": "feature-select", "blockVersion": 1, "config": {"columns": "SepalLengthCm,SepalWidthCm,Species"}},
-                {"id": "selectB", "blockId": "feature-select", "blockVersion": 1, "config": {"columns": "PetalLengthCm,PetalWidthCm"}},
-                {"id": "union", "blockId": "feature-union", "blockVersion": 1, "config": {}},
-                {"id": "formula1", "blockId": "custom-feature-formula", "blockVersion": 1, "config": {"outputColumn": "PetalArea", "outputType": "float", "expression": "SepalLengthCm * SepalWidthCm"}},
                 {"id": "filter", "blockId": "filter-rows", "blockVersion": 1, "config": {"conditions": [{"column": "SepalLengthCm", "op": "gt", "value": 4.5}], "combinator": "AND"}},
-                {"id": "formula2", "blockId": "custom-feature-formula", "blockVersion": 1, "config": {"outputColumn": "SepalArea", "outputType": "float", "expression": "PetalLengthCm * PetalWidthCm"}},
+                {"id": "formula1", "blockId": "custom-feature-formula", "blockVersion": 1, "config": {"outputColumn": "PetalArea", "outputType": "float", "expression": "PetalLengthCm * PetalWidthCm"}},
+                {"id": "formula2", "blockId": "custom-feature-formula", "blockVersion": 1, "config": {"outputColumn": "SepalArea", "outputType": "float", "expression": "SepalLengthCm * SepalWidthCm"}},
+                {"id": "union", "blockId": "feature-union", "blockVersion": 1, "config": {}},
                 {"id": "select", "blockId": "select-target", "blockVersion": 1, "config": {"targetColumn": "Species", "task": "classification"}},
                 {"id": "split", "blockId": "train-test-split", "blockVersion": 1, "config": {"testSize": 0.2, "stratify": True}},
                 {"id": "rf", "blockId": "random-forest", "blockVersion": 1, "config": {"n_estimators": 50, "max_depth": 5}},
@@ -44,19 +38,18 @@ def build_job(run_id: str, dataset_id: str) -> dict:
             ],
             "edges": [
                 {"id": "e1", "sourceNodeId": "load", "sourcePortId": "dataset", "targetNodeId": "impute", "targetPortId": "dataset"},
-                {"id": "e2", "sourceNodeId": "impute", "sourcePortId": "dataset", "targetNodeId": "selectA", "targetPortId": "dataset"},
-                {"id": "e3", "sourceNodeId": "impute", "sourcePortId": "dataset", "targetNodeId": "selectB", "targetPortId": "dataset"},
-                {"id": "e4", "sourceNodeId": "selectA", "sourcePortId": "dataset", "targetNodeId": "union", "targetPortId": "datasetA"},
-                {"id": "e5", "sourceNodeId": "selectB", "sourcePortId": "dataset", "targetNodeId": "union", "targetPortId": "datasetB"},
-                {"id": "e6", "sourceNodeId": "union", "sourcePortId": "dataset", "targetNodeId": "formula1", "targetPortId": "dataset"},
-                {"id": "e7", "sourceNodeId": "formula1", "sourcePortId": "dataset", "targetNodeId": "filter", "targetPortId": "dataset"},
-                {"id": "e8", "sourceNodeId": "filter", "sourcePortId": "dataset", "targetNodeId": "formula2", "targetPortId": "dataset"},
-                {"id": "e9", "sourceNodeId": "formula2", "sourcePortId": "dataset", "targetNodeId": "select", "targetPortId": "dataset"},
-                {"id": "e10", "sourceNodeId": "select", "sourcePortId": "dataset", "targetNodeId": "split", "targetPortId": "dataset"},
-                {"id": "e11", "sourceNodeId": "split", "sourcePortId": "train", "targetNodeId": "rf", "targetPortId": "dataset"},
-                {"id": "e12", "sourceNodeId": "rf", "sourcePortId": "model", "targetNodeId": "save", "targetPortId": "model"},
-                {"id": "e13", "sourceNodeId": "split", "sourcePortId": "test", "targetNodeId": "eval", "targetPortId": "dataset"},
-                {"id": "e14", "sourceNodeId": "rf", "sourcePortId": "model", "targetNodeId": "eval", "targetPortId": "model"},
+                {"id": "e2", "sourceNodeId": "impute", "sourcePortId": "dataset", "targetNodeId": "filter", "targetPortId": "dataset"},
+                {"id": "e3", "sourceNodeId": "filter", "sourcePortId": "dataset", "targetNodeId": "union", "targetPortId": "datasetA"},
+                {"id": "e4", "sourceNodeId": "filter", "sourcePortId": "dataset", "targetNodeId": "formula1", "targetPortId": "dataset"},
+                {"id": "e5", "sourceNodeId": "formula1", "sourcePortId": "dataset", "targetNodeId": "union", "targetPortId": "datasetB"},
+                {"id": "e6", "sourceNodeId": "filter", "sourcePortId": "dataset", "targetNodeId": "formula2", "targetPortId": "dataset"},
+                {"id": "e7", "sourceNodeId": "formula2", "sourcePortId": "dataset", "targetNodeId": "union", "targetPortId": "datasetC"},
+                {"id": "e8", "sourceNodeId": "union", "sourcePortId": "dataset", "targetNodeId": "select", "targetPortId": "dataset"},
+                {"id": "e9", "sourceNodeId": "select", "sourcePortId": "dataset", "targetNodeId": "split", "targetPortId": "dataset"},
+                {"id": "e10", "sourceNodeId": "split", "sourcePortId": "train", "targetNodeId": "rf", "targetPortId": "dataset"},
+                {"id": "e11", "sourceNodeId": "rf", "sourcePortId": "model", "targetNodeId": "save", "targetPortId": "model"},
+                {"id": "e12", "sourceNodeId": "split", "sourcePortId": "test", "targetNodeId": "eval", "targetPortId": "dataset"},
+                {"id": "e13", "sourceNodeId": "rf", "sourcePortId": "model", "targetNodeId": "eval", "targetPortId": "model"},
             ],
         },
         "blocks": {

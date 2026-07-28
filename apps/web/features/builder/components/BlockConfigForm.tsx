@@ -630,6 +630,8 @@ export function BlockConfigForm({
                   }}
                   disabled={disabled}
                   error={nodeErrors.find((e) => e.fieldId === field.id)?.message}
+                  columns={inputColumns}
+                  ref={controllerField.ref}
                 />
               )}
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

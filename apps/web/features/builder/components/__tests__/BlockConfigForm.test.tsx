@@ -7,6 +7,15 @@ import { render, screen } from "@testing-library/react";
 import type { ConfigField } from "@training-ml/contracts";
 import { BlockConfigForm } from "../BlockConfigForm";
 
+if (typeof ResizeObserver === "undefined") {
+  class ResizeObserverMock {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  globalThis.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
+}
+
 const fields: ConfigField[] = [
   { type: "ConditionList", id: "conditions", ops: ["eq", "isNull"] },
   { type: "Expression", id: "expression" },
@@ -14,11 +23,12 @@ const fields: ConfigField[] = [
 ];
 
 const mockGetNodeErrors = jest.fn().mockReturnValue([]);
+const mockInputContracts: Record<string, unknown> = {};
 
 jest.mock("../../contexts/validation.context", () => ({
   useValidationContext: () => ({
     contracts: {},
-    inputContracts: {},
+    inputContracts: mockInputContracts,
     getNodeErrors: mockGetNodeErrors,
   }),
 }));
@@ -35,7 +45,7 @@ describe("BlockConfigForm renders new field types", () => {
       />,
     );
     expect(screen.getByText("conditions")).toBeInTheDocument();
-    expect(screen.getByText("expression")).toBeInTheDocument();
+    expect(screen.getAllByText("expression").length).toBeGreaterThan(0);
     expect(screen.getByText("outputColumn")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /add condition/i })).toBeInTheDocument();
   });
@@ -64,5 +74,46 @@ describe("BlockConfigForm surfaces expression errors", () => {
       />,
     );
     expect(screen.getByText("Unexpected end")).toBeInTheDocument();
+  });
+});
+
+describe("BlockConfigForm with ColumnSelector and Expression", () => {
+  beforeEach(() => {
+    mockInputContracts["n2"] = {
+      dataset: {
+        artifact: "Dataset",
+        schema: {
+          columns: [{ name: "Age" }, { name: "Income" }, { name: "Score" }],
+        },
+      },
+    };
+  });
+
+  afterEach(() => {
+    delete mockInputContracts["n2"];
+  });
+
+  it("renders column checkboxes and expression input", () => {
+    render(
+      <BlockConfigForm
+        nodeId="n2"
+        fields={[
+          { id: "columns", type: "ColumnSelector", multiple: true },
+          { id: "expression", type: "Expression" },
+        ]}
+        values={{ columns: "Age,Income" }}
+        onChange={() => {}}
+        datasets={[]}
+      />,
+    );
+
+    expect(screen.getAllByText("Age").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Income").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Score").length).toBeGreaterThan(0);
+    const checkboxes = screen.getAllByRole("checkbox");
+    expect(checkboxes).toHaveLength(3);
+    expect(
+      screen.getByPlaceholderText("e.g. Income / (Age + 1)"),
+    ).toBeInTheDocument();
   });
 });

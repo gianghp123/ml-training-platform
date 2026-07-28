@@ -93,7 +93,8 @@ function buildContractFromTransform(
         schema,
         role: t.role !== undefined ? t.role : DatasetRole.FULL,
         task: t.task !== undefined ? t.task : null,
-      } as Contract;
+        rowCount: t.rowCount as number | undefined,
+      } as unknown as Contract;
     }
   }
 
@@ -265,7 +266,19 @@ function buildContractFromTransform(
     const anyUnknown = inputs.some((c) => c.schema.columns === 'unknown');
     const columns = anyUnknown
       ? ('unknown' as const)
-      : inputs.flatMap((c) => c.schema.columns as Column[]);
+      : (() => {
+          const seen = new Set<string>();
+          const out: Column[] = [];
+          for (const c of inputs) {
+            for (const col of c.schema.columns as Column[]) {
+              if (!seen.has(col.name)) {
+                seen.add(col.name);
+                out.push(col);
+              }
+            }
+          }
+          return out;
+        })();
     const withTarget = inputs.find((c) => c.schema.target != null);
     const withTask = inputs.find((c) => c.task != null);
     return {

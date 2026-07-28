@@ -15,10 +15,12 @@ export default async function BuilderPage() {
   ]);
 
   const datasets = datasetsResponse.data ?? [];
+  const blocksData = blocks.data ?? [];
+  const categoriesData = categories.data ?? [];
 
   return (
     <div className="w-full h-lvh">
-      <BuilderCanvas blocks={blocks} categories={categories} datasets={datasets} />
+      <BuilderCanvas blocks={blocksData} categories={categoriesData} datasets={datasets} />
     </div>
   );
 }

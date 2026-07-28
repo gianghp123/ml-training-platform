@@ -9,6 +9,8 @@ import {
   stubCustomersBlock,
   stubSourceBlock,
   stubSpendingBlock,
+  stubTwoRowsBlock,
+  stubThreeRowsBlock,
 } from './fixtures/feature-blocks-catalog';
 
 const node = (id: string, def: { id: string; version: number }, config: Record<string, unknown> = {}) => ({
@@ -154,7 +156,7 @@ describe('feature blocks: end-to-end graph validation', () => {
     expect(result.errors.some((e) => e.code === 'COLUMNS_NOT_DISJOINT')).toBe(true);
   });
 
-  it('Feature Union: overlapping branch columns fail', () => {
+  it('Feature Union: overlapping branch columns succeed via first-occurrence-wins dedup', () => {
     const graph: Graph = {
       nodes: [
         node('src', stubSourceBlock),
@@ -170,10 +172,15 @@ describe('feature blocks: end-to-end graph validation', () => {
       ],
     };
     const result = validateGraph(graph, featureBlocksCatalog);
-    expect(result.errors.some((e) => e.code === 'COLUMNS_NOT_DISJOINT')).toBe(true);
+    expect(result.errors.filter((e) => e.code === 'COLUMNS_NOT_DISJOINT')).toEqual([]);
+    const out1 = result.contracts['union']?.['dataset'];
+    expect(out1).toBeDefined();
+    if (out1?.artifact === 'Dataset' && out1.schema.columns !== 'unknown') {
+      expect(out1.schema.columns.map((c) => c.name)).toEqual(['Age', 'Income', 'Country', 'Col1', 'Col2']);
+    }
   });
 
-  it('Feature Union: joined branch + raw branch sharing columns fail', () => {
+  it('Feature Union: joined + raw branch sharing columns dedup with first-wins', () => {
     const graph: Graph = {
       nodes: [
         node('c1', stubCustomersBlock),
@@ -191,7 +198,13 @@ describe('feature blocks: end-to-end graph validation', () => {
       ],
     };
     const result = validateGraph(graph, featureBlocksCatalog);
-    expect(result.errors.some((e) => e.code === 'COLUMNS_NOT_DISJOINT')).toBe(true);
+    expect(result.errors.filter((e) => e.code === 'COLUMNS_NOT_DISJOINT')).toEqual([]);
+    const out2 = result.contracts['union']?.['dataset'];
+    expect(out2).toBeDefined();
+    if (out2?.artifact === 'Dataset' && out2.schema.columns !== 'unknown') {
+      expect(out2.schema.columns).toHaveLength(4);
+      expect(out2.schema.columns.map((c) => c.name).sort()).toEqual(['Age', 'Derived', 'Income', 'TotalSpent']);
+    }
   });
 
   it('Feature Union: truly disjoint 3-branch merge succeeds with no PORT_NOT_CONNECTED on datasetD', () => {
@@ -212,5 +225,21 @@ describe('feature blocks: end-to-end graph validation', () => {
     const codes = result.errors.map((e) => `${e.fieldId}:${e.code}`);
     expect(codes).toContain('datasetA:PORT_NOT_CONNECTED');
     expect(codes).not.toContain('datasetD:PORT_NOT_CONNECTED');
+  });
+
+  it('Feature Union: row count mismatch still fails', () => {
+    const graph: Graph = {
+      nodes: [
+        node('s2', stubTwoRowsBlock),
+        node('s3', stubThreeRowsBlock),
+        node('union', featureUnionBlock),
+      ],
+      edges: [
+        edge('e1', 's2', 'dataset', 'union', 'datasetA'),
+        edge('e2', 's3', 'dataset', 'union', 'datasetB'),
+      ],
+    };
+    const result = validateGraph(graph, featureBlocksCatalog);
+    expect(result.errors.filter((e) => e.code === 'ROW_COUNT_MISMATCH')).not.toEqual([]);
   });
 });

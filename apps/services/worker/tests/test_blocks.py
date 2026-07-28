@@ -735,11 +735,46 @@ def test_feature_union_rejects_row_count_mismatch(context_factory):
         )
 
 
-def test_feature_union_rejects_duplicate_columns(context_factory):
+def test_feature_union_dedupes_overlapping_columns_keeping_first_occurrence(context_factory):
+    block = FeatureUnionBlock()
+    a = DatasetValue(frame=pd.DataFrame({"x": [1, 2], "y": [10, 20]}))
+    b = DatasetValue(frame=pd.DataFrame({"x": [99, 98], "z": [100, 200]}))
+    result = block.execute(
+        context_factory(),
+        {"datasetA": a, "datasetB": b},
+        {},
+    )
+    out = result.outputs["dataset"]
+    assert list(out.frame.columns) == ["x", "y", "z"]
+    assert out.frame["x"].tolist() == [1, 2]
+    assert out.frame["y"].tolist() == [10, 20]
+    assert out.frame["z"].tolist() == [100, 200]
+    assert len(out.frame) == 2
+
+
+def test_feature_union_three_branches_dedup_with_first_wins(context_factory):
+    block = FeatureUnionBlock()
+    a = DatasetValue(frame=pd.DataFrame({"age": [25, 30], "income": [50, 60]}))
+    b = DatasetValue(frame=pd.DataFrame({"age": [99, 98], "score": [0.1, 0.2]}))
+    c = DatasetValue(frame=pd.DataFrame({"income": [9, 8], "score": [9.9, 8.8], "tag": ["x", "y"]}))
+    result = block.execute(
+        context_factory(),
+        {"datasetA": a, "datasetB": b, "datasetC": c},
+        {},
+    )
+    out = result.outputs["dataset"]
+    assert list(out.frame.columns) == ["age", "income", "score", "tag"]
+    assert out.frame["age"].tolist() == [25, 30]
+    assert out.frame["income"].tolist() == [50, 60]
+    assert out.frame["score"].tolist() == [0.1, 0.2]
+    assert out.frame["tag"].tolist() == ["x", "y"]
+
+
+def test_feature_union_row_count_mismatch_still_raises(context_factory):
     block = FeatureUnionBlock()
     a = DatasetValue(frame=pd.DataFrame({"x": [1, 2]}))
-    b = DatasetValue(frame=pd.DataFrame({"x": [3, 4]}))
-    with pytest.raises(BlockExecutionError, match="[Cc]ollid"):
+    b = DatasetValue(frame=pd.DataFrame({"y": [3, 4, 5]}))
+    with pytest.raises(BlockExecutionError, match="[Rr]ows|[Cc]ount"):
         block.execute(
             context_factory(),
             {"datasetA": a, "datasetB": b},

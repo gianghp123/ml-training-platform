@@ -199,16 +199,63 @@ export const featureUnionBlock: BlockDefinition = {
         targets: ['$inputs.datasetA', '$inputs.datasetB', '$inputs.datasetC', '$inputs.datasetD'],
         message: 'All feature branches must have the same number of rows.',
       },
-      {
-        op: 'disjoint',
-        targets: ['$inputs.datasetA', '$inputs.datasetB', '$inputs.datasetC', '$inputs.datasetD'],
-        message: 'Column names must be unique across all feature branches.',
-      },
     ],
   },
   outputTransform: {
     declared: {
       concatColumns: ['$inputs.datasetA', '$inputs.datasetB', '$inputs.datasetC', '$inputs.datasetD'],
+    },
+  },
+};
+
+export const stubTwoRowsBlock: BlockDefinition = {
+  id: 'stub-two-rows',
+  executorKey: 'stub_two_rows',
+  version: 1,
+  status: 'active',
+  name: 'Stub Two Rows',
+  categoryId: 'Data Source',
+  ports: { inputs: [], outputs: [{ id: 'dataset', artifact: 'Dataset' }] },
+  configSchema: { fields: [] },
+  constraints: {},
+  outputTransform: {
+    declared: {
+      artifact: 'Dataset',
+      schema: {
+        columns: [
+          { name: 'X', primitive: 'int', semantic: 'numeric', nullable: false },
+        ],
+        target: null,
+      },
+      role: 'full',
+      task: null,
+      rowCount: 2,
+    },
+  },
+};
+
+export const stubThreeRowsBlock: BlockDefinition = {
+  id: 'stub-three-rows',
+  executorKey: 'stub_three_rows',
+  version: 1,
+  status: 'active',
+  name: 'Stub Three Rows',
+  categoryId: 'Data Source',
+  ports: { inputs: [], outputs: [{ id: 'dataset', artifact: 'Dataset' }] },
+  configSchema: { fields: [] },
+  constraints: {},
+  outputTransform: {
+    declared: {
+      artifact: 'Dataset',
+      schema: {
+        columns: [
+          { name: 'Y', primitive: 'int', semantic: 'numeric', nullable: false },
+        ],
+        target: null,
+      },
+      role: 'full',
+      task: null,
+      rowCount: 3,
     },
   },
 };
@@ -221,4 +268,6 @@ export const featureBlocksCatalog: BlockDefinition[] = [
   customFeatureFormulaBlock,
   joinDatasetsBlock,
   featureUnionBlock,
+  stubTwoRowsBlock,
+  stubThreeRowsBlock,
 ];

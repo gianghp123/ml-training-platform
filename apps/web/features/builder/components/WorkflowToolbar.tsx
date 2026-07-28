@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { useValidationContext } from "../contexts/validation.context"
 import type { Dataset } from "@training-ml/contracts"
+import type { DemoDescriptor } from "../utils/demos"
 
 interface WorkflowToolbarProps {
   workflowName: string
@@ -37,7 +38,10 @@ interface WorkflowToolbarProps {
   readyCsvDatasets: Dataset[]
   demoDatasetId: string
   onDemoDatasetChange: (datasetId: string) => void
-  onLoadIrisDemo: () => void
+  demoId: string
+  onDemoIdChange: (id: string) => void
+  demos: readonly DemoDescriptor[]
+  onLoadDemo: () => void
 }
 
 export function WorkflowToolbar({
@@ -53,7 +57,10 @@ export function WorkflowToolbar({
   readyCsvDatasets,
   demoDatasetId,
   onDemoDatasetChange,
-  onLoadIrisDemo,
+  demoId,
+  onDemoIdChange,
+  demos,
+  onLoadDemo,
 }: WorkflowToolbarProps) {
   const { isValid } = useValidationContext()
 
@@ -103,20 +110,37 @@ export function WorkflowToolbar({
         </SelectContent>
       </Select>
 
+      <Select
+        value={demoId}
+        onValueChange={onDemoIdChange}
+        disabled={isRunning}
+      >
+        <SelectTrigger className="h-8 w-48 text-xs" title="Select a demo to load">
+          <SelectValue placeholder="Demo" />
+        </SelectTrigger>
+        <SelectContent>
+          {demos.map((demo) => (
+            <SelectItem key={demo.id} value={demo.id}>
+              {demo.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       <Button
         variant="secondary"
         size="sm"
-        onClick={onLoadIrisDemo}
-        disabled={isRunning || !demoDatasetId}
+        onClick={onLoadDemo}
+        disabled={isRunning || !demoId || !demoDatasetId}
         className="gap-1.5"
         title={
-          readyCsvDatasets.length === 0
-            ? "Upload a CSV dataset and wait until it is READY"
-            : "Replace the canvas with the six-node Iris demo"
+          !demoDatasetId
+            ? "Select a READY CSV dataset before loading a demo"
+            : `Replace the canvas with the selected demo`
         }
       >
         <FlaskConical className="size-3.5" />
-        Iris Demo
+        Load Demo
       </Button>
 
       <Select

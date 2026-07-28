@@ -30,6 +30,7 @@ export class AddFeatureEngineeringBlocks1784900000000
         uuid_generate_v4(), 1, 'active', 'custom_feature_formula', 'Custom Feature Formula', ${cat("Preprocessing")},
         '{"inputs":[{"id":"dataset","artifact":"Dataset"}],"outputs":[{"id":"dataset","artifact":"Dataset"}]}',
         '{"fields":[
+          {"id":"columns","type":"ColumnSelector","multiple":true},
           {"id":"outputColumn","type":"Text"},
           {"id":"outputType","type":"Select","options":["float","int","boolean"],"default":"float"},
           {"id":"expression","type":"Expression"}
@@ -63,8 +64,7 @@ export class AddFeatureEngineeringBlocks1784900000000
         ],"outputs":[{"id":"dataset","artifact":"Dataset"}]}',
         '{"fields":[]}',
         '{"rules":[
-          {"op":"rowCountMatches","targets":["$inputs.datasetA","$inputs.datasetB","$inputs.datasetC","$inputs.datasetD"],"message":"All feature branches must have the same number of rows."},
-          {"op":"disjoint","targets":["$inputs.datasetA","$inputs.datasetB","$inputs.datasetC","$inputs.datasetD"],"message":"Column names must be unique across all feature branches."}
+          {"op":"rowCountMatches","targets":["$inputs.datasetA","$inputs.datasetB","$inputs.datasetC","$inputs.datasetD"],"message":"All feature branches must have the same number of rows."}
         ]}',
         '{"declared":{"concatColumns":["$inputs.datasetA","$inputs.datasetB","$inputs.datasetC","$inputs.datasetD"]}}',
         now()

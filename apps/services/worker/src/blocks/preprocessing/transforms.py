@@ -558,18 +558,21 @@ class FeatureUnionBlock(Block):
                     f"{expected_rows} vs {len(dataset.frame)}."
                 )
 
-        seen_columns: set[str] = set()
+        ordered_columns: list[str] = []
         for dataset in connected:
-            collisions = sorted(set(dataset.frame.columns) & seen_columns)
-            if collisions:
-                raise BlockExecutionError(
-                    "Feature Union column names collide across branches: "
-                    + ", ".join(repr(c) for c in collisions)
-                )
-            seen_columns.update(dataset.frame.columns)
+            for col in dataset.frame.columns:
+                if col not in ordered_columns:
+                    ordered_columns.append(col)
+        if not ordered_columns:
+            return _dataset_result(connected[0].derive(frame=connected[0].frame.iloc[:0].copy()), (("info", "Feature Union: no columns to merge"),))
 
-        frames = [dataset.frame.reset_index(drop=True) for dataset in connected]
-        merged = pd.concat(frames, axis=1)
+        first_df = connected[0].frame.reset_index(drop=True)
+        merged = pd.DataFrame(index=range(len(first_df)))
+        for col in ordered_columns:
+            for dataset in connected:
+                if col in dataset.frame.columns:
+                    merged[col] = dataset.frame[col].reset_index(drop=True).values
+                    break
 
         target = next(
             (d.target for d in connected if d.target is not None),

@@ -1,7 +1,7 @@
-import type { BlockDefinition, ConfigField, Dataset, Port } from "@training-ml/contracts"
+import type { BlockDefinition, Dataset } from "@training-ml/contracts"
 import type { Edge } from "@xyflow/react"
-import { getCategoryColor } from "../blocks"
-import { createDefaultConfig, type PipelineNode } from "./node-factory"
+import type { PipelineNode } from "./node-factory"
+import { makeNode, makeEdge, resolveBlocks } from "./demo-helpers"
 
 export const IRIS_EXECUTOR_KEYS = [
   "load_csv",
@@ -13,7 +13,6 @@ export const IRIS_EXECUTOR_KEYS = [
 ] as const
 
 type IrisExecutorKey = (typeof IRIS_EXECUTOR_KEYS)[number]
-type ExecutableBlockDefinition = BlockDefinition & { executorKey?: string }
 
 export interface IrisDemoGraph {
   nodes: PipelineNode[]
@@ -47,92 +46,17 @@ const configs: Record<
   evaluate: () => ({ metrics: "" }),
 }
 
-function resolveBlocks(
-  blocks: BlockDefinition[]
-): Record<IrisExecutorKey, ExecutableBlockDefinition> {
-  const resolved = {} as Record<IrisExecutorKey, ExecutableBlockDefinition>
-  const missing: string[] = []
-
-  for (const executorKey of IRIS_EXECUTOR_KEYS) {
-    const block = blocks.find(
-      (candidate) =>
-        (candidate as ExecutableBlockDefinition).executorKey === executorKey &&
-        candidate.status === "active"
-    ) as ExecutableBlockDefinition | undefined
-    if (block) resolved[executorKey] = block
-    else missing.push(executorKey)
-  }
-
-  if (missing.length > 0) {
-    throw new Error(
-      `The block catalog is missing active executor keys: ${missing.join(", ")}.`
-    )
-  }
-  return resolved
-}
-
-function makeNode(
-  block: ExecutableBlockDefinition,
-  executorKey: IrisExecutorKey,
-  datasetId: string,
-  idPrefix: string
-): PipelineNode {
-  const b = block as Record<string, unknown>
-  const schema = (b.configSchema ?? b.config_schema) as { fields?: ConfigField[] } | undefined
-  const fields = schema?.fields ?? []
-  const ports = (b.ports ?? { inputs: [], outputs: [] }) as { inputs: Port[]; outputs: Port[] }
-
-  return {
-    id: `${idPrefix}_${executorKey}`,
-    type: "block",
-    position: positions[executorKey],
-    data: {
-      block,
-      blockId: String(b.id ?? ""),
-      blockName: String(b.name ?? ""),
-      categoryId: String(b.categoryId ?? b.category_id ?? ""),
-      config: {
-        ...createDefaultConfig(fields),
-        ...configs[executorKey](datasetId),
-      },
-      inputs: ports.inputs ?? [],
-      outputs: ports.outputs ?? [],
-      status: "idle",
-    },
-  }
-}
-
-function makeEdge(
-  source: PipelineNode,
-  sourcePortId: string,
-  target: PipelineNode,
-  targetPortId: string
-): Edge {
-  return {
-    id: `xy-edge__${source.id}${sourcePortId}-${target.id}${targetPortId}`,
-    source: source.id,
-    sourceHandle: sourcePortId,
-    target: target.id,
-    targetHandle: targetPortId,
-    type: "pipeline",
-    data: {
-      edgeStyle: "smoothstep",
-      color: getCategoryColor(source.data.categoryId).hex,
-    },
-  }
-}
-
 export function createIrisDemoGraph(
   blocks: BlockDefinition[],
   datasetId: string,
   idPrefix = `iris_${Date.now()}`
 ): IrisDemoGraph {
   if (!datasetId) throw new Error("Select a READY CSV dataset first.")
-  const catalog = resolveBlocks(blocks)
+  const catalog = resolveBlocks(IRIS_EXECUTOR_KEYS, blocks)
   const nodes = Object.fromEntries(
     IRIS_EXECUTOR_KEYS.map((executorKey) => [
       executorKey,
-      makeNode(catalog[executorKey], executorKey, datasetId, idPrefix),
+      makeNode(catalog[executorKey], executorKey, idPrefix, positions[executorKey], configs[executorKey](datasetId)),
     ])
   ) as Record<IrisExecutorKey, PipelineNode>
 

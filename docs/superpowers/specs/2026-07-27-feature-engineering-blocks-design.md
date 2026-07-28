@@ -75,12 +75,16 @@ All in category **Preprocessing**.
 
 ### 2.4 Feature Union — `feature_union` v1
 
+**Semantics (post-MVP revision):** Merge the connected branches' columns using first-occurrence-wins dedup. Branch columns are visited in port order (datasetA → datasetB → datasetC → datasetD); for each branch, columns whose name hasn't been seen yet are added to the output schema. This means common base columns (e.g. `Age`, `Income`) shared by every branch are kept from the **first** branch in port order, and any genuinely new columns from later branches are appended. No error is raised on overlap; the user is **not** required to insert `Feature Select` before the union to drop base columns.
+
 - **Ports:** inputs `datasetA` (required), `datasetB` (required), `datasetC` (optional), `datasetD` (optional) → output `dataset` (Dataset)
 - **Config:** none (`{"fields":[]}`)
 - **Constraints (design-time):**
-  - N-ary `rowCountMatches` across connected inputs (unconnected optional inputs skipped)
-  - N-ary `disjoint` across connected inputs' columns
-- **Output transform:** `{"declared":{"concatColumns":["$inputs.datasetA","$inputs.datasetB","$inputs.datasetC","$inputs.datasetD"]}}` — `concatColumns` extended to skip unconnected inputs. Target/task/role from first connected input that defines one.
+  - N-ary `rowCountMatches` across connected inputs (unconnected optional inputs skipped). This is the **only** structural check at design-time.
+  - ~~N-ary `disjoint`~~ — removed. Feature Union no longer requires branches to be column-disjoint.
+- **Output transform:** `{"declared":{"concatColumns":[...]}}` — `concatColumns` is extended to: (a) skip unconnected inputs, (b) dedup the resulting column list with first-occurrence-wins so downstream contracts see a unique-column schema.
+- **Runtime dedup:** the worker's `FeatureUnionBlock.execute` mirrors the same first-occurrence-wins dedup when building the merged DataFrame. If a column is present in two branches, the **first branch's value is kept** (no averaging, no error).
+- **Edge case:** if a column name appears as a "new feature" added by two different branches (e.g. both `Custom Feature Formula` blocks add a column called `score`), only the first branch's column is kept. The user's intention should be to name derived features uniquely. There is no automatic conflict detection for this in the MVP — column lineage is a long-term concern tracked separately.
 - **Deprecation:** migration sets `concat_features.status = 'deprecated'`. Python class stays registered.
 
 ### 2.5 Formula DSL — Python expression subset (v1, core only)
@@ -120,7 +124,7 @@ Users write normal Python expressions, e.g. `Income / (Age + 1)` or `log(Income)
   - `ConditionList`: `EMPTY_CONDITIONS`, `CONDITION_COLUMN_NOT_FOUND` (skip when columns `"unknown"`), `CONDITION_VALUE_MISSING`, `CONDITION_VALUE_TYPE_MISMATCH`.
   - `Expression`: DSL parser → `EXPRESSION_PARSE_ERROR` (context carries position), `EXPRESSION_UNKNOWN_COLUMN`, `EXPRESSION_NON_NUMERIC_COLUMN`, `EXPRESSION_OUTPUT_COLLISION`; `outputColumn` identifier-format check.
 - **Phase 3 constraints:**
-  - `disjoint` → N-ary: accepts `{ targets: [...paths], exclude?: PathRef }`; legacy `{left,right}` form stays valid (both forms honor `exclude`).
+  - `disjoint` → N-ary: accepts `{ targets: [...paths], exclude?: PathRef }`; legacy `{left,right}` form stays valid (both forms honor `exclude`). Note: the N-ary form was added to support Feature Union's original disjoint constraint; with the switch to first-occurrence-wins dedup, no block currently uses the N-ary form. Join Datasets continues to use the legacy `{left,right}` form with `exclude`.
   - New `columnsExist` operator: `{ op:"columnsExist", columns: PathRef, inputs: [...paths] }` → every named column must exist in every resolved dataset input; missing → `KEYS_NOT_FOUND`. Skips inputs whose columns are `"unknown"`.
   - `rowCountMatches`: no change required — targets resolving to `undefined` are already filtered out; a pin test locks this behavior for unconnected optional inputs.
 - **Path resolution:** `resolvePath` gains `$inputs.<portId>.*` as an alias for `$input.<portId>.*`. (The existing `concat_features` seed uses `$inputs.*` paths that silently resolve to `undefined` today — this also fixes that latent bug.)
@@ -140,7 +144,7 @@ Users write normal Python expressions, e.g. `Income / (Age + 1)` or `log(Income)
   | `blocks/preprocessing/filter_rows.py` | per-condition mask (`==`, `!=`, `>`, …, `str.contains`, `isna()`, `isin()`), combine `&`/`\|`, negate on `invert`, `frame[mask]`; metadata untouched | `{rowsIn, rowsOut, rowsRemoved}` |
   | `blocks/preprocessing/custom_feature_formula.py` | parse → check cols exist+numeric → evaluate → append `outputColumn`; collision → error | `{addedColumn, expression}` |
   | `blocks/preprocessing/join_datasets.py` | pre-checks (keys in both, non-key disjoint) then `pd.merge(on=keys, how=strategy)`; metadata from left | `{leftRows, rightRows, outRows, strategy, keys}` |
-  | `blocks/preprocessing/feature_union.py` | connected inputs in port order A→D, check equal row counts + disjoint, `reset_index` + `pd.concat(axis=1)`; target from first input that has one | `{inputCount, outColumns}` |
+  | `blocks/preprocessing/feature_union.py` | connected inputs in port order A→D, check equal row counts, first-occurrence-wins column dedup, `reset_index` + `pd.concat(axis=1)` on dedup columns; target from first input that has one | `{inputCount, outColumns}` |
 - **Registry:** add `(filter_rows,1)`, `(custom_feature_formula,1)`, `(join_datasets,1)`, `(feature_union,1)`. `concat_features` remains registered.
 - **Runtime null-hardening (no version bumps):** shared helper `require_no_nulls(frame, columns, block_name)` raising `BlockExecutionError` with the friendly message; applied in `normalize`, `encode`, `random_forest`, `logistic_regression`, `svm`, `kmeans`. Models check the full feature matrix + target column.
 
@@ -183,7 +187,7 @@ Runtime errors reuse `BlockExecutionError` → `node.failed` SSE; no new event t
 | Suite | Coverage |
 |---|---|
 | `pipeline-engine/tests/dsl/` | TS parser vs `vectors.json` (~40 cases) |
-| `pipeline-engine/tests/` | optional ports (skip/connected); N-ary disjoint + `exclude`; rowCountMatches skipping unconnected; `addColumns`/`joinColumns` contract shapes; ConditionList config validation; 4-block graph fixtures end-to-end |
+| `pipeline-engine/tests/` | optional ports (skip/connected); disjoint `exclude` (Join Datasets); rowCountMatches skipping unconnected; `addColumns`/`joinColumns` contract shapes; ConditionList config validation; 4-block graph fixtures end-to-end |
 | `worker/tests/test_dsl.py` | Python parser+evaluator vs same `vectors.json`; evaluation on small synthetic DataFrame |
 | `worker/tests/test_blocks.py` | +4 block suites: success, invalid config, metadata propagation (target/role survive filter/union/join), join strategy matrix, feature_union with 2/3/4 inputs, defense-in-depth errors |
 | worker null-hardening | each hardened block fails with friendly missing-values message on NaN input |
