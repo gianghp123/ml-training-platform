@@ -474,15 +474,47 @@ def wait_for_terminal(
                     continue
                 event["eventId"] = cursor_id
                 events.append(event)
+                event_type = event.get("type", "unknown")
+                node_id = event.get("nodeId", "")
+                payload = event.get("payload") or {}
+                executor_key = payload.get("executorKey") or ""
+                block_name = payload.get("name") or executor_key
                 message = event.get("message")
-                suffix = f" - {message}" if message else ""
-                print(
-                    f"[{event.get('timestamp', '?')}] "
-                    f"{event.get('type', 'unknown')}"
-                    f"{' ' + event['nodeId'] if event.get('nodeId') else ''}"
-                    f"{suffix}",
-                    flush=True,
-                )
+
+                if event_type == "node.started":
+                    tag = f" ({block_name})" if block_name else ""
+                    print(
+                        f"[{event.get('timestamp', '?')}] [START] Node {node_id}{tag}",
+                        flush=True,
+                    )
+                elif event_type == "node.completed":
+                    tag = f" ({executor_key})" if executor_key else ""
+                    print(
+                        f"[{event.get('timestamp', '?')}] [DONE] Node {node_id}{tag}",
+                        flush=True,
+                    )
+                elif event_type == "node.log":
+                    level = (event.get("level") or "info").upper()
+                    print(
+                        f"[{event.get('timestamp', '?')}] [{level}] [{node_id}] {message}",
+                        flush=True,
+                    )
+                elif event_type == "run.started":
+                    print(
+                        f"[{event.get('timestamp', '?')}] [RUN START] Workflow run started (run_id={resources.run_id})",
+                        flush=True,
+                    )
+                elif event_type in {"run.completed", "run.failed"}:
+                    print(
+                        f"[{event.get('timestamp', '?')}] [RUN END] Status: {event_type}",
+                        flush=True,
+                    )
+                else:
+                    suffix = f" - {message}" if message else ""
+                    print(
+                        f"[{event.get('timestamp', '?')}] {event_type} {node_id}{suffix}",
+                        flush=True,
+                    )
                 if event.get("type") in {"run.completed", "run.failed"}:
                     terminal_event = event
 
@@ -861,7 +893,30 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             resources=resources,
             evaluation_node_id=node_ids["evaluate"],
         )
-        print("\nIris smoke result:")
+        print("\n==================================================")
+        print("          IRIS DEMO TRAINING & EVALUATION         ")
+        print("==================================================")
+        print(f"Run ID:         {result['runId']}")
+        print(f"Status:         {result['status'].upper()}")
+        print(f"Accuracy:       {result['accuracy']:.4f} ({result['accuracy']*100:.2f}%)")
+        print("\nMetrics:")
+        for k, v in result.get("metrics", {}).items():
+            if isinstance(v, (int, float)):
+                print(f"  - {k:<20}: {v:.4f}")
+            else:
+                print(f"  - {k:<20}: {v}")
+
+        cm = result.get("confusionMatrix", {})
+        if isinstance(cm, dict) and "labels" in cm and "matrix" in cm:
+            print("\nConfusion Matrix:")
+            labels = cm["labels"]
+            header_str = " ".join(f"{str(l):>16}" for l in labels)
+            print(f"  {'Actual \\ Pred':<18} {header_str}")
+            for i, row in enumerate(cm["matrix"]):
+                row_str = " ".join(f"{val:>16}" for val in row)
+                print(f"  {str(labels[i]):<18} {row_str}")
+        print("==================================================\n")
+        print("Raw result JSON:")
         print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
         succeeded = True
         return result

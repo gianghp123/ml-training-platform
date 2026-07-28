@@ -402,14 +402,17 @@ class PipelineRunner:
                     "node.started",
                     job.run_id,
                     node_id=current_node.id,
-                    payload={"executorKey": current_descriptor.executor_key},
+                    payload={
+                        "executorKey": current_descriptor.executor_key,
+                        "name": current_descriptor.name,
+                    },
                 )
                 self.events.publish(
                     "node.log",
                     job.run_id,
                     node_id=current_node.id,
                     level="info",
-                    message=f"Executing {current_descriptor.name}",
+                    message=f"Starting execution for block '{current_descriptor.name}' ({current_descriptor.executor_key})",
                     payload={"executorKey": current_descriptor.executor_key},
                 )
 

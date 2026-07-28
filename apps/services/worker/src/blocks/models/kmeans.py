@@ -41,6 +41,13 @@ class KMeansBlock(Block):
             raise BlockExecutionError(
                 "n_clusters cannot exceed the number of input rows"
             )
+        logs: list[tuple[str, str]] = [
+            (
+                "info",
+                f"Training KMeans clustering (n_clusters={n_clusters}) on {len(dataset.frame)} samples "
+                f"with {len(feature_columns)} features ({', '.join(feature_columns)}).",
+            )
+        ]
         estimator = KMeans(
             n_clusters=n_clusters,
             n_init="auto",
@@ -50,6 +57,13 @@ class KMeansBlock(Block):
             estimator.fit(dataset.frame.loc[:, list(feature_columns)])
         except ValueError as exc:
             raise BlockExecutionError(f"K-Means training failed: {exc}") from exc
+
+        logs.append(
+            (
+                "info",
+                f"KMeans training completed successfully. Final Inertia: {estimator.inertia_:.4f}",
+            )
+        )
         value = ModelValue(
             estimator=estimator,
             algorithm="KMeans",
@@ -57,4 +71,8 @@ class KMeansBlock(Block):
             feature_columns=feature_columns,
             target_column=None,
         )
-        return BlockResult(outputs={"model": value}, summary=value.summary())
+        return BlockResult(
+            outputs={"model": value},
+            summary=value.summary(),
+            logs=tuple(logs),
+        )

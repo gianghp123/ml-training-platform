@@ -254,7 +254,16 @@ class FeatureSelectBlock(Block):
             frame=dataset.frame.loc[:, columns].copy(),
             lineage_node=context.node_id,
         )
-        return _dataset_result(value)
+        return BlockResult(
+            outputs={"dataset": value},
+            summary=value.summary(),
+            logs=(
+                (
+                    "info",
+                    f"Selected {len(columns)} feature column(s): {', '.join(columns)}.",
+                ),
+            ),
+        )
 
 
 class SelectTargetBlock(Block):
@@ -287,7 +296,17 @@ class SelectTargetBlock(Block):
             task=task,
             lineage_node=context.node_id,
         )
-        return _dataset_result(value)
+        target_info = f"target column '{target}'" if target else "no target column"
+        return BlockResult(
+            outputs={"dataset": value},
+            summary=value.summary(),
+            logs=(
+                (
+                    "info",
+                    f"Configured task type '{task}' with {target_info}.",
+                ),
+            ),
+        )
 
 
 class RenameColumnsBlock(Block):

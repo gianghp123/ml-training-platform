@@ -222,14 +222,43 @@ class EvaluateBlock(Block):
             storage_uri=storage_uri,
             metadata={"task": model.task, "metrics": selected},
         )
+        metrics_str = ", ".join(
+            f"{k}={v:.4f}" if isinstance(v, (int, float)) else f"{k}={v}"
+            for k, v in scalar_metrics.items()
+        )
+        
+        eval_logs: list[tuple[str, str]] = [
+            ("info", "════════════════════════════════════════════════════════════════"),
+            ("info", f" [MODEL EVALUATION] Metrics & Performance Summary ({model.task.upper()})"),
+            ("info", "════════════════════════════════════════════════════════════════"),
+            ("info", f" ► Tested samples     : {len(features)} instances"),
+            ("info", "────────────────────────────────────────────────────────────────"),
+            ("info", " │ Metric                  │ Value        │ Rating"),
+            ("info", " ├─────────────────────────┼──────────────┼───────────────"),
+        ]
+
+        for metric_name, val in scalar_metrics.items():
+            formatted_val = f"{val * 100:.2f}%" if metric_name in ("accuracy", "precision", "recall", "f1") else f"{val:.4f}"
+            rating = "★★★★★ Excellent" if val > 0.85 else ("★★██☆ Good" if val > 0.70 else "★☆☆☆☆ Needs Imp.")
+            eval_logs.append(("info", f" │ {metric_name.upper():<23s} │ {formatted_val:<12s} │ {rating}"))
+
+        eval_logs.append(("info", " └─────────────────────────┴──────────────┴───────────────"))
+
+        if matrix_payload and "matrix" in matrix_payload:
+            labels = matrix_payload.get("labels", [])
+            matrix = matrix_payload.get("matrix", [])
+            eval_logs.append(("info", " 📌 Confusion Matrix Breakdown:"))
+            eval_logs.append(("info", f"    Classes: {labels}"))
+            for idx, row in enumerate(matrix):
+                row_label = labels[idx] if idx < len(labels) else f"Class {idx}"
+                eval_logs.append(("info", f"    Actual [{row_label:<10s}] ➔ Predicted: {row}"))
+
+        eval_logs.append(("info", "════════════════════════════════════════════════════════════════"))
+
         return BlockResult(
             outputs={"metrics": value},
             summary=summary,
             artifacts=(artifact,),
-            logs=(
-                (
-                    "info",
-                    f"Computed {len(scalar_metrics)} scalar metrics for {model.task}",
-                ),
-            ),
+            logs=tuple(eval_logs),
         )
+

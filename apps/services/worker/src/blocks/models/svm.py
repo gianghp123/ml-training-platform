@@ -37,6 +37,14 @@ class SvmBlock(Block):
             default="rbf",
         )
         c_value = positive_float(config.get("C"), field_name="C", default=1.0)
+        logs: list[tuple[str, str]] = [
+            (
+                "info",
+                f"Training SVM {dataset.task} model on {len(features)} samples "
+                f"with {len(feature_columns)} features ({', '.join(feature_columns)}). "
+                f"Hyperparameters: kernel={kernel}, C={c_value}.",
+            )
+        ]
         if dataset.task == "classification":
             estimator = SVC(kernel=kernel, C=c_value)
         elif dataset.task == "regression":
@@ -47,6 +55,15 @@ class SvmBlock(Block):
             estimator.fit(features, target)
         except ValueError as exc:
             raise BlockExecutionError(f"SVM training failed: {exc}") from exc
+
+        train_score = float(estimator.score(features, target))
+        score_name = "Accuracy" if dataset.task == "classification" else "R2 Score"
+        logs.append(
+            (
+                "info",
+                f"SVM fit completed successfully. Training {score_name}: {train_score:.4f}",
+            )
+        )
         value = ModelValue(
             estimator=estimator,
             algorithm="SVM",
@@ -54,4 +71,8 @@ class SvmBlock(Block):
             feature_columns=feature_columns,
             target_column=dataset.target,
         )
-        return BlockResult(outputs={"model": value}, summary=value.summary())
+        return BlockResult(
+            outputs={"model": value},
+            summary=value.summary(),
+            logs=tuple(logs),
+        )

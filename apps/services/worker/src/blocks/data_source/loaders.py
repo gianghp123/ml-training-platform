@@ -58,15 +58,27 @@ class _DatasetLoader(Block):
             frame=frame,
             lineage=(dataset_id, context.node_id),
         )
+        mem_mb = frame.memory_usage(deep=True).sum() / (1024 * 1024)
+        null_count = int(frame.isnull().sum().sum())
+        cols_str = ", ".join(list(frame.columns)[:6])
+        if len(frame.columns) > 6:
+            cols_str += f", ... (+{len(frame.columns)-6} more)"
+
+        logs: list[tuple[str, str]] = [
+            ("info", "════════════════════════════════════════════════════════════════"),
+            ("info", f" [DATA SOURCE] Loaded Dataset ID: '{dataset_id}'"),
+            ("info", "════════════════════════════════════════════════════════════════"),
+            ("info", f" ► Record count      : {len(frame)} rows"),
+            ("info", f" ► Feature count     : {len(frame.columns)} columns"),
+            ("info", f" ► Memory footprint   : {mem_mb:.3f} MB"),
+            ("info", f" ► Missing values    : {null_count} nulls total"),
+            ("info", f" ► Schema / Columns  : [{cols_str}]"),
+            ("info", "════════════════════════════════════════════════════════════════"),
+        ]
         return BlockResult(
             outputs={"dataset": value},
             summary=value.summary(),
-            logs=(
-                (
-                    "info",
-                    f"Loaded {len(frame)} rows and {len(frame.columns)} columns",
-                ),
-            ),
+            logs=tuple(logs),
         )
 
 
