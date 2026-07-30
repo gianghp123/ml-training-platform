@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import os
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any, Mapping, Protocol, Sequence
 
@@ -347,11 +350,20 @@ class PipelineRunner:
         events: EventPort,
         storage: Any,
         registry: BlockRegistry = DEFAULT_REGISTRY,
+        max_concurrency: int | None = None,
     ) -> None:
         self.database = database
         self.events = events
         self.storage = storage
         self.registry = registry
+        if max_concurrency is not None:
+            self.max_concurrency = max_concurrency
+        else:
+            raw_concurrency = os.getenv("WORKER_MAX_CONCURRENCY", "4").strip()
+            try:
+                self.max_concurrency = max(1, int(raw_concurrency))
+            except ValueError:
+                self.max_concurrency = 4
 
     def run(self, raw_payload: Mapping[str, Any], worker_id: str) -> RunOutcome:
         raw_run_id = str(raw_payload.get("runId") or "").strip()
@@ -372,96 +384,115 @@ class PipelineRunner:
             job.run_id,
             payload={"workerId": worker_id},
         )
-        outputs: dict[str, Mapping[str, Any]] = {}
+
+        order = job.topological_order()
+
+        node_by_id = {node.id: node for node in job.nodes}
+        position = {node.id: index for index, node in enumerate(job.nodes)}
+        indegree = {node.id: 0 for node in job.nodes}
+        outgoing: dict[str, list[str]] = {node.id: [] for node in job.nodes}
         incoming: dict[str, list[GraphEdge]] = {node.id: [] for node in job.nodes}
+
         for edge in job.edges:
+            indegree[edge.target_node_id] += 1
+            outgoing[edge.source_node_id].append(edge.target_node_id)
             incoming[edge.target_node_id].append(edge)
 
-        current_node: GraphNode | None = None
-        current_descriptor: BlockDescriptor | None = None
-        current_started = run_started
-        try:
-            order = job.topological_order()
-            for current_node in order:
-                current_descriptor = job.block_for(current_node)
-                current_started = time.perf_counter()
+        outputs: dict[str, Mapping[str, Any]] = {}
+        lock = threading.Lock()
+        completed_count = 0
+        total_nodes = len(job.nodes)
+        done_event = threading.Event()
+
+        first_failure: dict[str, Any] = {}
+
+        def _execute_node(node: GraphNode) -> None:
+            nonlocal completed_count
+            node_started = time.perf_counter()
+            descriptor: BlockDescriptor | None = None
+            try:
+                descriptor = job.block_for(node)
                 resolved_inputs: dict[str, Any] = {}
-                for edge in incoming[current_node.id]:
-                    try:
-                        resolved_inputs[edge.target_port_id] = outputs[
-                            edge.source_node_id
-                        ][edge.source_port_id]
-                    except KeyError as exc:
-                        raise GraphValidationError(
-                            f"Runtime output {edge.source_node_id}."
-                            f"{edge.source_port_id} is missing"
-                        ) from exc
+                with lock:
+                    for edge in incoming[node.id]:
+                        try:
+                            resolved_inputs[edge.target_port_id] = outputs[
+                                edge.source_node_id
+                            ][edge.source_port_id]
+                        except KeyError as exc:
+                            raise GraphValidationError(
+                                f"Runtime output {edge.source_node_id}."
+                                f"{edge.source_port_id} is missing"
+                            ) from exc
+
                 optional_input_ports = _optional_input_port_ids(
-                    current_descriptor.ports.get("inputs")
+                    descriptor.ports.get("inputs")
                 )
                 missing_inputs = sorted(
                     {
                         port
-                        for port in set(current_descriptor.input_ports())
+                        for port in set(descriptor.input_ports())
                         - set(resolved_inputs)
                         if port not in optional_input_ports
                     }
                 )
                 if missing_inputs:
                     raise GraphValidationError(
-                        f"Node {current_node.id!r} is missing inputs: "
+                        f"Node {node.id!r} is missing inputs: "
                         + ", ".join(missing_inputs)
                     )
 
                 node_execution_id = self.database.start_node(
-                    job.run_id, current_node.id, worker_id
+                    job.run_id, node.id, worker_id
                 )
                 self.events.publish(
                     "node.started",
                     job.run_id,
-                    node_id=current_node.id,
-                    payload={"executorKey": current_descriptor.executor_key},
+                    node_id=node.id,
+                    payload={"executorKey": descriptor.executor_key},
                 )
                 self.events.publish(
                     "node.log",
                     job.run_id,
-                    node_id=current_node.id,
+                    node_id=node.id,
                     level="info",
-                    message=f"Executing {current_descriptor.name}",
-                    payload={"executorKey": current_descriptor.executor_key},
+                    message=f"Executing {descriptor.name}",
+                    payload={"executorKey": descriptor.executor_key},
                 )
 
                 block = self.registry.resolve(
-                    current_descriptor.executor_key,
-                    current_descriptor.version,
+                    descriptor.executor_key,
+                    descriptor.version,
                 )
                 result = block.execute(
                     BlockContext(
                         run_id=job.run_id,
-                        node_id=current_node.id,
+                        node_id=node.id,
                         datasets=job.datasets,
                         storage=self.storage,
                     ),
                     resolved_inputs,
-                    current_node.config,
+                    node.config,
                 )
-                expected_outputs = set(current_descriptor.output_ports())
+                expected_outputs = set(descriptor.output_ports())
                 actual_outputs = set(result.outputs)
                 if actual_outputs != expected_outputs:
                     raise GraphValidationError(
-                        f"Executor {current_descriptor.executor_key!r} returned "
+                        f"Executor {descriptor.executor_key!r} returned "
                         f"ports {sorted(actual_outputs)}; expected "
                         f"{sorted(expected_outputs)}"
                     )
+
                 for level, message in result.logs:
                     self.events.publish(
                         "node.log",
                         job.run_id,
-                        node_id=current_node.id,
+                        node_id=node.id,
                         level=level,
                         message=message,
-                        payload={"executorKey": current_descriptor.executor_key},
+                        payload={"executorKey": descriptor.executor_key},
                     )
+
                 for pending in result.artifacts:
                     artifact = self.database.create_artifact(
                         run_id=job.run_id,
@@ -475,51 +506,79 @@ class PipelineRunner:
                     self.events.publish(
                         "artifact.created",
                         job.run_id,
-                        node_id=current_node.id,
+                        node_id=node.id,
                         payload={"artifact": artifact},
                     )
-                outputs[current_node.id] = dict(result.outputs)
+
                 summary = json_safe(
                     dict(result.summary)
                     if result.summary
                     else summarize_outputs(result.outputs)
                 )
                 self.database.complete_node(
-                    job.run_id, current_node.id, summary
+                    job.run_id, node.id, summary
                 )
-                duration_ms = int((time.perf_counter() - current_started) * 1000)
+                duration_ms = int((time.perf_counter() - node_started) * 1000)
                 self.events.publish(
                     "node.completed",
                     job.run_id,
-                    node_id=current_node.id,
+                    node_id=node.id,
                     payload={
-                        "executorKey": current_descriptor.executor_key,
+                        "executorKey": descriptor.executor_key,
                         "durationMs": duration_ms,
                         "summary": summary,
                     },
                 )
 
-            self.database.complete_run(job.run_id)
-            duration_ms = int((time.perf_counter() - run_started) * 1000)
-            self.events.publish(
-                "run.completed",
-                job.run_id,
-                payload={"durationMs": duration_ms, "nodeCount": len(order)},
-            )
-            return RunOutcome(job.run_id, "completed")
-        except Exception as exc:
-            descriptor_key = (
-                current_descriptor.executor_key
-                if current_descriptor is not None
-                else "graph"
-            )
-            node_id = current_node.id if current_node is not None else None
+                next_nodes_to_submit: list[GraphNode] = []
+                with lock:
+                    outputs[node.id] = dict(result.outputs)
+                    completed_count += 1
+                    if first_failure:
+                        return
+                    for target_id in sorted(outgoing[node.id], key=position.__getitem__):
+                        indegree[target_id] -= 1
+                        if indegree[target_id] == 0:
+                            next_nodes_to_submit.append(node_by_id[target_id])
+                    if completed_count == total_nodes:
+                        done_event.set()
+
+                for next_node in next_nodes_to_submit:
+                    executor.submit(_execute_node, next_node)
+
+            except Exception as exc:
+                duration_ms = int((time.perf_counter() - node_started) * 1000)
+                with lock:
+                    if not first_failure:
+                        first_failure["exception"] = exc
+                        first_failure["node"] = node
+                        first_failure["descriptor"] = descriptor
+                        first_failure["durationMs"] = duration_ms
+                        done_event.set()
+
+        ready_initial = [node for node in job.nodes if indegree[node.id] == 0]
+        ready_initial.sort(key=lambda n: position[n.id])
+
+        with ThreadPoolExecutor(max_workers=self.max_concurrency) as executor:
+            for node in ready_initial:
+                executor.submit(_execute_node, node)
+
+            done_event.wait()
+
+        if first_failure:
+            exc = first_failure["exception"]
+            f_node: GraphNode | None = first_failure.get("node")
+            f_desc: BlockDescriptor | None = first_failure.get("descriptor")
+            duration_ms: int = first_failure.get("durationMs", 0)
+
+            descriptor_key = f_desc.executor_key if f_desc is not None else "graph"
+            node_id = f_node.id if f_node is not None else None
             error = (
                 f"Node {node_id!r} ({descriptor_key}) failed: {exc}"
                 if node_id
                 else f"Pipeline graph failed: {exc}"
             )
-            duration_ms = int((time.perf_counter() - current_started) * 1000)
+
             if node_id is not None:
                 self.database.fail_node(job.run_id, node_id, error)
                 self.events.publish(
@@ -534,6 +593,7 @@ class PipelineRunner:
                         "error": error,
                     },
                 )
+
             self.database.skip_pending_nodes(job.run_id)
             self.database.fail_run(job.run_id)
             run_duration_ms = int((time.perf_counter() - run_started) * 1000)
@@ -549,6 +609,15 @@ class PipelineRunner:
                 },
             )
             return RunOutcome(job.run_id, "failed")
+
+        self.database.complete_run(job.run_id)
+        duration_ms = int((time.perf_counter() - run_started) * 1000)
+        self.events.publish(
+            "run.completed",
+            job.run_id,
+            payload={"durationMs": duration_ms, "nodeCount": len(order)},
+        )
+        return RunOutcome(job.run_id, "completed")
 
     def _fail_before_execution(self, run_id: str, error: str) -> None:
         started = self.database.start_run(run_id)

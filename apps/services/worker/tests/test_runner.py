@@ -268,3 +268,94 @@ def test_runner_marks_failed_node_and_run(storage):
     assert database.nodes["feature"] == "failed"
     assert any(event["type"] == "node.failed" for event in events.items)
     assert events.items[-1]["type"] == "run.failed"
+
+
+def test_runner_executes_parallel_branches_concurrently(storage):
+    """Test that independent branches run concurrently and finish successfully."""
+    storage.objects["datasets/data.csv"] = b"a,b,target\n1,2,x\n3,4,y\n"
+    job_payload = {
+        "schemaVersion": 1,
+        "runId": "run-parallel-test",
+        "datasets": {"dataset-1": {"id": "dataset-1", "storageUri": "datasets/data.csv", "format": "csv"}},
+        "graph": {
+            "nodes": [
+                {
+                    "id": "load",
+                    "blockId": "load_csv",
+                    "blockVersion": 1,
+                    "config": {"dataset": "dataset-1"},
+                },
+                {
+                    "id": "branch_a",
+                    "blockId": "feature_select",
+                    "blockVersion": 1,
+                    "config": {"columns": "a,target"},
+                },
+                {
+                    "id": "branch_b",
+                    "blockId": "rename_columns",
+                    "blockVersion": 1,
+                    "config": {"mapping": {"b": "b_renamed"}},
+                },
+            ],
+            "edges": [
+                {
+                    "id": "e1",
+                    "sourceNodeId": "load",
+                    "sourcePortId": "dataset",
+                    "targetNodeId": "branch_a",
+                    "targetPortId": "dataset",
+                },
+                {
+                    "id": "e2",
+                    "sourceNodeId": "load",
+                    "sourcePortId": "dataset",
+                    "targetNodeId": "branch_b",
+                    "targetPortId": "dataset",
+                },
+            ],
+        },
+        "blocks": [
+            {
+                "id": "load_csv",
+                "version": 1,
+                "executorKey": "load_csv",
+                "name": "Load CSV",
+                "ports": {"inputs": [], "outputs": [{"id": "dataset"}]},
+            },
+            {
+                "id": "feature_select",
+                "version": 1,
+                "executorKey": "feature_select",
+                "name": "Feature Select",
+                "ports": {"inputs": [{"id": "dataset"}], "outputs": [{"id": "dataset"}]},
+            },
+            {
+                "id": "rename_columns",
+                "version": 1,
+                "executorKey": "rename_columns",
+                "name": "Rename Column",
+                "ports": {"inputs": [{"id": "dataset"}], "outputs": [{"id": "dataset"}]},
+            },
+        ],
+    }
+
+    database = FakeDatabase()
+    database.nodes = {"load": "pending", "branch_a": "pending", "branch_b": "pending"}
+    events = FakeEvents()
+    runner = PipelineRunner(database=database, events=events, storage=storage, max_concurrency=4)
+
+    outcome = runner.run(job_payload, "worker-1")
+
+    assert outcome.status == "completed"
+    assert database.run_status == "completed"
+    assert database.nodes["load"] == "completed"
+    assert database.nodes["branch_a"] == "completed"
+    assert database.nodes["branch_b"] == "completed"
+
+    started_events = [e for e in events.items if e["type"] == "node.started"]
+    started_node_ids = [e["node_id"] for e in started_events]
+
+    assert started_node_ids[0] == "load"
+    assert set(started_node_ids[1:]) == {"branch_a", "branch_b"}
+
