@@ -21,9 +21,9 @@ export interface DemoDescriptor {
 export const DEMOS: readonly DemoDescriptor[] = [
   {
     id: "parallel-execution",
-    name: "⚡ Luồng Chạy Song Song (Parallel Branches)",
-    workflowName: "Parallel Multi-Branch ML Pipeline Demo",
-    description: "Pipeline 9-node với 3 nhánh xử lý dữ liệu độc lập (Formula, Filter, Normalize) chạy song song cùng lúc.",
+    name: "⚡ Song Luồng Model Comparison (RF vs LogReg)",
+    workflowName: "Parallel Multi-Model Pipeline Demo",
+    description: "Pipeline 10-node chia làm 2 nhánh huấn luyện 2 Model (Random Forest & Logistic Regression) chạy song song cùng lúc, tạo ra 2 kết quả Đánh Giá & Model riêng biệt.",
     create: (blocks, datasetId, idPrefix) => createParallelDemoGraph(blocks, datasetId, idPrefix),
   },
   {

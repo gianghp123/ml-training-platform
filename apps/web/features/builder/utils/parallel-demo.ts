@@ -5,13 +5,11 @@ import { makeNode, makeEdge, resolveBlocks } from "./demo-helpers"
 
 export const PARALLEL_EXECUTOR_KEYS = [
   "load_csv",
-  "custom_feature_formula",
-  "filter_rows",
-  "normalize",
-  "feature_union",
+  "feature_select",
   "select_target",
   "train_test_split",
   "random_forest",
+  "logistic_regression",
   "save_model",
   "evaluate",
 ] as const
@@ -25,50 +23,6 @@ export interface ParallelDemoGraph {
 
 const IRIS_COLUMNS = "SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm,Species"
 
-const positions: Record<ParallelExecutorKey, { x: number; y: number }> = {
-  load_csv: { x: 0, y: 240 },
-  custom_feature_formula: { x: 320, y: 60 },
-  filter_rows: { x: 320, y: 240 },
-  normalize: { x: 320, y: 420 },
-  feature_union: { x: 680, y: 240 },
-  select_target: { x: 1000, y: 240 },
-  train_test_split: { x: 1300, y: 240 },
-  random_forest: { x: 1600, y: 100 },
-  save_model: { x: 1900, y: 60 },
-  evaluate: { x: 1900, y: 240 },
-}
-
-const configs: Record<
-  ParallelExecutorKey,
-  (datasetId: string) => Record<string, unknown>
-> = {
-  load_csv: (datasetId) => ({ dataset: datasetId, file: datasetId }),
-  custom_feature_formula: () => ({
-    outputColumn: "PetalArea",
-    outputType: "float",
-    expression: "PetalLengthCm * PetalWidthCm",
-    columns: IRIS_COLUMNS,
-  }),
-  filter_rows: () => ({
-    conditions: [{ column: "PetalLengthCm", op: "gt", value: 0.5 }],
-    combinator: "AND",
-    invert: false,
-  }),
-  normalize: () => ({
-    columns: "SepalLengthCm,SepalWidthCm",
-    strategy: "minmax",
-  }),
-  feature_union: () => ({}),
-  select_target: () => ({
-    targetColumn: "Species",
-    task: "classification",
-  }),
-  train_test_split: () => ({ testSize: 0.2, stratify: true }),
-  random_forest: () => ({ n_estimators: 100, max_depth: 10 }),
-  save_model: () => ({ format: "joblib", name: "parallel-iris-model" }),
-  evaluate: () => ({ metrics: "accuracy" }),
-}
-
 export function createParallelDemoGraph(
   blocks: BlockDefinition[],
   datasetId: string,
@@ -76,41 +30,52 @@ export function createParallelDemoGraph(
 ): ParallelDemoGraph {
   if (!datasetId) throw new Error("Select a READY CSV dataset first.")
   const catalog = resolveBlocks(PARALLEL_EXECUTOR_KEYS, blocks)
-  const nodes = Object.fromEntries(
-    PARALLEL_EXECUTOR_KEYS.map((executorKey) => [
-      executorKey,
-      makeNode(
-        catalog[executorKey],
-        executorKey,
-        idPrefix,
-        positions[executorKey],
-        configs[executorKey](datasetId)
-      ),
-    ])
-  ) as Record<ParallelExecutorKey, PipelineNode>
 
-  return {
-    nodes: PARALLEL_EXECUTOR_KEYS.map((executorKey) => nodes[executorKey]),
-    edges: [
-      // Branch 1: load_csv -> custom_feature_formula -> feature_union (datasetA)
-      makeEdge(nodes.load_csv, "dataset", nodes.custom_feature_formula, "dataset"),
-      makeEdge(nodes.custom_feature_formula, "dataset", nodes.feature_union, "datasetA"),
+  const nLoad = makeNode(catalog.load_csv, "load_csv", `${idPrefix}_load`, { x: 0, y: 240 }, { dataset: datasetId, file: datasetId })
+  const nSelect = makeNode(catalog.feature_select, "feature_select", `${idPrefix}_select`, { x: 300, y: 240 }, { columns: IRIS_COLUMNS })
+  const nTarget = makeNode(catalog.select_target, "select_target", `${idPrefix}_target`, { x: 600, y: 240 }, { targetColumn: "Species", task: "classification" })
+  const nSplit = makeNode(catalog.train_test_split, "train_test_split", `${idPrefix}_split`, { x: 900, y: 240 }, { testSize: 0.2, stratify: true })
 
-      // Branch 2: load_csv -> filter_rows -> feature_union (datasetB)
-      makeEdge(nodes.load_csv, "dataset", nodes.filter_rows, "dataset"),
-      makeEdge(nodes.filter_rows, "dataset", nodes.feature_union, "datasetB"),
+  // Branch 1: Random Forest Pipeline
+  const nRf = makeNode(catalog.random_forest, "random_forest", `${idPrefix}_rf`, { x: 1250, y: 80 }, { n_estimators: 100, max_depth: 10 })
+  const nEvalRf = makeNode(catalog.evaluate, "evaluate", `${idPrefix}_eval_rf`, { x: 1600, y: 80 }, { metrics: "accuracy" })
+  const nSaveRf = makeNode(catalog.save_model, "save_model", `${idPrefix}_save_rf`, { x: 1950, y: 80 }, { format: "joblib", name: "iris-random-forest-model" })
 
-      // Branch 3: load_csv -> normalize -> feature_union (datasetC)
-      makeEdge(nodes.load_csv, "dataset", nodes.normalize, "dataset"),
-      makeEdge(nodes.normalize, "dataset", nodes.feature_union, "datasetC"),
+  // Branch 2: Logistic Regression Pipeline (Parallel)
+  const nLogReg = makeNode(catalog.logistic_regression, "logistic_regression", `${idPrefix}_logreg`, { x: 1250, y: 400 }, { penalty: "l2", C: 1.0 })
+  const nEvalLogReg = makeNode(catalog.evaluate, "evaluate", `${idPrefix}_eval_logreg`, { x: 1600, y: 400 }, { metrics: "accuracy" })
+  const nSaveLogReg = makeNode(catalog.save_model, "save_model", `${idPrefix}_save_logreg`, { x: 1950, y: 400 }, { format: "joblib", name: "iris-logistic-regression-model" })
 
-      // Downstream: feature_union -> select_target -> train_test_split -> random_forest -> evaluate & save_model
-      makeEdge(nodes.feature_union, "dataset", nodes.select_target, "dataset"),
-      makeEdge(nodes.select_target, "dataset", nodes.train_test_split, "dataset"),
-      makeEdge(nodes.train_test_split, "train", nodes.random_forest, "dataset"),
-      makeEdge(nodes.random_forest, "model", nodes.save_model, "model"),
-      makeEdge(nodes.train_test_split, "test", nodes.evaluate, "dataset"),
-      makeEdge(nodes.random_forest, "model", nodes.evaluate, "model"),
-    ],
-  }
+  const nodes = [
+    nLoad,
+    nSelect,
+    nTarget,
+    nSplit,
+    nRf,
+    nEvalRf,
+    nSaveRf,
+    nLogReg,
+    nEvalLogReg,
+    nSaveLogReg,
+  ]
+
+  const edges = [
+    makeEdge(nLoad, "dataset", nSelect, "dataset"),
+    makeEdge(nSelect, "dataset", nTarget, "dataset"),
+    makeEdge(nTarget, "dataset", nSplit, "dataset"),
+
+    // Branch 1 Edges (Random Forest)
+    makeEdge(nSplit, "train", nRf, "dataset"),
+    makeEdge(nSplit, "test", nEvalRf, "dataset"),
+    makeEdge(nRf, "model", nEvalRf, "model"),
+    makeEdge(nRf, "model", nSaveRf, "model"),
+
+    // Branch 2 Edges (Logistic Regression - Parallel)
+    makeEdge(nSplit, "train", nLogReg, "dataset"),
+    makeEdge(nSplit, "test", nEvalLogReg, "dataset"),
+    makeEdge(nLogReg, "model", nEvalLogReg, "model"),
+    makeEdge(nLogReg, "model", nSaveLogReg, "model"),
+  ]
+
+  return { nodes, edges }
 }

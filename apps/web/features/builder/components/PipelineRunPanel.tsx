@@ -38,8 +38,15 @@ function formatMetric(value: number): string {
   return value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "")
 }
 
-function MetricsView({ metrics }: { metrics: PipelineMetrics | null }) {
-  if (!metrics) {
+function MetricsView({
+  metrics,
+  nodeMetrics = {},
+}: {
+  metrics: PipelineMetrics | null
+  nodeMetrics?: Record<string, PipelineMetrics>
+}) {
+  const nodeEntries = Object.entries(nodeMetrics)
+  if (nodeEntries.length === 0 && !metrics) {
     return (
       <div className="flex h-full items-center justify-center px-6 text-center text-xs text-muted-foreground">
         Evaluation metrics will appear when the Evaluation block completes.
@@ -47,63 +54,86 @@ function MetricsView({ metrics }: { metrics: PipelineMetrics | null }) {
     )
   }
 
-  return (
-    <div className="space-y-5 overflow-auto p-4">
-      <div className="grid grid-cols-2 gap-2">
-        {Object.entries(metrics.values).map(([name, value]) => (
-          <div key={name} className="rounded-md border bg-muted/30 p-3">
-            <div className="text-[10px] tracking-wide text-muted-foreground uppercase">
-              {name}
-            </div>
-            <div className="mt-1 font-mono text-lg font-semibold">
-              {formatMetric(value)}
-            </div>
-          </div>
-        ))}
-      </div>
+  const listToRender: Array<[string, PipelineMetrics]> =
+    nodeEntries.length > 0
+      ? nodeEntries
+      : [["Evaluation Metrics", metrics!]]
 
-      {metrics.confusionMatrix && (
-        <div className="space-y-2">
-          <h3 className="text-xs font-medium">Confusion matrix</h3>
-          <div className="overflow-auto rounded-md border">
-            <table className="w-full border-collapse text-center font-mono text-xs">
-              <thead>
-                <tr className="bg-muted/50">
-                  <th className="border-r border-b p-2 text-left text-[10px] text-muted-foreground">
-                    actual \ predicted
-                  </th>
-                  {metrics.confusionMatrix.labels.map((label, index) => (
-                    <th key={`${label}-${index}`} className="border-b p-2">
-                      {label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {metrics.confusionMatrix.matrix.map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    <th className="border-r bg-muted/30 p-2 text-left">
-                      {metrics.confusionMatrix?.labels[rowIndex] ?? rowIndex}
-                    </th>
-                    {row.map((value, columnIndex) => (
-                      <td
-                        key={columnIndex}
-                        className={cn(
-                          "p-2",
-                          rowIndex === columnIndex &&
-                          "bg-success/10 font-semibold"
-                        )}
-                      >
-                        {value}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+  return (
+    <div className="space-y-4 overflow-auto p-3">
+      {listToRender.map(([nodeId, itemMetrics]) => (
+        <div
+          key={nodeId}
+          className="space-y-3 rounded-lg border bg-card p-3 shadow-2xs"
+        >
+          {nodeEntries.length > 1 && (
+            <div className="flex items-center gap-2 border-b pb-2 font-mono text-xs font-semibold text-primary">
+              <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] uppercase">
+                Node
+              </span>
+              <span>{nodeId}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(itemMetrics.values).map(([name, value]) => (
+              <div key={name} className="rounded-md border bg-muted/30 p-2.5">
+                <div className="text-[10px] tracking-wide text-muted-foreground uppercase">
+                  {name}
+                </div>
+                <div className="mt-1 font-mono text-base font-semibold">
+                  {formatMetric(value)}
+                </div>
+              </div>
+            ))}
           </div>
+
+          {itemMetrics.confusionMatrix && (
+            <div className="space-y-1.5">
+              <h4 className="text-[11px] font-medium text-muted-foreground">
+                Confusion matrix
+              </h4>
+              <div className="overflow-auto rounded-md border">
+                <table className="w-full border-collapse text-center font-mono text-xs">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="border-r border-b p-1.5 text-left text-[9px] text-muted-foreground">
+                        actual \ predicted
+                      </th>
+                      {itemMetrics.confusionMatrix.labels.map((label, index) => (
+                        <th key={`${label}-${index}`} className="border-b p-1.5">
+                          {label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {itemMetrics.confusionMatrix.matrix.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        <th className="border-r bg-muted/30 p-1.5 text-left text-[11px] font-normal">
+                          {itemMetrics.confusionMatrix?.labels[rowIndex] ?? rowIndex}
+                        </th>
+                        {row.map((value, columnIndex) => (
+                          <td
+                            key={columnIndex}
+                            className={cn(
+                              "p-1.5",
+                              rowIndex === columnIndex &&
+                                "bg-success/10 font-semibold"
+                            )}
+                          >
+                            {value}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      ))}
     </div>
   )
 }
@@ -199,7 +229,10 @@ export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
         <TabsList variant="line" className="mx-3 shrink-0">
           <TabsTrigger value="logs">Logs ({state.logs.length})</TabsTrigger>
           <TabsTrigger value="metrics">
-            Metrics ({Object.keys(state.metrics?.values ?? {}).length})
+            Metrics (
+              {Object.keys(state.nodeMetrics ?? {}).length ||
+                (state.metrics ? 1 : 0)}
+            )
           </TabsTrigger>
           <TabsTrigger value="artifacts">
             Artifacts ({state.artifacts.length})
@@ -209,7 +242,7 @@ export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
           <LogsView logs={state.logs} />
         </TabsContent>
         <TabsContent value="metrics" className="min-h-0 overflow-hidden">
-          <MetricsView metrics={state.metrics} />
+          <MetricsView metrics={state.metrics} nodeMetrics={state.nodeMetrics} />
         </TabsContent>
         <TabsContent value="artifacts" className="min-h-0 overflow-auto p-3">
           {state.artifacts.length === 0 ? (

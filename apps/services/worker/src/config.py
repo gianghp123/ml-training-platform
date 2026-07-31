@@ -5,7 +5,26 @@ from __future__ import annotations
 import os
 import socket
 from dataclasses import dataclass
+from pathlib import Path
 from urllib.parse import urlparse
+
+
+def _load_env_file() -> None:
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+    if env_path.exists():
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k = k.strip()
+                v = v.strip().strip("'\"")
+                if k and k not in os.environ:
+                    os.environ[k] = v
+
+
+_load_env_file()
 
 
 class ConfigurationError(ValueError):

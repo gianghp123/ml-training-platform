@@ -31,6 +31,7 @@ export function createInitialRunState(): PipelineRunState {
     nodeStatuses: {},
     logs: [],
     metrics: null,
+    nodeMetrics: {},
     artifacts: [],
     error: null,
     lastEventId: null,
@@ -316,6 +317,7 @@ function applySnapshot(
     payload.node_executions ??
     runRecord?.nodeExecutions
   const nodeStatuses = { ...state.nodeStatuses }
+  const nodeMetrics = { ...state.nodeMetrics }
   let executionMetrics: PipelineMetrics | null = null
   let executionError: string | null = null
 
@@ -330,11 +332,12 @@ function applySnapshot(
             : undefined
       const nodeStatus = normalizeNodeStatus(execution.status)
       if (nodeId && nodeStatus) nodeStatuses[nodeId] = nodeStatus
-      if (!executionMetrics) {
-        const outputSummary =
-          execution.outputSummary ?? execution.output_summary
-        if (isRecord(outputSummary)) {
-          executionMetrics = extractMetrics({ summary: outputSummary })
+      const outputSummary = execution.outputSummary ?? execution.output_summary
+      if (isRecord(outputSummary)) {
+        const extracted = extractMetrics({ summary: outputSummary })
+        if (extracted && nodeId) {
+          nodeMetrics[nodeId] = extracted
+          if (!executionMetrics) executionMetrics = extracted
         }
       }
       if (
@@ -366,6 +369,7 @@ function applySnapshot(
     nodeStatuses,
     artifacts,
     metrics,
+    nodeMetrics,
     error:
       status === "failed" &&
       typeof (payload.error ?? runRecord?.error) === "string"
@@ -387,6 +391,7 @@ function applyEvent(
     next = applySnapshot(state, event)
   } else {
     const nodeStatuses = { ...state.nodeStatuses }
+    const nodeMetrics = { ...state.nodeMetrics }
     let status = state.status
     let error = state.error
     let metrics = state.metrics
@@ -403,7 +408,11 @@ function applyEvent(
     }
     if (event.type === "node.completed" && event.nodeId) {
       nodeStatuses[event.nodeId] = "success"
-      metrics = extractMetrics(event.payload) ?? metrics
+      const nodeMetric = extractMetrics(event.payload)
+      if (nodeMetric) {
+        metrics = nodeMetric
+        nodeMetrics[event.nodeId] = nodeMetric
+      }
     }
     if (event.type === "node.failed" && event.nodeId) {
       nodeStatuses[event.nodeId] = "error"
@@ -447,6 +456,7 @@ function applyEvent(
       nodeStatuses,
       error,
       metrics,
+      nodeMetrics,
       artifacts,
       logs: appendLog(state.logs, event),
     }

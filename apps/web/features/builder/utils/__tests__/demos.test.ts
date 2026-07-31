@@ -13,7 +13,7 @@ describe("DEMOS registry", () => {
   })
 
   it("getDemo returns the correct demo", () => {
-    expect(getDemo("parallel-execution")?.name).toContain("Luồng Chạy Song Song")
+    expect(getDemo("parallel-execution")?.name).toContain("Song Luồng Model Comparison")
     expect(getDemo("iris")?.name).toBe("Iris Random Forest")
     expect(getDemo("feature-engineering")?.name).toBe("Feature Engineering")
   })

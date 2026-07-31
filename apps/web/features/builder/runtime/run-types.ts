@@ -71,6 +71,7 @@ export interface PipelineRunState {
   nodeStatuses: Record<string, NodeRunStatus>
   logs: PipelineLogEntry[]
   metrics: PipelineMetrics | null
+  nodeMetrics: Record<string, PipelineMetrics>
   artifacts: RunArtifact[]
   error: string | null
   lastEventId: string | null
