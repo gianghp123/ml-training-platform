@@ -13,6 +13,15 @@ import {
 } from "@/components/ui/select"
 import { ROUTES } from "@/lib/route"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  ChevronDown,
   ChevronLeft,
   Download,
   FlaskConical,
@@ -41,7 +50,7 @@ interface WorkflowToolbarProps {
   demoId: string
   onDemoIdChange: (id: string) => void
   demos: readonly DemoDescriptor[]
-  onLoadDemo: () => void
+  onLoadDemo: (demoId?: string) => void
 }
 
 export function WorkflowToolbar({
@@ -110,38 +119,51 @@ export function WorkflowToolbar({
         </SelectContent>
       </Select>
 
-      <Select
-        value={demoId}
-        onValueChange={onDemoIdChange}
-        disabled={isRunning}
-      >
-        <SelectTrigger className="h-8 w-48 text-xs" title="Select a demo to load">
-          <SelectValue placeholder="Demo" />
-        </SelectTrigger>
-        <SelectContent>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={isRunning || readyCsvDatasets.length === 0}
+            className="gap-1.5 font-medium"
+            title={
+              !demoDatasetId
+                ? "Select a READY CSV dataset before loading a demo"
+                : "Choose a demo pipeline to load onto the canvas"
+            }
+          >
+            <FlaskConical className="size-3.5 text-primary" />
+            <span>Load Demo</span>
+            <ChevronDown className="size-3.5 opacity-60" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-84 p-1.5">
+          <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1">
+            Danh Sách Luồng Demo (Preset Pipelines)
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
           {demos.map((demo) => (
-            <SelectItem key={demo.id} value={demo.id}>
-              {demo.name}
-            </SelectItem>
+            <DropdownMenuItem
+              key={demo.id}
+              disabled={isRunning}
+              onClick={() => onLoadDemo(demo.id)}
+              className="flex flex-col items-start gap-1 p-2.5 cursor-pointer rounded-md focus:bg-accent"
+            >
+              <div className="flex items-center gap-2 w-full font-semibold text-sm">
+                <span>{demo.name}</span>
+                {demo.id === demoId && (
+                  <span className="ml-auto text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">
+                    Đang chọn
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                {demo.description}
+              </p>
+            </DropdownMenuItem>
           ))}
-        </SelectContent>
-      </Select>
-
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={onLoadDemo}
-        disabled={isRunning || !demoId || !demoDatasetId}
-        className="gap-1.5"
-        title={
-          !demoDatasetId
-            ? "Select a READY CSV dataset before loading a demo"
-            : `Replace the canvas with the selected demo`
-        }
-      >
-        <FlaskConical className="size-3.5" />
-        Load Demo
-      </Button>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Select
         value={edgeStyle}

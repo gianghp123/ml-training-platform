@@ -2,15 +2,18 @@ import type { BlockDefinition } from "@training-ml/contracts"
 import { DEMOS, getDemo, getDefaultDemo } from "../demos"
 import { IRIS_EXECUTOR_KEYS } from "../iris-demo"
 import { FEATURE_ENGINEERING_EXECUTOR_KEYS } from "../feature-engineering-demo"
+import { PARALLEL_EXECUTOR_KEYS } from "../parallel-demo"
 
 describe("DEMOS registry", () => {
-  it("contains both iris and feature-engineering", () => {
-    expect(DEMOS).toHaveLength(2)
-    expect(DEMOS[0]?.id).toBe("iris")
-    expect(DEMOS[1]?.id).toBe("feature-engineering")
+  it("contains parallel-execution, iris, and feature-engineering", () => {
+    expect(DEMOS).toHaveLength(3)
+    expect(DEMOS[0]?.id).toBe("parallel-execution")
+    expect(DEMOS[1]?.id).toBe("iris")
+    expect(DEMOS[2]?.id).toBe("feature-engineering")
   })
 
   it("getDemo returns the correct demo", () => {
+    expect(getDemo("parallel-execution")?.name).toContain("Luồng Chạy Song Song")
     expect(getDemo("iris")?.name).toBe("Iris Random Forest")
     expect(getDemo("feature-engineering")?.name).toBe("Feature Engineering")
   })
@@ -20,13 +23,14 @@ describe("DEMOS registry", () => {
   })
 
   it("getDefaultDemo returns the first demo", () => {
-    expect(getDefaultDemo().id).toBe("iris")
+    expect(getDefaultDemo().id).toBe("parallel-execution")
   })
 
   it("each demo's create function works with mocked blocks", () => {
     const allKeys = new Set([
       ...IRIS_EXECUTOR_KEYS,
       ...FEATURE_ENGINEERING_EXECUTOR_KEYS,
+      ...PARALLEL_EXECUTOR_KEYS,
     ])
     const blocks = Array.from(allKeys).map((key) => {
       const b: BlockDefinition = {

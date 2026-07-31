@@ -3,6 +3,7 @@ import type { Edge } from "@xyflow/react"
 import type { PipelineNode } from "./node-factory"
 import { createIrisDemoGraph } from "./iris-demo"
 import { createFeatureEngineeringDemoGraph } from "./feature-engineering-demo"
+import { createParallelDemoGraph } from "./parallel-demo"
 
 export interface DemoGraph {
   nodes: PipelineNode[]
@@ -18,6 +19,13 @@ export interface DemoDescriptor {
 }
 
 export const DEMOS: readonly DemoDescriptor[] = [
+  {
+    id: "parallel-execution",
+    name: "⚡ Luồng Chạy Song Song (Parallel Branches)",
+    workflowName: "Parallel Multi-Branch ML Pipeline Demo",
+    description: "Pipeline 9-node với 3 nhánh xử lý dữ liệu độc lập (Formula, Filter, Normalize) chạy song song cùng lúc.",
+    create: (blocks, datasetId, idPrefix) => createParallelDemoGraph(blocks, datasetId, idPrefix),
+  },
   {
     id: "iris",
     name: "Iris Random Forest",

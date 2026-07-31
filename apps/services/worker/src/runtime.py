@@ -64,6 +64,14 @@ class DatasetValue:
     role: str = "full"
     lineage: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        target_val = self.target
+        if isinstance(target_val, (list, tuple, set, pd.Index, pd.Series)):
+            items = [str(x).strip() for x in target_val if str(x).strip()]
+            object.__setattr__(self, "target", items[0] if items else None)
+        elif target_val is not None and not isinstance(target_val, str):
+            object.__setattr__(self, "target", str(target_val).strip() or None)
+
     def derive(
         self,
         *,

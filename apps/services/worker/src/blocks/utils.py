@@ -174,10 +174,13 @@ def supervised_training_data(
         raise BlockExecutionError(
             f"Model supports tasks: {', '.join(allowed_tasks)}"
         )
-    if not dataset.target or dataset.target not in dataset.frame.columns:
+    target_name = dataset.target
+    if isinstance(target_name, (list, tuple, pd.Index)):
+        target_name = target_name[0] if len(target_name) > 0 else None
+    if not target_name or not isinstance(target_name, str) or target_name not in dataset.frame.columns:
         raise BlockExecutionError("A valid target column must be selected")
     feature_columns = tuple(
-        str(column) for column in dataset.frame.columns if column != dataset.target
+        str(column) for column in dataset.frame.columns if column != target_name
     )
     if not feature_columns:
         raise BlockExecutionError("Dataset has no feature columns")

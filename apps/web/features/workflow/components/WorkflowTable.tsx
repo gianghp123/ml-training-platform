@@ -49,11 +49,11 @@ export function WorkflowTable({ page, pageSize }: { page: number; pageSize: numb
     },
     {
       header: "Created",
-      cell: (row) => row.createdAt.toLocaleDateString("en-US"),
+      cell: (row) => <span suppressHydrationWarning>{row.createdAt.toLocaleDateString("en-US")}</span>,
     },
     {
       header: "Updated",
-      cell: (row) => row.updatedAt.toLocaleDateString("en-US"),
+      cell: (row) => <span suppressHydrationWarning>{row.updatedAt.toLocaleDateString("en-US")}</span>,
     },
     {
       header: "Actions",

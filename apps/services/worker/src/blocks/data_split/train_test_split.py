@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
+import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from ...runtime import BlockContext, BlockExecutionError, BlockResult
@@ -38,11 +39,14 @@ class TrainTestSplitBlock(Block):
         stratify = None
         logs: list[tuple[str, str]] = []
         if wants_stratify and dataset.task == "classification":
-            if not dataset.target or dataset.target not in dataset.frame.columns:
+            target = dataset.target
+            if isinstance(target, (list, tuple, pd.Index)):
+                target = target[0] if len(target) > 0 else None
+            if not target or not isinstance(target, str) or target not in dataset.frame.columns:
                 raise BlockExecutionError(
                     "Classification stratification requires a selected target column"
                 )
-            stratify = dataset.frame[dataset.target]
+            stratify = dataset.frame[target]
         elif wants_stratify:
             logs.append(
                 (

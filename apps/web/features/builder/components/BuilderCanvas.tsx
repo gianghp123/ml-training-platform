@@ -219,9 +219,13 @@ export function BuilderCanvas({
     }
   }
 
-  const handleLoadDemo = () => {
+  const handleLoadDemo = (targetDemoId?: string) => {
     if (pipelineRun.isActive) return
-    const demo = getDemo(activeDemoId) ?? getDefaultDemo()
+    const demoIdToLoad = targetDemoId || activeDemoId
+    if (targetDemoId && targetDemoId !== activeDemoId) {
+      setDemoId(targetDemoId)
+    }
+    const demo = getDemo(demoIdToLoad) ?? getDefaultDemo()
     const dataset = readyCsvDatasets.find(
       (candidate) => candidate.id === activeDemoDatasetId
     )
