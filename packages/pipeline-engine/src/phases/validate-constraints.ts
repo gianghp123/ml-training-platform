@@ -1,6 +1,6 @@
 import type { ValidationError } from '@training-ml/contracts';
-import type { NodeContext } from '../types';
-import { evaluateRule } from '../operators';
+import type { NodeContext } from '../types.js';
+import { evaluateRule } from '../operators/index.js';
 
 export function validateConstraints(ctx: NodeContext): ValidationError[] {
   const errors: ValidationError[] = [];

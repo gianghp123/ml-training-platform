@@ -1,5 +1,5 @@
 import { PipelineArtifactType, type ValidationError } from '@training-ml/contracts';
-import type { GraphEdge, NodeContext } from '../types';
+import type { GraphEdge, NodeContext } from '../types.js';
 
 export function validatePorts(ctx: NodeContext, allEdges: GraphEdge[]): ValidationError[] {
   const errors: ValidationError[] = [];

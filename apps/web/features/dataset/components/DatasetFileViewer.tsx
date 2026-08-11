@@ -176,8 +176,11 @@ function DatasetFileDrawerBody({ dataset }: { dataset: Dataset }) {
 
   return (
     <>
-      <DrawerHeader>
-        <DrawerTitle>{dataset.name}</DrawerTitle>
+      <DrawerHeader className="border-b border-white/7 bg-white/[0.018]">
+        <div className="studio-eyebrow">Dataset explorer</div>
+        <DrawerTitle className="text-base tracking-[-0.02em]">
+          {dataset.name}
+        </DrawerTitle>
         {dataset.description && (
           <DrawerDescription>{dataset.description}</DrawerDescription>
         )}
@@ -196,9 +199,9 @@ function DatasetFileDrawerBody({ dataset }: { dataset: Dataset }) {
           </span>
         </div>
       </DrawerHeader>
-      <Separator />
-      <div className="px-4 pt-1">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+      <Separator className="bg-white/7" />
+      <div className="px-4 pt-3">
+        <span className="font-mono text-[9px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
           Files
         </span>
       </div>
@@ -221,7 +224,7 @@ export function DatasetFileViewer({
 }: DatasetFileViewerProps) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-      <DrawerContent>
+      <DrawerContent className="border-white/10 bg-[#10151b] shadow-[-24px_0_64px_rgba(0,0,0,.32)]">
         {dataset && (
           <DatasetFileDrawerBody key={dataset.storageUri} dataset={dataset} />
         )}

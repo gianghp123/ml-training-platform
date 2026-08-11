@@ -1,10 +1,11 @@
 export const ROUTES = {
+  HOME: "/",
   AUTH: {
     SIGN_IN: "/sign-in",
     SIGN_UP: "/sign-up",
   },
   WORKFLOW: {
-    LIST: "/",
+    LIST: "/dashboard",
     CREATE: "/builder",
     DETAIL: (workflowId: string) => `/builder?workflowId=${encodeURIComponent(workflowId)}`,
   },

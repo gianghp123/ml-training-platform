@@ -1,6 +1,6 @@
 "use client"
 
-import { Upload, FileUp, CheckCircle2, Loader2, ChevronRight } from "lucide-react"
+import { Upload, FileUp, CheckCircle2, Loader2, ChevronRight, Plus } from "lucide-react"
 import { useCallback, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -186,9 +186,12 @@ export function UploadDatasetModal() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button>Create Dataset</Button>
+        <Button size="lg" className="h-9 gap-2 px-3.5 text-[13px]">
+          <Plus className="size-4" />
+          Create Dataset
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="studio-floating-surface border-white/10 sm:max-w-lg">
         {state === "complete" ? (
           <div className="flex flex-col items-center justify-center gap-4 py-8">
             <CheckCircle2 className="size-12 text-success" />
@@ -374,11 +377,11 @@ export function UploadDatasetModal() {
                   onDragLeave={handleDragLeave}
                   onClick={() => fileInputRef.current?.click()}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 min-h-[130px] cursor-pointer transition-colors",
+                    "flex min-h-[130px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-6 shadow-[inset_0_1px_0_rgba(255,255,255,.025)] transition-colors",
                     dragOver
-                      ? "border-primary bg-primary/5"
-                      : "border-muted-foreground/25 hover:border-muted-foreground/50",
-                    file && "border-success bg-success/5",
+                      ? "border-primary/60 bg-primary/8"
+                      : "border-white/12 bg-black/10 hover:border-white/22 hover:bg-white/3",
+                    file && "border-success/45 bg-success/6",
                     state === "uploading" && "pointer-events-none opacity-50",
                   )}
                 >

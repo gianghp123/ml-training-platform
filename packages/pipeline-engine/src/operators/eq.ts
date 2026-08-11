@@ -1,6 +1,6 @@
 import type { ConstraintRule, ValidationError } from '@training-ml/contracts';
-import type { NodeContext } from '../types';
-import { resolveItems, resolvePath } from './_resolve-path';
+import type { NodeContext } from '../types.js';
+import { resolveItems, resolvePath } from './_resolve-path.js';
 
 export function eq(rule: ConstraintRule, ctx: NodeContext): ValidationError[] {
   const left = resolvePath(rule.left as string, ctx);

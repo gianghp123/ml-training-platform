@@ -4,7 +4,22 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
-import { RotateCcw, TerminalSquare } from "lucide-react"
+import {
+  Activity,
+  BadgeCheck,
+  ChartNoAxesCombined,
+  ClipboardCheck,
+  Copy,
+  Gauge,
+  Hash,
+  PanelRightClose,
+  PanelRightOpen,
+  RotateCcw,
+  Target,
+  ListChecks,
+  TerminalSquare,
+  TrendingUp,
+} from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import type {
   PipelineLogEntry,
@@ -38,6 +53,45 @@ function formatMetric(value: number): string {
   return value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "")
 }
 
+function isRateMetric(name: string): boolean {
+  return /(accuracy|precision|recall|f1|auc|score|rate|specificity|sensitivity)/i.test(
+    name
+  )
+}
+
+function formatMetricValue(name: string, value: number): string {
+  if (!Number.isFinite(value)) return "â€”"
+  if (isRateMetric(name) && value >= 0 && value <= 1) {
+    return (value * 100).toFixed(1) + "%"
+  }
+  return formatMetric(value)
+}
+
+function metricLabel(name: string): string {
+  return name.replace(/[_-]+/g, " ")
+}
+
+function metricIcon(name: string) {
+  const normalized = name.toLowerCase()
+  if (normalized.includes("accuracy")) return BadgeCheck
+  if (normalized.includes("precision") || normalized.includes("recall")) {
+    return Target
+  }
+  if (normalized.includes("f1") || normalized.includes("score")) return Gauge
+  if (normalized.includes("loss") || normalized.includes("error")) {
+    return Activity
+  }
+  if (normalized.includes("r2") || normalized.includes("auc")) {
+    return TrendingUp
+  }
+  return ChartNoAxesCombined
+}
+
+function metricProgress(name: string, value: number): number | null {
+  if (!isRateMetric(name) || value < 0 || value > 1) return null
+  return Math.round(value * 100)
+}
+
 function MetricsView({
   metrics,
   nodeMetrics = {},
@@ -48,92 +102,380 @@ function MetricsView({
   const nodeEntries = Object.entries(nodeMetrics)
   if (nodeEntries.length === 0 && !metrics) {
     return (
-      <div className="flex h-full items-center justify-center px-6 text-center text-xs text-muted-foreground">
-        Evaluation metrics will appear when the Evaluation block completes.
+      <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+        <div className="flex size-11 items-center justify-center rounded-2xl border border-primary/15 bg-primary/8 text-primary">
+          <ChartNoAxesCombined className="size-5" />
+        </div>
+        <div>
+          <p className="text-sm font-medium">No metrics yet</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Run the graph to see model performance and evaluation details.
+          </p>
+        </div>
       </div>
     )
   }
 
   const listToRender: Array<[string, PipelineMetrics]> =
-    nodeEntries.length > 0
-      ? nodeEntries
-      : [["Evaluation Metrics", metrics!]]
+    nodeEntries.length > 0 ? nodeEntries : [["Evaluation summary", metrics!]]
 
   return (
-    <div className="space-y-4 overflow-auto p-3">
+    <div className="space-y-3 overflow-auto p-3">
       {listToRender.map(([nodeId, itemMetrics]) => (
-        <div
-          key={nodeId}
-          className="space-y-3 rounded-lg border bg-card p-3 shadow-2xs"
-        >
-          {nodeEntries.length > 1 && (
-            <div className="flex items-center gap-2 border-b pb-2 font-mono text-xs font-semibold text-primary">
-              <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] uppercase">
-                Node
-              </span>
-              <span>{nodeId}</span>
+        <section key={nodeId} className="space-y-3">
+          <div className="flex items-start justify-between gap-3 px-1">
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                {nodeEntries.length > 1
+                  ? "Evaluation node"
+                  : "Evaluation summary"}
+              </p>
+              <h3 className="mt-1 truncate text-sm font-semibold">{nodeId}</h3>
             </div>
-          )}
+            <Badge variant="outline" className="shrink-0 gap-1 text-[10px]">
+              <Hash className="size-3" />
+              {Object.keys(itemMetrics.values).length} metrics
+            </Badge>
+          </div>
 
           <div className="grid grid-cols-2 gap-2">
-            {Object.entries(itemMetrics.values).map(([name, value]) => (
-              <div key={name} className="rounded-md border bg-muted/30 p-2.5">
-                <div className="text-[10px] tracking-wide text-muted-foreground uppercase">
-                  {name}
+            {Object.entries(itemMetrics.values).map(([name, value]) => {
+              const Icon = metricIcon(name)
+              const progress = metricProgress(name, value)
+              const isGood = progress !== null && progress >= 80
+
+              return (
+                <div
+                  key={name}
+                  className={cn(
+                    "group rounded-xl border bg-card p-3 shadow-2xs transition-colors",
+                    isGood && "border-success/25 bg-success/[0.035]"
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <span
+                        className={cn(
+                          "flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary",
+                          isGood && "bg-success/12 text-success"
+                        )}
+                      >
+                        <Icon className="size-3.5" />
+                      </span>
+                      <span className="truncate text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                        {metricLabel(name)}
+                      </span>
+                    </div>
+                    {progress !== null && (
+                      <span className="text-[9px] font-medium text-muted-foreground">
+                        {progress}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 font-mono text-xl font-semibold tracking-tight">
+                    {formatMetricValue(name, value)}
+                  </div>
+                  {progress !== null && (
+                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={cn(
+                          "h-full rounded-full bg-primary transition-all",
+                          isGood && "bg-success"
+                        )}
+                        style={{ width: progress + "%" }}
+                      />
+                    </div>
+                  )}
                 </div>
-                <div className="mt-1 font-mono text-base font-semibold">
-                  {formatMetric(value)}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {itemMetrics.confusionMatrix && (
-            <div className="space-y-1.5">
-              <h4 className="text-[11px] font-medium text-muted-foreground">
-                Confusion matrix
-              </h4>
-              <div className="overflow-auto rounded-md border">
-                <table className="w-full border-collapse text-center font-mono text-xs">
-                  <thead>
-                    <tr className="bg-muted/50">
-                      <th className="border-r border-b p-1.5 text-left text-[9px] text-muted-foreground">
-                        actual \ predicted
-                      </th>
-                      {itemMetrics.confusionMatrix.labels.map((label, index) => (
-                        <th key={`${label}-${index}`} className="border-b p-1.5">
-                          {label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {itemMetrics.confusionMatrix.matrix.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        <th className="border-r bg-muted/30 p-1.5 text-left text-[11px] font-normal">
-                          {itemMetrics.confusionMatrix?.labels[rowIndex] ?? rowIndex}
-                        </th>
-                        {row.map((value, columnIndex) => (
-                          <td
-                            key={columnIndex}
-                            className={cn(
-                              "p-1.5",
-                              rowIndex === columnIndex &&
-                                "bg-success/10 font-semibold"
-                            )}
-                          >
-                            {value}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <ConfusionMatrixView result={itemMetrics.confusionMatrix} />
           )}
-        </div>
+        </section>
       ))}
+    </div>
+  )
+}
+
+function formatPercent(value: number | null): string {
+  return value === null || !Number.isFinite(value)
+    ? "—"
+    : value.toFixed(1) + "%"
+}
+
+function ConfusionMatrixView({
+  result,
+}: {
+  result: NonNullable<PipelineMetrics["confusionMatrix"]>
+}) {
+  const [viewMode, setViewMode] = useState<"count" | "rowPercent">("count")
+  const [copied, setCopied] = useState(false)
+  const rowTotals = result.matrix.map((row) =>
+    row.reduce((sum, value) => sum + value, 0)
+  )
+  const columnTotals = result.labels.map((_, columnIndex) =>
+    result.matrix.reduce((sum, row) => sum + (row[columnIndex] ?? 0), 0)
+  )
+  const total = rowTotals.reduce((sum, value) => sum + value, 0)
+  const correct = result.matrix.reduce(
+    (sum, row, index) => sum + (row[index] ?? 0),
+    0
+  )
+  const accuracy = total > 0 ? (correct / total) * 100 : null
+  const maxValue = Math.max(1, ...result.matrix.flat())
+
+  const classStats = result.labels.map((label, index) => {
+    const truePositive = result.matrix[index]?.[index] ?? 0
+    const precision =
+      columnTotals[index] > 0
+        ? (truePositive / columnTotals[index]) * 100
+        : null
+    const recall =
+      rowTotals[index] > 0 ? (truePositive / rowTotals[index]) * 100 : null
+    const f1 =
+      precision !== null && recall !== null && precision + recall > 0
+        ? (2 * precision * recall) / (precision + recall)
+        : null
+
+    return { label, precision, recall, f1 }
+  })
+
+  const copyMatrix = async () => {
+    const csv = [
+      ["Actual / Predicted", ...result.labels, "Total"].join(","),
+      ...result.matrix.map((row, rowIndex) =>
+        [
+          result.labels[rowIndex] ?? rowIndex,
+          ...row,
+          rowTotals[rowIndex] ?? 0,
+        ].join(",")
+      ),
+      ["Total", ...columnTotals, total].join(","),
+    ].join("\n")
+
+    try {
+      await navigator.clipboard.writeText(csv)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1800)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  return (
+    <div className="space-y-3 rounded-xl border bg-card p-3 shadow-2xs">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="flex items-center gap-1.5">
+            <ChartNoAxesCombined className="size-3.5 text-primary" />
+            <h4 className="text-xs font-semibold">Confusion matrix</h4>
+          </div>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            Actual classes compared with predicted classes
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="rounded-full bg-success/10 px-2 py-1 text-[9px] font-medium text-success">
+            {formatPercent(accuracy)} accuracy
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            onClick={copyMatrix}
+            title="Copy matrix as CSV"
+            aria-label="Copy confusion matrix as CSV"
+          >
+            {copied ? (
+              <ClipboardCheck className="size-3.5 text-success" />
+            ) : (
+              <Copy className="size-3.5" />
+            )}
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <div className="inline-flex rounded-md border bg-muted/30 p-0.5">
+          <Button
+            type="button"
+            size="xs"
+            variant={viewMode === "count" ? "secondary" : "ghost"}
+            onClick={() => setViewMode("count")}
+            className="h-6 px-2 text-[10px]"
+          >
+            Count
+          </Button>
+          <Button
+            type="button"
+            size="xs"
+            variant={viewMode === "rowPercent" ? "secondary" : "ghost"}
+            onClick={() => setViewMode("rowPercent")}
+            className="h-6 px-2 text-[10px]"
+          >
+            Row %
+          </Button>
+        </div>
+        <span className="text-[9px] text-muted-foreground">
+          {total} samples · diagonal = correct
+        </span>
+      </div>
+
+      <div className="overflow-auto rounded-lg border bg-muted/15">
+        <table className="w-full min-w-[300px] border-collapse text-center font-mono text-[10px]">
+          <caption className="sr-only">
+            Confusion matrix with actual rows and predicted columns
+          </caption>
+          <thead>
+            <tr>
+              <th className="border-r border-b p-2 text-left text-[9px] font-medium text-muted-foreground">
+                Actual \ Predicted
+              </th>
+              {result.labels.map((label, index) => (
+                <th
+                  key={String(label) + "-" + index}
+                  className="border-b p-2 font-semibold text-muted-foreground"
+                >
+                  {label}
+                </th>
+              ))}
+              <th className="border-b p-2 font-medium text-muted-foreground">
+                Total
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.matrix.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                <th className="border-r p-2 text-left font-semibold text-muted-foreground">
+                  {result.labels[rowIndex] ?? rowIndex}
+                </th>
+                {row.map((value, columnIndex) => {
+                  const rowTotal = rowTotals[rowIndex] ?? 0
+                  const displayValue =
+                    viewMode === "rowPercent"
+                      ? rowTotal > 0
+                        ? (value / rowTotal) * 100
+                        : 0
+                      : value
+                  const intensity =
+                    viewMode === "rowPercent"
+                      ? displayValue / 100
+                      : displayValue / maxValue
+                  const diagonal = rowIndex === columnIndex
+
+                  return (
+                    <td
+                      key={columnIndex}
+                      title={
+                        String(result.labels[rowIndex] ?? rowIndex) +
+                        " predicted as " +
+                        String(result.labels[columnIndex] ?? columnIndex) +
+                        ": " +
+                        value
+                      }
+                      className={cn(
+                        "border-t border-l p-2 font-semibold tabular-nums",
+                        diagonal &&
+                          "text-success ring-1 ring-success/25 ring-inset"
+                      )}
+                      style={{
+                        backgroundColor: diagonal
+                          ? "rgba(16, 185, 129, " +
+                            (0.08 + intensity * 0.38) +
+                            ")"
+                          : "rgba(37, 99, 235, " +
+                            (0.04 + intensity * 0.34) +
+                            ")",
+                      }}
+                    >
+                      {viewMode === "rowPercent"
+                        ? displayValue.toFixed(1) + "%"
+                        : value}
+                    </td>
+                  )
+                })}
+                <td className="border-t border-l bg-muted/25 p-2 font-semibold tabular-nums">
+                  {viewMode === "rowPercent"
+                    ? "100%"
+                    : (rowTotals[rowIndex] ?? 0)}
+                </td>
+              </tr>
+            ))}
+            <tr>
+              <th className="border-t border-r bg-muted/30 p-2 text-left font-semibold text-muted-foreground">
+                Total
+              </th>
+              {columnTotals.map((value, index) => (
+                <td
+                  key={index}
+                  className="border-t border-l bg-muted/25 p-2 font-semibold tabular-nums"
+                >
+                  {value}
+                </td>
+              ))}
+              <td className="border-t border-l bg-muted/35 p-2 font-semibold tabular-nums">
+                {total}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-center justify-between text-[9px] text-muted-foreground">
+        <span className="flex items-center gap-1.5">
+          <span className="size-2 rounded-sm bg-success/45" /> Correct
+          predictions
+        </span>
+        <span>Darker = more samples</span>
+      </div>
+
+      <div className="space-y-2 border-t pt-3">
+        <div className="flex items-center gap-1.5">
+          <ListChecks className="size-3.5 text-primary" />
+          <h4 className="text-xs font-semibold">Class quality</h4>
+        </div>
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full min-w-[300px] text-left text-[10px]">
+            <thead className="bg-muted/30 text-muted-foreground">
+              <tr>
+                <th className="px-2 py-1.5 font-medium">Class</th>
+                <th className="px-2 py-1.5 text-right font-medium">
+                  Precision
+                </th>
+                <th className="px-2 py-1.5 text-right font-medium">Recall</th>
+                <th className="px-2 py-1.5 text-right font-medium">F1</th>
+              </tr>
+            </thead>
+            <tbody>
+              {classStats.map((item, index) => (
+                <tr key={String(item.label) + "-" + index} className="border-t">
+                  <th className="px-2 py-1.5 font-medium">{item.label}</th>
+                  <td className="px-2 py-1.5 text-right font-mono">
+                    {formatPercent(item.precision)}
+                  </td>
+                  <td className="px-2 py-1.5 text-right font-mono">
+                    {formatPercent(item.recall)}
+                  </td>
+                  <td
+                    className={cn(
+                      "px-2 py-1.5 text-right font-mono font-semibold",
+                      item.f1 !== null && item.f1 >= 80
+                        ? "text-success"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {formatPercent(item.f1)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }
@@ -184,8 +526,70 @@ function LogsView({ logs }: { logs: PipelineLogEntry[] }) {
   )
 }
 
+function RunOverview({ state }: { state: PipelineRunState }) {
+  const nodeStatuses = Object.values(state.nodeStatuses)
+  const settledNodes = nodeStatuses.filter((status) =>
+    ["success", "error", "skipped"].includes(status)
+  ).length
+  const activeNodes = nodeStatuses.filter((status) =>
+    ["queued", "running"].includes(status)
+  ).length
+  const progress =
+    nodeStatuses.length > 0
+      ? Math.round((settledNodes / nodeStatuses.length) * 100)
+      : 0
+
+  return (
+    <div className="space-y-2 border-b bg-muted/15 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+          Run overview
+        </span>
+        <span className="font-mono text-[10px] font-semibold text-primary">
+          {settledNodes}/{nodeStatuses.length || 0} nodes
+        </span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+        <div
+          className={cn(
+            "h-full rounded-full bg-primary transition-all",
+            state.status === "failed" && "bg-destructive",
+            state.status === "completed" && "bg-success"
+          )}
+          style={{ width: progress + "%" }}
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-[9px] text-muted-foreground">
+        <span>{progress}% settled</span>
+        <span className="text-center">{activeNodes} active</span>
+        <span className="text-right">
+          {state.logs.length} logs · {state.artifacts.length} artifacts
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
   const hasFinished = state.status === "completed" || state.status === "failed"
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
+  if (isCollapsed) {
+    return (
+      <aside className="flex h-full w-11 shrink-0 flex-col items-center border-l bg-background">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setIsCollapsed(false)}
+          title="Expand execution panel"
+          aria-label="Expand execution panel"
+        >
+          <PanelRightOpen className="size-4" />
+        </Button>
+      </aside>
+    )
+  }
 
   return (
     <aside className="flex h-full w-[390px] max-w-[42vw] shrink-0 flex-col border-l bg-background">
@@ -200,6 +604,7 @@ export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
         </Badge>
         {hasFinished && (
           <Button
+            type="button"
             variant="ghost"
             size="icon-sm"
             onClick={onReset}
@@ -208,7 +613,19 @@ export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
             <RotateCcw className="size-3.5" />
           </Button>
         )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setIsCollapsed(true)}
+          title="Collapse execution panel"
+          aria-label="Collapse execution panel"
+        >
+          <PanelRightClose className="size-3.5" />
+        </Button>
       </div>
+
+      <RunOverview state={state} />
 
       <div className="flex items-center justify-between border-b px-3 py-1.5 text-[10px] text-muted-foreground">
         <span className="truncate font-mono">
@@ -230,8 +647,8 @@ export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
           <TabsTrigger value="logs">Logs ({state.logs.length})</TabsTrigger>
           <TabsTrigger value="metrics">
             Metrics (
-              {Object.keys(state.nodeMetrics ?? {}).length ||
-                (state.metrics ? 1 : 0)}
+            {Object.keys(state.nodeMetrics ?? {}).length ||
+              (state.metrics ? 1 : 0)}
             )
           </TabsTrigger>
           <TabsTrigger value="artifacts">
@@ -242,7 +659,10 @@ export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
           <LogsView logs={state.logs} />
         </TabsContent>
         <TabsContent value="metrics" className="min-h-0 overflow-hidden">
-          <MetricsView metrics={state.metrics} nodeMetrics={state.nodeMetrics} />
+          <MetricsView
+            metrics={state.metrics}
+            nodeMetrics={state.nodeMetrics}
+          />
         </TabsContent>
         <TabsContent value="artifacts" className="min-h-0 overflow-auto p-3">
           {state.artifacts.length === 0 ? (
@@ -261,7 +681,7 @@ export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
                   </div>
                   <div className="mt-1 text-muted-foreground">
                     {artifact.artifactType ?? "unknown type"}
-                    {artifact.mimeType ? ` · ${artifact.mimeType}` : ""}
+                    {artifact.mimeType ? ` Ã‚Â· ${artifact.mimeType}` : ""}
                   </div>
                   {artifact.storageUri && (
                     <div className="mt-1 truncate font-mono text-[10px] text-muted-foreground">

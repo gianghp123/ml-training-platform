@@ -1,4 +1,4 @@
-import type { NodeContext } from '../types';
+import type { NodeContext } from '../types.js';
 
 export function resolvePath(path: string, ctx: NodeContext): unknown {
   if (typeof path !== 'string' || !path.startsWith('$')) return path;

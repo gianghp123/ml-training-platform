@@ -1,7 +1,7 @@
 import type { ConstraintRule, Contract, ValidationError } from '@training-ml/contracts';
-import type { NodeContext } from '../types';
-import { getDatasetColumns } from '../utils/contract-helpers';
-import { resolveItems, resolvePath } from './_resolve-path';
+import type { NodeContext } from '../types.js';
+import { getDatasetColumns } from '../utils/contract-helpers.js';
+import { resolveItems, resolvePath } from './_resolve-path.js';
 
 export function disjoint(rule: ConstraintRule, ctx: NodeContext): ValidationError[] {
   const excluded = new Set(rule.exclude !== undefined ? resolveItems(rule.exclude, ctx) : []);

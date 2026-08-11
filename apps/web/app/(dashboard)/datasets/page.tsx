@@ -21,7 +21,7 @@ export default async function Page({
 
   return <PageContainer
     title="Datasets"
-    description="Manage datasets used for training and evaluation."
+    description="Manage versioned data assets used across training and evaluation runs."
     actions={<UploadDatasetModal />}
   >
     <DatasetTable data={data} totalItems={meta?.total ?? data.length} />

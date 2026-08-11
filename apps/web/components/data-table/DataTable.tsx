@@ -181,9 +181,12 @@ export function DataTable<T>({
           <TableBody>
             <TableRow>
               <TableCell colSpan={columns.length}>
-                <Empty className="py-16">
-                  <EmptyMedia variant="icon">
-                    <DatabaseIcon />
+                <Empty className="py-20">
+                  <EmptyMedia
+                    variant="icon"
+                    className="border border-white/8 bg-white/3 text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,.04)]"
+                  >
+                    <DatabaseIcon className="size-5" />
                   </EmptyMedia>
                   <EmptyTitle>{emptyTitle}</EmptyTitle>
                   <EmptyDescription>{emptyDescription}</EmptyDescription>
@@ -208,7 +211,7 @@ export function DataTable<T>({
         </TableHeader>
         <TableBody>
           {data.map((row, i) => (
-            <TableRow key={i}>
+            <TableRow key={i} className="group/row">
               {columns.map((col) => (
                 <TableCell key={col.header} className={col.className}>
                   {col.cell
@@ -226,11 +229,16 @@ export function DataTable<T>({
   }
 
   return (
-    <div className={cn("overflow-hidden rounded-xl border", className)}>
+    <div
+      className={cn(
+        "studio-surface overflow-hidden rounded-xl",
+        className
+      )}
+    >
       {renderTable()}
-      <div className="flex items-center justify-between gap-4 border-t px-4 py-2">
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>
+      <div className="flex flex-col items-start justify-between gap-3 border-t border-white/7 bg-black/8 px-4 py-3 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="font-mono text-[10px] tracking-[0.04em] tabular-nums">
             {from}-{to} of {totalItems}
           </span>
           <Select
@@ -242,7 +250,11 @@ export function DataTable<T>({
               })
             }
           >
-            <SelectTrigger size="sm" className="h-7 w-17">
+            <SelectTrigger
+              size="sm"
+              className="h-7 w-17 font-mono text-[10px]"
+              aria-label="Rows per page"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent align="start">
@@ -254,7 +266,7 @@ export function DataTable<T>({
             </SelectContent>
           </Select>
         </div>
-        <Pagination className="mx-0 w-auto">
+        <Pagination className="mx-0 w-auto [&_[data-slot=pagination-link]]:font-mono [&_[data-slot=pagination-link]]:text-[10px]">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious

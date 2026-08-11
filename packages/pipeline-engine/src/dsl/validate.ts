@@ -1,5 +1,5 @@
 import type { Column } from '@training-ml/contracts';
-import { FUNCTION_ARITY, type DslNode } from './ast';
+import { FUNCTION_ARITY, type DslNode } from './ast.js';
 
 export interface DslSemanticError {
   code: 'EXPRESSION_UNKNOWN_COLUMN' | 'EXPRESSION_NON_NUMERIC_COLUMN' | 'EXPRESSION_INVALID_ARITY';

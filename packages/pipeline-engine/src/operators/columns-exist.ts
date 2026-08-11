@@ -1,7 +1,7 @@
 import type { ConstraintRule, Contract, ValidationError } from '@training-ml/contracts';
-import type { NodeContext } from '../types';
-import { getDatasetColumns, isDatasetContract } from '../utils/contract-helpers';
-import { resolveItems, resolvePath } from './_resolve-path';
+import type { NodeContext } from '../types.js';
+import { getDatasetColumns, isDatasetContract } from '../utils/contract-helpers.js';
+import { resolveItems, resolvePath } from './_resolve-path.js';
 
 export function columnsExist(rule: ConstraintRule, ctx: NodeContext): ValidationError[] {
   const names = resolveItems(rule.columns, ctx);

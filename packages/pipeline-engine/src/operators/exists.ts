@@ -1,6 +1,6 @@
 import type { ConstraintRule, ValidationError } from '@training-ml/contracts';
-import type { NodeContext } from '../types';
-import { resolvePath } from './_resolve-path';
+import type { NodeContext } from '../types.js';
+import { resolvePath } from './_resolve-path.js';
 
 export function exists(rule: ConstraintRule, ctx: NodeContext): ValidationError[] {
   const target = resolvePath(rule.target as string, ctx);

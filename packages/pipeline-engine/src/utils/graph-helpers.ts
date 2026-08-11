@@ -1,4 +1,4 @@
-import type { Graph, GraphEdge, GraphNode } from '../types';
+import type { Graph, GraphEdge, GraphNode } from '../types.js';
 
 export function buildAdjacencyList(edges: GraphEdge[]): Record<string, string[]> {
   const adj: Record<string, string[]> = {};

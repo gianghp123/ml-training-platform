@@ -4,6 +4,7 @@ import { PageContainer } from "@/components/layouts/PageContainer"
 import { Button } from "@/components/ui/button"
 import { WorkflowTable } from "@/features/workflow/components/WorkflowTable"
 import { ROUTES } from "@/lib/route"
+import { Plus } from "lucide-react"
 
 
 export default async function Home({
@@ -20,10 +21,11 @@ export default async function Home({
   return (
     <PageContainer
       title="Workflows"
-      description="Create and manage your ML training workflows."
+      description="Build, validate, and operate production-ready machine learning pipelines."
       actions={
-        <Button asChild>
+        <Button asChild size="lg" className="h-9 gap-2 px-3.5 text-[13px]">
           <Link href={ROUTES.WORKFLOW.CREATE}>
+            <Plus className="size-4" />
             Create Workflow
           </Link>
         </Button>

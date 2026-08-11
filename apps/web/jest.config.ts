@@ -5,6 +5,7 @@ const config: Config = {
   testEnvironment: 'node',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^([.]{1,2}/.*)\\.js$': '$1',
     '^@training-ml/pipeline-engine$': '<rootDir>/../../packages/pipeline-engine/src/index.ts',
     '^@training-ml/contracts$': '<rootDir>/../../packages/contracts/src/index.ts',
   },

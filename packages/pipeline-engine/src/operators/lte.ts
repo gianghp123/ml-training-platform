@@ -1,7 +1,7 @@
 import type { ConstraintRule, Contract, ValidationError } from '@training-ml/contracts';
-import type { NodeContext } from '../types';
-import { getDatasetColumns } from '../utils/contract-helpers';
-import { resolvePath } from './_resolve-path';
+import type { NodeContext } from '../types.js';
+import { getDatasetColumns } from '../utils/contract-helpers.js';
+import { resolvePath } from './_resolve-path.js';
 
 export function lte(rule: ConstraintRule, ctx: NodeContext): ValidationError[] {
   const leftRaw = resolvePath(rule.left as string, ctx);

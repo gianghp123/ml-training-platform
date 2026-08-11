@@ -4,11 +4,11 @@ import {
   PipelineArtifactType,
   type ValidationError,
 } from '@training-ml/contracts';
-import { DslParseError } from '../dsl/tokenizer';
-import { parseExpression } from '../dsl/parser';
-import { validateAst } from '../dsl/validate';
-import type { NodeContext } from '../types';
-import { getDatasetColumns } from '../utils/contract-helpers';
+import { DslParseError } from '../dsl/tokenizer.js';
+import { parseExpression } from '../dsl/parser.js';
+import { validateAst } from '../dsl/validate.js';
+import type { NodeContext } from '../types.js';
+import { getDatasetColumns } from '../utils/contract-helpers.js';
 
 const NO_VALUE_OPS: string[] = [FilterOp.IS_NULL, FilterOp.IS_NOT_NULL];
 const RANGE_OPS: string[] = [FilterOp.GT, FilterOp.GTE, FilterOp.LT, FilterOp.LTE];

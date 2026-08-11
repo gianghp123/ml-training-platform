@@ -1,7 +1,7 @@
 import type { BlockDefinition, Column, Contract, ValidationError } from '@training-ml/contracts';
-import type { Graph, GraphEdge, GraphNode, ResolveColumnsFn, ValidationResult } from './types';
-import { getIncomingEdges, topologicalSort } from './utils/graph-helpers';
-import { validateNode } from './validate-node';
+import type { Graph, GraphEdge, GraphNode, ResolveColumnsFn, ValidationResult } from './types.js';
+import { getIncomingEdges, topologicalSort } from './utils/graph-helpers.js';
+import { validateNode } from './validate-node.js';
 
 export function validateGraph(
   graph: Graph,

@@ -1,14 +1,14 @@
 import type { ConstraintRule, ValidationError } from '@training-ml/contracts';
-import type { NodeContext } from '../types';
-import { evaluateCondition } from './_condition';
-import { disjoint } from './disjoint';
-import { eq } from './eq';
-import { exists } from './exists';
-import { lte } from './lte';
-import { rowCountMatches } from './row-count-matches';
-import { semantic } from './semantic';
-import { columnsExist } from './columns-exist';
-import { subsetOf } from './subset-of';
+import type { NodeContext } from '../types.js';
+import { evaluateCondition } from './_condition.js';
+import { disjoint } from './disjoint.js';
+import { eq } from './eq.js';
+import { exists } from './exists.js';
+import { lte } from './lte.js';
+import { rowCountMatches } from './row-count-matches.js';
+import { semantic } from './semantic.js';
+import { columnsExist } from './columns-exist.js';
+import { subsetOf } from './subset-of.js';
 
 export type OperatorFn = (rule: ConstraintRule, ctx: NodeContext) => ValidationError[];
 

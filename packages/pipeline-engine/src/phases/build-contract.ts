@@ -6,9 +6,9 @@ import {
   type DatasetContract,
   type ValidationError,
 } from '@training-ml/contracts';
-import { resolveItems, resolvePath } from '../operators/_resolve-path';
-import type { NodeContext } from '../types';
-import { isDatasetContract } from '../utils/contract-helpers';
+import { resolveItems, resolvePath } from '../operators/_resolve-path.js';
+import type { NodeContext } from '../types.js';
+import { isDatasetContract } from '../utils/contract-helpers.js';
 
 export function buildOutputContracts(ctx: NodeContext): {
   contracts: Record<string, Contract>;

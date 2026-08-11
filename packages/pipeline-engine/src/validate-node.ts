@@ -1,9 +1,9 @@
 import type { BlockDefinition, Column, ValidationError } from '@training-ml/contracts';
-import type { GraphEdge, GraphNode, NodeContext, ResolveColumnsFn } from './types';
-import { buildOutputContracts } from './phases/build-contract';
-import { validateConfig } from './phases/validate-config';
-import { validateConstraints } from './phases/validate-constraints';
-import { validatePorts } from './phases/validate-ports';
+import type { GraphEdge, GraphNode, NodeContext, ResolveColumnsFn } from './types.js';
+import { buildOutputContracts } from './phases/build-contract.js';
+import { validateConfig } from './phases/validate-config.js';
+import { validateConstraints } from './phases/validate-constraints.js';
+import { validatePorts } from './phases/validate-ports.js';
 
 export function validateNode(
   node: GraphNode,

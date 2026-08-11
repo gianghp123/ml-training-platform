@@ -1,7 +1,7 @@
 import type { ConstraintRule, ValidationError } from '@training-ml/contracts';
-import type { NodeContext } from '../types';
-import { getColumnByName } from '../utils/contract-helpers';
-import { resolvePath } from './_resolve-path';
+import type { NodeContext } from '../types.js';
+import { getColumnByName } from '../utils/contract-helpers.js';
+import { resolvePath } from './_resolve-path.js';
 
 export function semantic(rule: ConstraintRule, ctx: NodeContext): ValidationError[] {
   const target = resolvePath(rule.target as string, ctx);

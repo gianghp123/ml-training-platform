@@ -1,4 +1,4 @@
-import type { DslNode } from './ast';
+import type { DslNode } from './ast.js';
 
 export function dump(node: DslNode): string {
   switch (node.kind) {

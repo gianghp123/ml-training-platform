@@ -1,5 +1,5 @@
-import { DSL_FUNCTIONS, type CompareOp, type DslFunction, type DslNode } from './ast';
-import { DslParseError, tokenize, type Token } from './tokenizer';
+import { DSL_FUNCTIONS, type CompareOp, type DslFunction, type DslNode } from './ast.js';
+import { DslParseError, tokenize, type Token } from './tokenizer.js';
 
 const COMPARE_OPS = ['>', '>=', '<', '<=', '==', '!='];
 

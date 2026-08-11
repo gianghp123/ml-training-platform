@@ -1,6 +1,6 @@
 import type { ConstraintRule } from '@training-ml/contracts';
-import type { NodeContext } from '../types';
-import { resolvePath } from './_resolve-path';
+import type { NodeContext } from '../types.js';
+import { resolvePath } from './_resolve-path.js';
 
 type Condition = { field?: string; equals?: unknown; in?: unknown[] };
 
