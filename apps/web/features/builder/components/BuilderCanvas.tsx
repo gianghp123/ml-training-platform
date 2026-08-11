@@ -177,6 +177,19 @@ export function BuilderCanvas({
     [blocks, datasets, pipelineRun.isActive, builder.updateNodeConfig]
   )
 
+  const executionNodeLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        builder.nodes
+          .filter((node) => node.type === "block")
+          .map((node) => [
+            node.id,
+            String((node.data as Record<string, unknown>).blockName ?? node.id),
+          ])
+      ),
+    [builder.nodes]
+  )
+
   const groupNode = useMemo(() => {
     if (!groupContextMenu) return undefined
     return builder.nodes.find(
@@ -230,7 +243,9 @@ export function BuilderCanvas({
       (candidate) => candidate.id === activeDemoDatasetId
     )
     if (!dataset) {
-      toast.error(`Select a READY CSV dataset before loading the ${demo.name} demo.`)
+      toast.error(
+        `Select a READY CSV dataset before loading the ${demo.name} demo.`
+      )
       return
     }
 
@@ -242,10 +257,14 @@ export function BuilderCanvas({
       window.requestAnimationFrame(() => {
         void reactFlowRef.current?.fitView({ padding: 0.15, duration: 400 })
       })
-      toast.success(`${demo.name} graph loaded. Review validation, then click Run.`)
+      toast.success(
+        `${demo.name} graph loaded. Review validation, then click Run.`
+      )
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : `Unable to load ${demo.name} demo.`
+        error instanceof Error
+          ? error.message
+          : `Unable to load ${demo.name} demo.`
       )
     }
   }
@@ -385,6 +404,7 @@ export function BuilderCanvas({
           </div>
           <PipelineRunPanel
             state={pipelineRun.state}
+            nodeLabels={executionNodeLabels}
             onReset={pipelineRun.reset}
           />
         </div>

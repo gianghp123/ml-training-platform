@@ -1,5 +1,6 @@
 "use client"
 
+import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -7,7 +8,9 @@ import { cn } from "@/lib/utils"
 import {
   Activity,
   BadgeCheck,
+  Box,
   ChartNoAxesCombined,
+  ChevronDown,
   ClipboardCheck,
   Copy,
   Gauge,
@@ -20,16 +23,18 @@ import {
   TerminalSquare,
   TrendingUp,
 } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import type {
   PipelineLogEntry,
   PipelineMetrics,
   PipelineRunState,
+  RunArtifact,
   RunStatus,
 } from "../runtime/run-types"
 
 interface PipelineRunPanelProps {
   state: PipelineRunState
+  nodeLabels?: Record<string, string>
   onReset: () => void
 }
 
@@ -48,6 +53,13 @@ function logColor(level: PipelineLogEntry["level"]): string {
   return "text-warning"
 }
 
+export function formatArtifactMetadata(artifact: RunArtifact): string {
+  const artifactType = artifact.artifactType ?? "unknown type"
+  return artifact.mimeType
+    ? `${artifactType} \u00b7 ${artifact.mimeType}`
+    : artifactType
+}
+
 function formatMetric(value: number): string {
   if (Number.isInteger(value)) return String(value)
   return value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "")
@@ -60,7 +72,7 @@ function isRateMetric(name: string): boolean {
 }
 
 function formatMetricValue(name: string, value: number): string {
-  if (!Number.isFinite(value)) return "â€”"
+  if (!Number.isFinite(value)) return "—"
   if (isRateMetric(name) && value >= 0 && value <= 1) {
     return (value * 100).toFixed(1) + "%"
   }
@@ -480,9 +492,60 @@ function ConfusionMatrixView({
   )
 }
 
-function LogsView({ logs }: { logs: PipelineLogEntry[] }) {
+interface PipelineLogGroup {
+  id: string
+  label: string
+  nodeId?: string
+  logs: PipelineLogEntry[]
+}
+
+const PIPELINE_LOG_GROUP_ID = "__pipeline__"
+
+export function groupPipelineLogs(
+  logs: PipelineLogEntry[],
+  nodeLabels: Record<string, string> = {}
+): PipelineLogGroup[] {
+  const groups = new Map<string, PipelineLogGroup>()
+
+  for (const log of logs) {
+    const id = log.nodeId ?? PIPELINE_LOG_GROUP_ID
+    const existing = groups.get(id)
+    if (existing) {
+      existing.logs.push(log)
+      continue
+    }
+
+    groups.set(id, {
+      id,
+      label: log.nodeId
+        ? (nodeLabels[log.nodeId] ?? "Unknown block")
+        : "Pipeline",
+      nodeId: log.nodeId,
+      logs: [log],
+    })
+  }
+
+  return Array.from(groups.values())
+}
+
+function compactNodeId(nodeId: string): string {
+  if (nodeId.length <= 28) return nodeId
+  return `${nodeId.slice(0, 15)}…${nodeId.slice(-8)}`
+}
+
+function LogsView({
+  logs,
+  nodeLabels,
+}: {
+  logs: PipelineLogEntry[]
+  nodeLabels?: Record<string, string>
+}) {
   const viewportRef = useRef<HTMLDivElement>(null)
   const [stickToBottom, setStickToBottom] = useState(true)
+  const groups = useMemo(
+    () => groupPipelineLogs(logs, nodeLabels),
+    [logs, nodeLabels]
+  )
 
   useEffect(() => {
     if (!stickToBottom) return
@@ -506,21 +569,68 @@ function LogsView({ logs }: { logs: PipelineLogEntry[] }) {
           Run the graph to stream worker logs here.
         </div>
       ) : (
-        logs.map((log) => (
-          <div key={log.id} className="mb-1 grid grid-cols-[68px_1fr] gap-2">
-            <span className="text-zinc-500">
-              {new Date(log.timestamp).toLocaleTimeString([], {
-                hour12: false,
-              })}
-            </span>
-            <span className={logColor(log.level)}>
-              {log.nodeId && (
-                <span className="mr-1 text-info">[{log.nodeId}]</span>
-              )}
-              {log.message}
-            </span>
-          </div>
-        ))
+        <AccordionPrimitive.Root type="multiple" className="space-y-2">
+          {groups.map((group) => (
+            <AccordionPrimitive.Item
+              key={group.id}
+              value={group.id}
+              className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/70"
+            >
+              <AccordionPrimitive.Header>
+                <AccordionPrimitive.Trigger className="group flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors outline-none hover:bg-zinc-800/80 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-950 text-zinc-400">
+                    {group.nodeId ? (
+                      <Box className="size-3.5" />
+                    ) : (
+                      <TerminalSquare className="size-3.5" />
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-xs font-semibold text-zinc-100">
+                      {group.label}
+                    </span>
+                    <span
+                      className="mt-0.5 block truncate text-[9px] text-zinc-500"
+                      title={group.nodeId}
+                    >
+                      {group.nodeId
+                        ? compactNodeId(group.nodeId)
+                        : "Run-level events"}
+                    </span>
+                  </span>
+                  <span className="rounded-full border border-zinc-700 bg-zinc-950 px-2 py-0.5 text-[9px] font-medium text-zinc-400 tabular-nums">
+                    {group.logs.length}
+                  </span>
+                  <ChevronDown className="size-3.5 shrink-0 text-zinc-500 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                </AccordionPrimitive.Trigger>
+              </AccordionPrimitive.Header>
+              <AccordionPrimitive.Content className="overflow-hidden border-t border-zinc-800 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                <div className="space-y-1 px-3 py-2.5">
+                  {group.logs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="grid grid-cols-[62px_minmax(0,1fr)] gap-2"
+                    >
+                      <span className="text-zinc-600 tabular-nums">
+                        {new Date(log.timestamp).toLocaleTimeString([], {
+                          hour12: false,
+                        })}
+                      </span>
+                      <span
+                        className={cn(
+                          "break-words whitespace-pre-wrap",
+                          logColor(log.level)
+                        )}
+                      >
+                        {log.message}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </AccordionPrimitive.Content>
+            </AccordionPrimitive.Item>
+          ))}
+        </AccordionPrimitive.Root>
       )}
     </div>
   )
@@ -570,7 +680,11 @@ function RunOverview({ state }: { state: PipelineRunState }) {
   )
 }
 
-export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
+export function PipelineRunPanel({
+  state,
+  nodeLabels,
+  onReset,
+}: PipelineRunPanelProps) {
   const hasFinished = state.status === "completed" || state.status === "failed"
   const [isCollapsed, setIsCollapsed] = useState(false)
 
@@ -656,7 +770,7 @@ export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="logs" className="min-h-0">
-          <LogsView logs={state.logs} />
+          <LogsView logs={state.logs} nodeLabels={nodeLabels} />
         </TabsContent>
         <TabsContent value="metrics" className="min-h-0 overflow-hidden">
           <MetricsView
@@ -680,8 +794,7 @@ export function PipelineRunPanel({ state, onReset }: PipelineRunPanelProps) {
                     {artifact.name ?? `Artifact ${index + 1}`}
                   </div>
                   <div className="mt-1 text-muted-foreground">
-                    {artifact.artifactType ?? "unknown type"}
-                    {artifact.mimeType ? ` Ã‚Â· ${artifact.mimeType}` : ""}
+                    {formatArtifactMetadata(artifact)}
                   </div>
                   {artifact.storageUri && (
                     <div className="mt-1 truncate font-mono text-[10px] text-muted-foreground">
