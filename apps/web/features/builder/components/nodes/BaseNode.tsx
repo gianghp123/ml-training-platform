@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/tooltip"
 import type { ConfigField } from "@training-ml/contracts"
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react"
-import { memo, useCallback, useMemo } from "react"
+import { memo, useCallback, useMemo, type CSSProperties } from "react"
 import { getCategoryColor } from "../../blocks"
 import { useBuilderContext } from "../../contexts/builder.context"
 import { useValidationContext } from "../../contexts/validation.context"
@@ -34,6 +34,7 @@ function getStatusVariant(status: PipelineNode["data"]["status"]) {
 
 function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
   const dotColor = getCategoryColor(data.categoryId).tw
+  const accentColor = getCategoryColor(data.categoryId).hex
   const builder = useBuilderContext()
   const rf = useReactFlow()
 
@@ -95,18 +96,21 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
   )
 
   const handleStyle = {
-    width: 10,
-    height: 10,
-    border: `2px solid var(--color-background)`,
-  }
+    "--node-accent": accentColor,
+    top: "auto",
+    bottom: "auto",
+    left: -5,
+    position: "absolute",
+    transform: "none",
+  } as CSSProperties
 
   return (
     <div
       className={`min-w-50 rounded-lg border bg-card text-card-foreground shadow-sm transition-shadow ${hasErrors
-          ? "ring-2 ring-destructive"
-          : selected
-            ? "ring-2 ring-ring"
-            : "ring-1 ring-foreground/10"
+        ? "ring-2 ring-destructive"
+        : selected
+          ? "ring-2 ring-ring"
+          : "ring-1 ring-foreground/10"
         } ${isParentSuspended ? "opacity-50 grayscale" : ""}`}
     >
       <div
@@ -136,15 +140,8 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
                       type="target"
                       position={Position.Left}
                       id={input.id}
-                      style={{
-                        ...handleStyle,
-                        top: "auto",
-                        bottom: "auto",
-                        left: -5,
-                        position: "absolute",
-                        transform: "none",
-                      }}
-                      className={`static! border-2! border-background! ${dotColor} ${
+                      style={handleStyle}
+                      className={`static! pipeline-handle ${
                         input.optional ? "ring-1 ring-dashed ring-foreground/40" : ""
                       }`}
                     />
@@ -178,13 +175,10 @@ function BaseNode({ id, data, selected, parentId }: NodeProps<PipelineNode>) {
                       id={output.id}
                       style={{
                         ...handleStyle,
-                        top: "auto",
-                        bottom: "auto",
+                        left: "auto",
                         right: -5,
-                        position: "absolute",
-                        transform: "none",
                       }}
-                      className={`static! ${dotColor} border-2! border-background!`}
+                      className={`static! pipeline-handle`}
                     />
                   </TooltipTrigger>
                   <TooltipContent side="right">

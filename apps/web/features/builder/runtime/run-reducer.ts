@@ -285,15 +285,17 @@ function appendLog(
 
 function upsertArtifact(
   artifacts: RunArtifact[],
-  artifact: Record<string, unknown>
+  artifact: Record<string, unknown>,
+  nodeId?: string
 ): RunArtifact[] {
+  const attributed = nodeId ? { ...artifact, nodeId } : artifact
   const artifactId = typeof artifact.id === "string" ? artifact.id : undefined
-  if (!artifactId) return [...artifacts, artifact]
+  if (!artifactId) return [...artifacts, attributed]
 
   const existingIndex = artifacts.findIndex(
     (candidate) => candidate.id === artifactId
   )
-  if (existingIndex === -1) return [...artifacts, artifact]
+  if (existingIndex === -1) return [...artifacts, attributed]
 
   return artifacts.map((candidate, index) =>
     index === existingIndex ? { ...candidate, ...artifact } : candidate
@@ -318,6 +320,7 @@ function applySnapshot(
     runRecord?.nodeExecutions
   const nodeStatuses = { ...state.nodeStatuses }
   const nodeMetrics = { ...state.nodeMetrics }
+  const executionNodeIds = new Map<string, string>()
   let executionMetrics: PipelineMetrics | null = null
   let executionError: string | null = null
 
@@ -330,6 +333,11 @@ function applySnapshot(
           : typeof execution.node_id === "string"
             ? execution.node_id
             : undefined
+      const executionId =
+        typeof execution.id === "string" ? execution.id : undefined
+      if (nodeId && executionId) {
+        executionNodeIds.set(executionId, nodeId)
+      }
       const nodeStatus = normalizeNodeStatus(execution.status)
       if (nodeId && nodeStatus) nodeStatuses[nodeId] = nodeStatus
       const outputSummary = execution.outputSummary ?? execution.output_summary
@@ -353,7 +361,19 @@ function applySnapshot(
 
   const rawArtifacts = payload.artifacts ?? runRecord?.artifacts
   const artifacts = Array.isArray(rawArtifacts)
-    ? rawArtifacts.filter(isRecord)
+    ? rawArtifacts.filter(isRecord).map((artifact) => {
+        const executionId =
+          typeof artifact.nodeExecutionId === "string"
+            ? artifact.nodeExecutionId
+            : typeof artifact.node_execution_id === "string"
+              ? artifact.node_execution_id
+              : undefined
+        const nodeId =
+          executionId !== undefined
+            ? executionNodeIds.get(executionId)
+            : undefined
+        return nodeId ? { ...artifact, nodeId } : artifact
+      })
     : state.artifacts
   const metrics =
     extractMetrics(payload) ??
@@ -421,7 +441,7 @@ function applyEvent(
     }
     if (event.type === "artifact.created") {
       const artifact = firstRecord(event.payload, ["artifact"])
-      if (artifact) artifacts = upsertArtifact(artifacts, artifact)
+      if (artifact) artifacts = upsertArtifact(artifacts, artifact, event.nodeId)
     }
     if (event.type === "run.completed") {
       const previousStatus = status

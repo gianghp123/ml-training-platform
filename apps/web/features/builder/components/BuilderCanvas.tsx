@@ -43,6 +43,7 @@ import PipelineEdge from "./edges/PipelineEdge"
 import { usePipelineRun } from "../hooks/usePipelineRun"
 import { getReadyCsvDatasets } from "../utils/iris-demo"
 import { DEMOS, getDemo, getDefaultDemo } from "../utils/demos"
+import { detectBranches } from "../utils/branch-graph"
 import { toast } from "sonner"
 
 const nodeTypes = {
@@ -188,6 +189,11 @@ export function BuilderCanvas({
           ])
       ),
     [builder.nodes]
+  )
+
+  const executionBranches = useMemo(
+    () => detectBranches(builder.nodes, builder.edges, executionNodeLabels),
+    [builder.nodes, builder.edges, executionNodeLabels]
   )
 
   const groupNode = useMemo(() => {
@@ -405,6 +411,7 @@ export function BuilderCanvas({
           <PipelineRunPanel
             state={pipelineRun.state}
             nodeLabels={executionNodeLabels}
+            branches={executionBranches}
             onReset={pipelineRun.reset}
           />
         </div>

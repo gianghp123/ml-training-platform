@@ -56,6 +56,7 @@ export interface PipelineMetrics {
 export interface RunArtifact {
   id?: string
   nodeExecutionId?: string
+  nodeId?: string
   name?: string
   artifactType?: string
   mimeType?: string

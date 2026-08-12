@@ -222,6 +222,95 @@ describe("pipelineRunReducer", () => {
     expect(state.status).toBe("running")
   })
 
+  it("attributes a live artifact to its node via the event nodeId", () => {
+    let state = pipelineRunReducer(createInitialRunState(), {
+      type: "accepted",
+      runId: "02b4cc08-2bf7-4d17-b154-0d8ecead3914",
+      nodeIds: ["evaluate"],
+    })
+    state = pipelineRunReducer(state, {
+      type: "event",
+      event: event("artifact.created", {
+        eventId: "60-0",
+        nodeId: "evaluate",
+        payload: {
+          artifact: {
+            id: "artifact-1",
+            name: "metrics.json",
+            artifactType: "metric",
+          },
+        },
+      }),
+    })
+
+    expect(state.artifacts[0]).toMatchObject({
+      id: "artifact-1",
+      nodeId: "evaluate",
+    })
+  })
+
+  it("attributes snapshot artifacts to nodes via node executions", () => {
+    const state = pipelineRunReducer(
+      pipelineRunReducer(createInitialRunState(), {
+        type: "restore",
+        runId: "02b4cc08-2bf7-4d17-b154-0d8ecead3914",
+        nodeIds: ["evaluate"],
+      }),
+      {
+        type: "event",
+        event: event("run.snapshot", {
+          payload: {
+            status: "completed",
+            nodeExecutions: [
+              { id: "exec-1", nodeId: "evaluate", status: "completed" },
+            ],
+            artifacts: [
+              {
+                id: "artifact-1",
+                nodeExecutionId: "exec-1",
+                name: "metrics.json",
+                artifactType: "metric",
+              },
+            ],
+          },
+        }),
+      }
+    )
+
+    expect(state.artifacts[0]).toMatchObject({
+      id: "artifact-1",
+      nodeId: "evaluate",
+    })
+  })
+
+  it("does not attach a nodeId when the snapshot node execution is unknown", () => {
+    const state = pipelineRunReducer(
+      pipelineRunReducer(createInitialRunState(), {
+        type: "restore",
+        runId: "02b4cc08-2bf7-4d17-b154-0d8ecead3914",
+        nodeIds: ["evaluate"],
+      }),
+      {
+        type: "event",
+        event: event("run.snapshot", {
+          payload: {
+            status: "completed",
+            nodeExecutions: [],
+            artifacts: [
+              {
+                id: "artifact-1",
+                nodeExecutionId: "exec-unknown",
+                name: "metrics.json",
+                artifactType: "metric",
+              },
+            ],
+          },
+        }),
+      }
+    )
+
+    expect(state.artifacts[0]?.nodeId).toBeUndefined()
+  })
   it.each([
     ["completed", "completed"],
     ["failed", "failed"],

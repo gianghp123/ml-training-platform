@@ -51,7 +51,7 @@ export function makeEdge(
     targetHandle: targetPortId,
     type: "pipeline",
     data: {
-      edgeStyle: "smoothstep",
+      edgeStyle: "bezier",
       color: getCategoryColor(source.data.categoryId).hex,
     },
   }

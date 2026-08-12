@@ -138,7 +138,7 @@ export function WorkflowToolbar({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-84 p-1.5">
-          <DropdownMenuLabel className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1">
+          <DropdownMenuLabel className="text-[11px] font-semibold px-2 py-1 text-muted-foreground">
             Danh Sách Luồng Demo (Preset Pipelines)
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

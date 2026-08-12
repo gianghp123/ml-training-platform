@@ -55,7 +55,7 @@ export function UserSideBar({ ...props }: React.ComponentProps<typeof Sidebar>) 
             <span className="block truncate text-sm font-semibold tracking-[-0.01em] text-sidebar-accent-foreground">
               ML Studio
             </span>
-            <span className="block truncate font-mono text-[9px] tracking-[0.12em] text-sidebar-foreground/55 uppercase">
+            <span className="block truncate font-mono text-[10px] text-sidebar-foreground/55">
               Training Platform
             </span>
           </span>
@@ -64,7 +64,7 @@ export function UserSideBar({ ...props }: React.ComponentProps<typeof Sidebar>) 
 
       <SidebarContent className="px-1.5 py-3">
         <SidebarGroup className="p-0">
-          <SidebarGroupLabel className="h-7 px-2.5 font-mono text-[9px] tracking-[0.16em] uppercase">
+          <SidebarGroupLabel className="h-7 px-2.5 font-mono text-[10px]">
             Workspace
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -106,7 +106,7 @@ export function UserSideBar({ ...props }: React.ComponentProps<typeof Sidebar>) 
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <div className="flex items-center justify-between gap-2 rounded-lg border border-white/6 bg-white/2 px-2.5 py-2 group-data-[collapsible=icon]:hidden">
-          <span className="font-mono text-[9px] tracking-[0.12em] text-sidebar-foreground/45 uppercase">
+          <span className="font-mono text-[10px] text-sidebar-foreground/45">
             Toggle panel
           </span>
           <kbd className="rounded border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[9px] text-sidebar-foreground/65">

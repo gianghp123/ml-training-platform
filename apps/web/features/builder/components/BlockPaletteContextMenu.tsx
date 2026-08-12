@@ -120,7 +120,7 @@ export function BlockPaletteContextMenu({
                   <div
                     className={`size-2 rounded-full ${getCategoryColor(group.category.id).tw}`}
                   />
-                  <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                  <span className="text-[11px] font-medium text-muted-foreground">
                     {group.category.name}
                   </span>
                 </div>

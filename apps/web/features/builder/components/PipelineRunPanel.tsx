@@ -1,50 +1,46 @@
 "use client"
 
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import {
-  Activity,
-  BadgeCheck,
-  Box,
+  ArrowLeft,
   ChartNoAxesCombined,
   ChevronDown,
   ClipboardCheck,
   Copy,
   Download,
-  Gauge,
-  Hash,
+  ListChecks,
   PanelRightClose,
   PanelRightOpen,
   RotateCcw,
-  Target,
-  ListChecks,
   TerminalSquare,
-  TrendingUp,
 } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type {
+  NodeRunStatus,
   PipelineLogEntry,
   PipelineMetrics,
   PipelineRunState,
   RunArtifact,
   RunStatus,
 } from "../runtime/run-types"
+import type { Branch } from "../utils/branch-graph"
 
 interface PipelineRunPanelProps {
   state: PipelineRunState
   nodeLabels?: Record<string, string>
+  branches?: Branch[]
   onReset: () => void
 }
 
-function statusVariant(status: RunStatus) {
-  if (status === "completed") return "success" as const
-  if (status === "failed") return "destructive" as const
-  if (status === "running") return "info" as const
-  if (status === "pending" || status === "submitting") return "warning" as const
-  return "outline" as const
+function statusDotClass(status: RunStatus): string {
+  if (status === "completed") return "bg-success"
+  if (status === "failed") return "bg-destructive"
+  if (status === "running") return "bg-info animate-pulse"
+  if (status === "pending" || status === "submitting") return "bg-warning"
+  return "bg-muted-foreground/40"
 }
 
 function logColor(level: PipelineLogEntry["level"]): string {
@@ -61,6 +57,34 @@ export function formatArtifactMetadata(artifact: RunArtifact): string {
     : artifactType
 }
 
+export function filterLogsByNodes(
+  logs: PipelineLogEntry[],
+  nodeIds: string[]
+): PipelineLogEntry[] {
+  const nodeSet = new Set(nodeIds)
+  return logs.filter((log) => !log.nodeId || nodeSet.has(log.nodeId))
+}
+
+export function filterArtifactsByNodes(
+  artifacts: RunArtifact[],
+  nodeIds: string[]
+): RunArtifact[] {
+  const nodeSet = new Set(nodeIds)
+  return artifacts.filter(
+    (artifact) => artifact.nodeId !== undefined && nodeSet.has(artifact.nodeId)
+  )
+}
+
+export function filterNodeMetrics(
+  nodeMetrics: Record<string, PipelineMetrics>,
+  nodeIds: string[]
+): Record<string, PipelineMetrics> {
+  const nodeSet = new Set(nodeIds)
+  return Object.fromEntries(
+    Object.entries(nodeMetrics).filter(([nodeId]) => nodeSet.has(nodeId))
+  )
+}
+
 export function ArtifactsView({ artifacts }: { artifacts: RunArtifact[] }) {
   if (artifacts.length === 0) {
     return (
@@ -71,44 +95,43 @@ export function ArtifactsView({ artifacts }: { artifacts: RunArtifact[] }) {
   }
 
   return (
-    <div className="space-y-2 p-3">
+    <div className="divide-y divide-border rounded-lg border">
       {artifacts.map((artifact, index) => {
         const artifactName = artifact.name ?? `Artifact ${index + 1}`
 
         return (
           <div
             key={artifact.id ?? `${artifactName}-${index}`}
-            className="rounded-md border p-3 text-xs"
+            className="group flex items-center gap-2 px-2.5 py-2"
           >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="truncate font-medium" title={artifactName}>
-                  {artifactName}
-                </div>
-                <div className="mt-1 text-muted-foreground">
-                  {formatArtifactMetadata(artifact)}
-                </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-xs font-medium" title={artifactName}>
+                {artifactName}
               </div>
-              {artifact.id && (
-                <Button asChild variant="ghost" size="icon-xs">
-                  <a
-                    href={`/api/artifacts/${encodeURIComponent(artifact.id)}/download`}
-                    download={artifactName}
-                    aria-label={`Download ${artifactName}`}
-                    title={`Download ${artifactName}`}
-                  >
-                    <Download className="size-3.5" />
-                  </a>
-                </Button>
-              )}
-            </div>
-            {artifact.storageUri && (
               <div
-                className="mt-1 truncate font-mono text-[10px] text-muted-foreground"
+                className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground"
                 title={artifact.storageUri}
               >
-                {artifact.storageUri}
+                {formatArtifactMetadata(artifact)}
+                {artifact.storageUri ? ` \u00b7 ${artifact.storageUri}` : ""}
               </div>
+            </div>
+            {artifact.id && (
+              <Button
+                asChild
+                variant="ghost"
+                size="icon-xs"
+                className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+              >
+                <a
+                  href={`/api/artifacts/${encodeURIComponent(artifact.id)}/download`}
+                  download={artifactName}
+                  aria-label={`Download ${artifactName}`}
+                  title={`Download ${artifactName}`}
+                >
+                  <Download className="size-3.5" />
+                </a>
+              </Button>
             )}
           </div>
         )
@@ -138,22 +161,6 @@ function formatMetricValue(name: string, value: number): string {
 
 function metricLabel(name: string): string {
   return name.replace(/[_-]+/g, " ")
-}
-
-function metricIcon(name: string) {
-  const normalized = name.toLowerCase()
-  if (normalized.includes("accuracy")) return BadgeCheck
-  if (normalized.includes("precision") || normalized.includes("recall")) {
-    return Target
-  }
-  if (normalized.includes("f1") || normalized.includes("score")) return Gauge
-  if (normalized.includes("loss") || normalized.includes("error")) {
-    return Activity
-  }
-  if (normalized.includes("r2") || normalized.includes("auc")) {
-    return TrendingUp
-  }
-  return ChartNoAxesCombined
 }
 
 function metricProgress(name: string, value: number): number | null {
@@ -189,72 +196,50 @@ function MetricsView({
     nodeEntries.length > 0 ? nodeEntries : [["Evaluation summary", metrics!]]
 
   return (
-    <div className="space-y-3 overflow-auto p-3">
+    <div className="space-y-4 overflow-auto p-3">
       {listToRender.map(([nodeId, itemMetrics]) => (
-        <section key={nodeId} className="space-y-3">
-          <div className="flex items-start justify-between gap-3 px-1">
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                {nodeEntries.length > 1
-                  ? "Evaluation node"
-                  : "Evaluation summary"}
-              </p>
-              <h3 className="mt-1 truncate text-sm font-semibold">{nodeId}</h3>
-            </div>
-            <Badge variant="outline" className="shrink-0 gap-1 text-[10px]">
-              <Hash className="size-3" />
+        <section key={nodeId} className="space-y-2">
+          <div className="flex items-baseline justify-between gap-3 px-1">
+            <h3 className="truncate font-heading text-xs font-semibold">
+              {nodeId}
+            </h3>
+            <span className="shrink-0 font-mono text-[9px] text-muted-foreground">
               {Object.keys(itemMetrics.values).length} metrics
-            </Badge>
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="divide-y divide-border rounded-lg border">
             {Object.entries(itemMetrics.values).map(([name, value]) => {
-              const Icon = metricIcon(name)
               const progress = metricProgress(name, value)
               const isGood = progress !== null && progress >= 80
 
               return (
                 <div
                   key={name}
-                  className={cn(
-                    "group rounded-xl border bg-card p-3 shadow-2xs transition-colors",
-                    isGood && "border-success/25 bg-success/[0.035]"
-                  )}
+                  className="flex items-center gap-3 px-2.5 py-1.5"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex min-w-0 items-center gap-1.5">
+                  <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+                    {metricLabel(name)}
+                  </span>
+                  {progress !== null && (
+                    <span className="h-1 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
                       <span
                         className={cn(
-                          "flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary",
-                          isGood && "bg-success/12 text-success"
-                        )}
-                      >
-                        <Icon className="size-3.5" />
-                      </span>
-                      <span className="truncate text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-                        {metricLabel(name)}
-                      </span>
-                    </div>
-                    {progress !== null && (
-                      <span className="text-[9px] font-medium text-muted-foreground">
-                        {progress}%
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-2 font-mono text-xl font-semibold tracking-tight">
-                    {formatMetricValue(name, value)}
-                  </div>
-                  {progress !== null && (
-                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          "h-full rounded-full bg-primary transition-all",
+                          "block h-full rounded-full bg-primary transition-all",
                           isGood && "bg-success"
                         )}
                         style={{ width: progress + "%" }}
                       />
-                    </div>
+                    </span>
                   )}
+                  <span
+                    className={cn(
+                      "w-16 shrink-0 text-right font-mono text-xs font-semibold tabular-nums",
+                      isGood ? "text-success" : "text-foreground"
+                    )}
+                  >
+                    {formatMetricValue(name, value)}
+                  </span>
                 </div>
               )
             })}
@@ -626,22 +611,15 @@ function LogsView({
           Run the graph to stream worker logs here.
         </div>
       ) : (
-        <AccordionPrimitive.Root type="multiple" className="space-y-2">
+        <AccordionPrimitive.Root type="multiple" className="space-y-1">
           {groups.map((group) => (
             <AccordionPrimitive.Item
               key={group.id}
               value={group.id}
-              className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/70"
+              className="rounded-lg"
             >
               <AccordionPrimitive.Header>
-                <AccordionPrimitive.Trigger className="group flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors outline-none hover:bg-zinc-800/80 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset">
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-950 text-zinc-400">
-                    {group.nodeId ? (
-                      <Box className="size-3.5" />
-                    ) : (
-                      <TerminalSquare className="size-3.5" />
-                    )}
-                  </span>
+                <AccordionPrimitive.Trigger className="group flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors outline-none hover:bg-zinc-900 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset">
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-xs font-semibold text-zinc-100">
                       {group.label}
@@ -655,14 +633,14 @@ function LogsView({
                         : "Run-level events"}
                     </span>
                   </span>
-                  <span className="rounded-full border border-zinc-700 bg-zinc-950 px-2 py-0.5 text-[9px] font-medium text-zinc-400 tabular-nums">
+                  <span className="shrink-0 font-mono text-[9px] text-zinc-500 tabular-nums">
                     {group.logs.length}
                   </span>
-                  <ChevronDown className="size-3.5 shrink-0 text-zinc-500 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  <ChevronDown className="size-3.5 shrink-0 text-zinc-600 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                 </AccordionPrimitive.Trigger>
               </AccordionPrimitive.Header>
-              <AccordionPrimitive.Content className="overflow-hidden border-t border-zinc-800 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                <div className="space-y-1 px-3 py-2.5">
+              <AccordionPrimitive.Content className="overflow-hidden border-t border-zinc-800/80 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                <div className="space-y-1 px-2 py-2">
                   {group.logs.map((log) => (
                     <div
                       key={log.id}
@@ -693,7 +671,15 @@ function LogsView({
   )
 }
 
-function RunOverview({ state }: { state: PipelineRunState }) {
+function RunOverview({
+  state,
+  logsCount,
+  artifactsCount,
+}: {
+  state: PipelineRunState
+  logsCount?: number
+  artifactsCount?: number
+}) {
   const nodeStatuses = Object.values(state.nodeStatuses)
   const settledNodes = nodeStatuses.filter((status) =>
     ["success", "error", "skipped"].includes(status)
@@ -707,16 +693,8 @@ function RunOverview({ state }: { state: PipelineRunState }) {
       : 0
 
   return (
-    <div className="space-y-2 border-b bg-muted/15 px-3 py-2.5">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
-          Run overview
-        </span>
-        <span className="font-mono text-[10px] font-semibold text-primary">
-          {settledNodes}/{nodeStatuses.length || 0} nodes
-        </span>
-      </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+    <div className="space-y-2 border-b px-3 py-2.5">
+      <div className="h-1 overflow-hidden rounded-full bg-muted">
         <div
           className={cn(
             "h-full rounded-full bg-primary transition-all",
@@ -726,13 +704,97 @@ function RunOverview({ state }: { state: PipelineRunState }) {
           style={{ width: progress + "%" }}
         />
       </div>
-      <div className="grid grid-cols-3 gap-2 text-[9px] text-muted-foreground">
-        <span>{progress}% settled</span>
-        <span className="text-center">{activeNodes} active</span>
-        <span className="text-right">
-          {state.logs.length} logs · {state.artifacts.length} artifacts
+      <div className="flex items-baseline justify-between gap-2 font-mono text-[10px] text-muted-foreground">
+        <span className="min-w-0">
+          <span className="font-semibold text-foreground">
+            {settledNodes}/{nodeStatuses.length || 0}
+          </span>{" "}
+          nodes settled
+        </span>
+        <span className="shrink-0">{activeNodes} active</span>
+        <span className="shrink-0 text-right">
+          {logsCount ?? state.logs.length} logs ·{" "}
+          {artifactsCount ?? state.artifacts.length} artifacts
         </span>
       </div>
+    </div>
+  )
+}
+
+function branchRunStatus(
+  nodeStatuses: Record<string, NodeRunStatus>,
+  nodeIds: string[]
+): RunStatus {
+  const statuses = nodeIds
+    .map((nodeId) => nodeStatuses[nodeId])
+    .filter((status): status is NodeRunStatus => status !== undefined)
+  if (statuses.some((status) => status === "error")) return "failed"
+  if (statuses.some((status) => status === "running")) return "running"
+  if (statuses.some((status) => status === "queued")) return "pending"
+  if (statuses.length > 0 && statuses.every((status) => status === "success" || status === "skipped")) {
+    return "completed"
+  }
+  return "pending"
+}
+
+function BranchList({
+  state,
+  branches,
+  onSelect,
+}: {
+  state: PipelineRunState
+  branches: Branch[]
+  onSelect: (branchId: string) => void
+}) {
+  return (
+    <div className="min-h-0 flex-1 space-y-2 overflow-auto p-3">
+      {branches.map((branch) => {
+        const nodeSet = new Set(branch.nodeIds)
+        const statuses = branch.nodeIds.map(
+          (nodeId) => state.nodeStatuses[nodeId]
+        )
+        const settled = statuses.filter((status) =>
+          ["success", "error", "skipped"].includes(status ?? "")
+        ).length
+        const artifactCount = state.artifacts.filter(
+          (artifact) =>
+            artifact.nodeId !== undefined && nodeSet.has(artifact.nodeId)
+        ).length
+        const status = branchRunStatus(state.nodeStatuses, branch.nodeIds)
+
+        return (
+          <button
+            key={branch.id}
+            type="button"
+            onClick={() => onSelect(branch.id)}
+            className="block w-full rounded-lg border bg-card p-3 text-left transition-colors hover:bg-accent/50"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="truncate text-sm font-medium">
+                {branch.label}
+              </span>
+              <span className="flex shrink-0 items-center gap-1.5 capitalize text-[10px] text-muted-foreground">
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    statusDotClass(status)
+                  )}
+                />
+                {status}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-3 font-mono text-[10px] text-muted-foreground">
+              <span>
+                <span className="text-foreground">
+                  {settled}/{branch.nodeIds.length}
+                </span>{" "}
+                nodes settled
+              </span>
+              <span>{artifactCount} artifacts</span>
+            </div>
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -740,10 +802,41 @@ function RunOverview({ state }: { state: PipelineRunState }) {
 export function PipelineRunPanel({
   state,
   nodeLabels,
+  branches = [],
   onReset,
 }: PipelineRunPanelProps) {
   const hasFinished = state.status === "completed" || state.status === "failed"
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [selection, setSelection] = useState<{
+    runId: string | null
+    branchId: string | null
+  }>({ runId: null, branchId: null })
+
+  const selectedBranch =
+    selection.runId === state.runId
+      ? (branches.find((branch) => branch.id === selection.branchId) ?? null)
+      : null
+  const effectiveBranch =
+    branches.length === 1 ? branches[0] : selectedBranch
+  const isEmpty =
+    state.status === "idle" &&
+    state.logs.length === 0 &&
+    state.artifacts.length === 0
+  const showList = branches.length > 1 && !effectiveBranch && !isEmpty
+
+  const filteredLogs = effectiveBranch
+    ? filterLogsByNodes(state.logs, effectiveBranch.nodeIds)
+    : state.logs
+  const filteredArtifacts = effectiveBranch
+    ? filterArtifactsByNodes(state.artifacts, effectiveBranch.nodeIds)
+    : state.artifacts
+  const filteredNodeMetrics = effectiveBranch
+    ? filterNodeMetrics(state.nodeMetrics ?? {}, effectiveBranch.nodeIds)
+    : state.nodeMetrics
+
+  const handleSelectBranch = (branchId: string) => {
+    setSelection({ runId: state.runId, branchId })
+  }
 
   if (isCollapsed) {
     return (
@@ -765,14 +858,35 @@ export function PipelineRunPanel({
   return (
     <aside className="flex h-full w-[390px] max-w-[42vw] shrink-0 flex-col border-l bg-background">
       <div className="flex items-center gap-2 border-b px-3 py-2">
-        <TerminalSquare className="size-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Execution</span>
-        <Badge
-          variant={statusVariant(state.status)}
-          className="ml-auto capitalize"
-        >
-          {state.status.replace("_", " ")}
-        </Badge>
+        {effectiveBranch && showList === false && branches.length > 1 && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setSelection({ runId: null, branchId: null })}
+            title="Back to branch list"
+            aria-label="Back to branch list"
+          >
+            <ArrowLeft className="size-3.5" />
+          </Button>
+        )}
+        <span className="font-heading text-sm font-semibold">Execution</span>
+        {effectiveBranch && (
+          <span
+            className="truncate text-xs text-muted-foreground"
+            title={effectiveBranch.label}
+          >
+            {effectiveBranch.label}
+          </span>
+        )}
+        <span className="ml-auto flex items-center gap-1.5">
+          <span
+            className={cn("size-1.5 rounded-full", statusDotClass(state.status))}
+          />
+          <span className="text-xs capitalize text-muted-foreground">
+            {state.status.replace("_", " ")}
+          </span>
+        </span>
         {hasFinished && (
           <Button
             type="button"
@@ -796,49 +910,80 @@ export function PipelineRunPanel({
         </Button>
       </div>
 
-      <RunOverview state={state} />
-
-      <div className="flex items-center justify-between border-b px-3 py-1.5 text-[10px] text-muted-foreground">
-        <span className="truncate font-mono">
-          {state.runId ?? "No active run"}
-        </span>
-        <span className="ml-2 shrink-0 capitalize">
-          stream: {state.connectionStatus}
-        </span>
-      </div>
-
-      {state.error && (
-        <div className="border-b border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-          {state.error}
+      {showList ? (
+        <BranchList
+          state={state}
+          branches={branches}
+          onSelect={handleSelectBranch}
+        />
+      ) : isEmpty ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+          <div className="flex size-10 items-center justify-center rounded-2xl border border-primary/15 bg-primary/8 text-primary">
+            <TerminalSquare className="size-5" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">No active execution</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Run the graph to see branch execution results here.
+            </p>
+          </div>
         </div>
-      )}
-
-      <Tabs defaultValue="logs" className="min-h-0 flex-1 gap-0">
-        <TabsList variant="line" className="mx-3 shrink-0">
-          <TabsTrigger value="logs">Logs ({state.logs.length})</TabsTrigger>
-          <TabsTrigger value="metrics">
-            Metrics (
-            {Object.keys(state.nodeMetrics ?? {}).length ||
-              (state.metrics ? 1 : 0)}
-            )
-          </TabsTrigger>
-          <TabsTrigger value="artifacts">
-            Artifacts ({state.artifacts.length})
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="logs" className="min-h-0">
-          <LogsView logs={state.logs} nodeLabels={nodeLabels} />
-        </TabsContent>
-        <TabsContent value="metrics" className="min-h-0 overflow-hidden">
-          <MetricsView
-            metrics={state.metrics}
-            nodeMetrics={state.nodeMetrics}
+      ) : (
+        <>
+          <RunOverview
+            state={state}
+            logsCount={filteredLogs.length}
+            artifactsCount={filteredArtifacts.length}
           />
-        </TabsContent>
-        <TabsContent value="artifacts" className="min-h-0 overflow-auto">
-          <ArtifactsView artifacts={state.artifacts} />
-        </TabsContent>
-      </Tabs>
+
+          <div className="flex items-center justify-between border-b px-3 py-1.5 text-[10px] text-muted-foreground">
+            <span className="truncate font-mono">
+              {state.runId ?? "No active run"}
+            </span>
+            <span className="ml-2 shrink-0 capitalize">
+              stream: {state.connectionStatus}
+            </span>
+          </div>
+
+          {state.error && (
+            <div className="border-b border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              {state.error}
+            </div>
+          )}
+
+          <Tabs defaultValue="logs" className="min-h-0 flex-1 gap-0">
+            <TabsList variant="line" className="mx-3 shrink-0">
+              <TabsTrigger value="logs">
+                Logs ({filteredLogs.length})
+              </TabsTrigger>
+              <TabsTrigger value="metrics">
+                Metrics (
+                {Object.keys(filteredNodeMetrics ?? {}).length ||
+                  (state.metrics && !selectedBranch ? 1 : 0)}
+                )
+              </TabsTrigger>
+              <TabsTrigger value="artifacts">
+                Artifacts ({filteredArtifacts.length})
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="logs" className="min-h-0">
+              <LogsView
+                logs={filteredLogs}
+                nodeLabels={nodeLabels}
+              />
+            </TabsContent>
+            <TabsContent value="metrics" className="min-h-0 overflow-hidden">
+              <MetricsView
+                metrics={selectedBranch ? null : state.metrics}
+                nodeMetrics={filteredNodeMetrics ?? {}}
+              />
+            </TabsContent>
+            <TabsContent value="artifacts" className="min-h-0 overflow-auto">
+              <ArtifactsView artifacts={filteredArtifacts} />
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
     </aside>
   )
 }

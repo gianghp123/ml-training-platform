@@ -25,6 +25,7 @@ import {
   findBlockById,
   type PipelineNode,
 } from "../utils/node-factory"
+import { isValidNodeConnection } from "../utils/socket-validator"
 import { useValidation } from "./useValidation"
 import { useWorkflowPersistence } from "./useWorkflowPersistence"
 
@@ -103,7 +104,7 @@ export function useBuilder({
   const [palettePosition, setPalettePosition] = useState<XYPosition | null>(
     null
   )
-  const [edgeStyle, setEdgeStyle] = useState<EdgeStyle>("smoothstep")
+  const [edgeStyle, setEdgeStyle] = useState<EdgeStyle>("bezier")
 
   const {
     saveWorkflow: persist,
@@ -134,6 +135,18 @@ export function useBuilder({
 
   const onConnect: OnConnect = useCallback(
     (connection: Connection) => {
+      if (
+        !isValidNodeConnection({
+          sourceNodeId: connection.source,
+          targetNodeId: connection.target,
+          sourceHandle: connection.sourceHandle ?? null,
+          targetHandle: connection.targetHandle ?? null,
+          nodes,
+          edges,
+        })
+      ) {
+        return
+      }
       setEdges((eds) =>
         addEdge(
           {
@@ -145,7 +158,7 @@ export function useBuilder({
         )
       )
     },
-    [nodes, edgeStyle, setEdges]
+    [nodes, edges, edgeStyle, setEdges]
   )
 
   const addNode = useCallback(

@@ -201,7 +201,7 @@ function DatasetFileDrawerBody({ dataset }: { dataset: Dataset }) {
       </DrawerHeader>
       <Separator className="bg-white/7" />
       <div className="px-4 pt-3">
-        <span className="font-mono text-[9px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+        <span className="font-mono text-[10px] font-medium text-muted-foreground">
           Files
         </span>
       </div>
