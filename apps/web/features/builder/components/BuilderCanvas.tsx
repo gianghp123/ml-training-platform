@@ -304,16 +304,19 @@ export function BuilderCanvas({
     }
   }
 
+  const validationContextValue = useMemo(
+    () => ({
+      result: validationResult,
+      contracts: validationResult.contracts,
+      inputContracts: validationResult.inputContracts,
+      getNodeErrors,
+      isValid,
+    }),
+    [validationResult, getNodeErrors, isValid]
+  )
+
   return (
-    <ValidationContext.Provider
-      value={{
-        result: validationResult,
-        contracts: validationResult.contracts,
-        inputContracts: validationResult.inputContracts,
-        getNodeErrors,
-        isValid,
-      }}
-    >
+    <ValidationContext.Provider value={validationContextValue}>
       <div className="flex h-full w-full flex-col">
         <WorkflowToolbar
           workflowName={builder.workflowName}
