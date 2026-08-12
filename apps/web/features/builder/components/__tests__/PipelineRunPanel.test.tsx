@@ -6,6 +6,7 @@ import "@testing-library/jest-dom"
 import { fireEvent, render, screen } from "@testing-library/react"
 import { createInitialRunState } from "../../runtime/run-reducer"
 import {
+  ArtifactsView,
   formatArtifactMetadata,
   groupPipelineLogs,
   PipelineRunPanel,
@@ -90,5 +91,27 @@ describe("PipelineRunPanel block log groups", () => {
         mimeType: "application/octet-stream",
       })
     ).toBe("model \u00b7 application/octet-stream")
+  })
+
+  it("renders an artifact download link through the authenticated BFF", () => {
+    const artifactId = "9b19531e-8656-463d-97a7-0bc438c22ca0"
+
+    render(
+      <ArtifactsView
+        artifacts={[
+          {
+            id: artifactId,
+            name: "model.joblib",
+            artifactType: "model",
+            mimeType: "application/octet-stream",
+            storageUri: "runs/run-1/artifacts/model.joblib",
+          },
+        ]}
+      />
+    )
+
+    expect(
+      screen.getByRole("link", { name: "Download model.joblib" })
+    ).toHaveAttribute("href", `/api/artifacts/${artifactId}/download`)
   })
 })

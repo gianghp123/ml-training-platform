@@ -43,5 +43,13 @@ export type CreateArtifact = z.infer<typeof CreateArtifactSchema>;
 export type UpdateArtifact = z.infer<typeof UpdateArtifactSchema>;
 export type Artifact = z.infer<typeof ArtifactSchema>;
 
+export const ArtifactDownloadResponseSchema = z.object({
+  url: z.string().url(),
+});
+
+export type ArtifactDownloadResponse = z.infer<
+  typeof ArtifactDownloadResponseSchema
+>;
+
 import { createPaginatedResponseSchema } from "../response";
 export const PaginatedArtifactResponseSchema = createPaginatedResponseSchema(ArtifactSchema);

@@ -1,91 +1,69 @@
-import {
-  Inject,
-  Injectable,
-  OnModuleInit,
-} from '@nestjs/common';
-import {
-  ConfigService,
-} from '@nestjs/config';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import { Client } from 'minio';
 import * as os from 'os';
 import * as path from 'path';
-import {
-  MINIO_CLIENT,
-} from './minio.provider';
+import { sanitizeFilename } from 'src/libs/utils/file.util';
+import { MINIO_CLIENT } from './minio.provider';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
   constructor(
     @Inject(MINIO_CLIENT)
     private readonly client: Client,
-    private readonly config:
-      ConfigService,
-  ) { }
+    private readonly config: ConfigService,
+  ) {}
 
   async onModuleInit() {
     await this.ensureBucket();
   }
 
   async ensureBucket() {
-    const bucket =
-      this.config.getOrThrow<string>(
-        'minio.bucket',
-      );
-    const exists =
-      await this.client.bucketExists(
-        bucket,
-      );
+    const bucket = this.config.getOrThrow<string>('minio.bucket');
+    const exists = await this.client.bucketExists(bucket);
 
     if (!exists) {
-      await this.client.makeBucket(
-        bucket,
-      );
+      await this.client.makeBucket(bucket);
     }
   }
 
-  async createUploadUrl(
-    objectKey: string,
-  ) {
+  async createUploadUrl(objectKey: string) {
     return this.client.presignedPutObject(
-      this.config.getOrThrow<string>(
-        'minio.bucket',
-      ),
+      this.config.getOrThrow<string>('minio.bucket'),
       objectKey,
       60 * 60,
     );
   }
 
-  async createDownloadUrl(
-    objectName: string,
-  ) {
+  async createDownloadUrl(objectName: string, downloadName?: string) {
+    const requestParams = downloadName
+      ? {
+          'response-content-disposition': `attachment; filename="${sanitizeFilename(downloadName) || 'artifact'}"`,
+        }
+      : undefined;
+
     return this.client.presignedGetObject(
-      this.config.getOrThrow<string>(
-        'minio.bucket',
-      ),
+      this.config.getOrThrow<string>('minio.bucket'),
       objectName,
       60 * 60,
+      requestParams,
     );
-
   }
 
-  async removeObject(
-    objectName: string,
-  ) {
+  async removeObject(objectName: string) {
     return this.client.removeObject(
-      this.config.getOrThrow<string>(
-        'minio.bucket',
-      ),
+      this.config.getOrThrow<string>('minio.bucket'),
       objectName,
     );
   }
 
   /**
-     * Streams an object down to a local temp file and returns its path.
-     * Caller is responsible for deleting the file when done (see
-     * `withTempFile` below for a safe wrapper).
-     */
+   * Streams an object down to a local temp file and returns its path.
+   * Caller is responsible for deleting the file when done (see
+   * `withTempFile` below for a safe wrapper).
+   */
   async downloadToTempFile(objectName: string): Promise<string> {
     const bucket = this.config.getOrThrow<string>('minio.bucket');
     const ext = path.extname(objectName) || '';

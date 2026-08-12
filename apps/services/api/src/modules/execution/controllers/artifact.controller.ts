@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ZodResponse } from 'nestjs-zod';
 import {
+  ArtifactDownloadResponseDto,
   ArtifactDto,
   PaginatedArtifactResponseDto,
 } from '../dtos/artifact.dto';
@@ -34,9 +35,13 @@ export class ArtifactController {
 
   @Get(':id')
   @ZodResponse({ status: HttpStatus.OK, type: ArtifactDto })
-  async findOne(
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.artifactService.findOne(id);
+  }
+
+  @Get(':id/download')
+  @ZodResponse({ status: HttpStatus.OK, type: ArtifactDownloadResponseDto })
+  async createDownloadUrl(@Param('id', ParseUUIDPipe) id: string) {
+    return this.artifactService.createDownloadUrl(id);
   }
 }

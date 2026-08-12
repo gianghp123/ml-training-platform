@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ClipboardCheck,
   Copy,
+  Download,
   Gauge,
   Hash,
   PanelRightClose,
@@ -58,6 +59,62 @@ export function formatArtifactMetadata(artifact: RunArtifact): string {
   return artifact.mimeType
     ? `${artifactType} \u00b7 ${artifact.mimeType}`
     : artifactType
+}
+
+export function ArtifactsView({ artifacts }: { artifacts: RunArtifact[] }) {
+  if (artifacts.length === 0) {
+    return (
+      <div className="p-6 text-center text-xs text-muted-foreground">
+        No artifacts have been created.
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2 p-3">
+      {artifacts.map((artifact, index) => {
+        const artifactName = artifact.name ?? `Artifact ${index + 1}`
+
+        return (
+          <div
+            key={artifact.id ?? `${artifactName}-${index}`}
+            className="rounded-md border p-3 text-xs"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium" title={artifactName}>
+                  {artifactName}
+                </div>
+                <div className="mt-1 text-muted-foreground">
+                  {formatArtifactMetadata(artifact)}
+                </div>
+              </div>
+              {artifact.id && (
+                <Button asChild variant="ghost" size="icon-xs">
+                  <a
+                    href={`/api/artifacts/${encodeURIComponent(artifact.id)}/download`}
+                    download={artifactName}
+                    aria-label={`Download ${artifactName}`}
+                    title={`Download ${artifactName}`}
+                  >
+                    <Download className="size-3.5" />
+                  </a>
+                </Button>
+              )}
+            </div>
+            {artifact.storageUri && (
+              <div
+                className="mt-1 truncate font-mono text-[10px] text-muted-foreground"
+                title={artifact.storageUri}
+              >
+                {artifact.storageUri}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 function formatMetric(value: number): string {
@@ -778,33 +835,8 @@ export function PipelineRunPanel({
             nodeMetrics={state.nodeMetrics}
           />
         </TabsContent>
-        <TabsContent value="artifacts" className="min-h-0 overflow-auto p-3">
-          {state.artifacts.length === 0 ? (
-            <div className="p-3 text-center text-xs text-muted-foreground">
-              No artifacts have been created.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {state.artifacts.map((artifact, index) => (
-                <div
-                  key={artifact.id ?? `${artifact.name}-${index}`}
-                  className="rounded-md border p-3 text-xs"
-                >
-                  <div className="font-medium">
-                    {artifact.name ?? `Artifact ${index + 1}`}
-                  </div>
-                  <div className="mt-1 text-muted-foreground">
-                    {formatArtifactMetadata(artifact)}
-                  </div>
-                  {artifact.storageUri && (
-                    <div className="mt-1 truncate font-mono text-[10px] text-muted-foreground">
-                      {artifact.storageUri}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+        <TabsContent value="artifacts" className="min-h-0 overflow-auto">
+          <ArtifactsView artifacts={state.artifacts} />
         </TabsContent>
       </Tabs>
     </aside>
