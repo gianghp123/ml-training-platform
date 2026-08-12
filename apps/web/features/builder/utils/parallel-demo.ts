@@ -38,12 +38,12 @@ export function createParallelDemoGraph(
 
   // Branch 1: Random Forest Pipeline
   const nRf = makeNode(catalog.random_forest, "random_forest", `${idPrefix}_rf`, { x: 1250, y: 80 }, { n_estimators: 100, max_depth: 10 })
-  const nEvalRf = makeNode(catalog.evaluate, "evaluate", `${idPrefix}_eval_rf`, { x: 1600, y: 80 }, { metrics: "accuracy" })
+  const nEvalRf = makeNode(catalog.evaluate, "evaluate", `${idPrefix}_eval_rf`, { x: 1600, y: 80 }, { metrics: "accuracy,f1,confusionMatrix" })
   const nSaveRf = makeNode(catalog.save_model, "save_model", `${idPrefix}_save_rf`, { x: 1950, y: 80 }, { format: "joblib", name: "iris-random-forest-model" })
 
   // Branch 2: Logistic Regression Pipeline (Parallel)
   const nLogReg = makeNode(catalog.logistic_regression, "logistic_regression", `${idPrefix}_logreg`, { x: 1250, y: 400 }, { penalty: "l2", C: 1.0 })
-  const nEvalLogReg = makeNode(catalog.evaluate, "evaluate", `${idPrefix}_eval_logreg`, { x: 1600, y: 400 }, { metrics: "accuracy" })
+  const nEvalLogReg = makeNode(catalog.evaluate, "evaluate", `${idPrefix}_eval_logreg`, { x: 1600, y: 400 }, { metrics: "accuracy,f1,confusionMatrix" })
   const nSaveLogReg = makeNode(catalog.save_model, "save_model", `${idPrefix}_save_logreg`, { x: 1950, y: 400 }, { format: "joblib", name: "iris-logistic-regression-model" })
 
   const nodes = [

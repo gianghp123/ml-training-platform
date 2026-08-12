@@ -342,4 +342,104 @@ describe("PipelineRunPanel branch navigation", () => {
       screen.queryByRole("button", { name: /Random Forest/i })
     ).not.toBeInTheDocument()
   })
+
+  it("hides the run error on a branch that succeeded", () => {
+    const failedState: PipelineRunState = {
+      ...state,
+      status: "failed",
+      error: "SVM training failed: bad data",
+      nodeStatuses: {
+        "node-load": "success",
+        "node-rf": "success",
+        "node-logreg": "error",
+      },
+      logs: [
+        ...state.logs,
+        {
+          id: "lg-err",
+          timestamp: "2026-08-11T12:00:04.000Z",
+          level: "error" as const,
+          message: "LogReg failed: bad data",
+          nodeId: "node-logreg",
+        },
+      ],
+    }
+
+    render(
+      <PipelineRunPanel
+        state={failedState}
+        branches={branches}
+        onReset={jest.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /Random Forest/i }))
+
+    expect(screen.queryByText("SVM training failed: bad data")).not.toBeInTheDocument()
+    expect(screen.queryByText("LogReg failed: bad data")).not.toBeInTheDocument()
+  })
+
+  it("expands and shrinks the panel width", () => {
+    render(
+      <PipelineRunPanel
+        state={state}
+        branches={branches}
+        onReset={jest.fn()}
+      />
+    )
+
+    expect(
+      screen.getByRole("button", { name: "Expand panel" })
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand panel" }))
+
+    expect(
+      screen.getByRole("button", { name: "Shrink panel" })
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Shrink panel" }))
+
+    expect(
+      screen.getByRole("button", { name: "Expand panel" })
+    ).toBeInTheDocument()
+  })
+
+  it("shows the branch's own error in its detail view", () => {
+    const failedState: PipelineRunState = {
+      ...state,
+      status: "failed",
+      error: "SVM training failed: bad data",
+      nodeStatuses: {
+        "node-load": "success",
+        "node-rf": "success",
+        "node-logreg": "error",
+      },
+      logs: [
+        ...state.logs,
+        {
+          id: "lg-err",
+          timestamp: "2026-08-11T12:00:04.000Z",
+          level: "error" as const,
+          message: "LogReg failed: bad data",
+          nodeId: "node-logreg",
+        },
+      ],
+    }
+
+    render(
+      <PipelineRunPanel
+        state={failedState}
+        branches={branches}
+        onReset={jest.fn()}
+      />
+    )
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Logistic Regression/i })
+    )
+
+    expect(screen.getByText("LogReg failed: bad data")).toBeVisible()
+    expect(screen.queryByText("SVM training failed: bad data")).not.toBeInTheDocument()
+  })
 })

@@ -117,3 +117,120 @@ describe("BlockConfigForm with ColumnSelector and Expression", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("BlockConfigForm resolves MultiSelect optionsFrom", () => {
+  beforeEach(() => {
+    mockInputContracts["n3"] = {
+      model: {
+        artifact: "Model",
+        algorithm: "RandomForest",
+        task: "classification",
+        featureSchema: [],
+        targetSchema: "Species",
+      },
+    };
+  });
+
+  afterEach(() => {
+    delete mockInputContracts["n3"];
+  });
+
+  it("shows metrics options matching the connected model task", () => {
+    render(
+      <BlockConfigForm
+        nodeId="n3"
+        fields={[
+          {
+            type: "MultiSelect",
+            id: "metrics",
+            optionsFrom: "$input.model.task",
+            optionsMap: {
+              classification: ["accuracy", "precision", "recall", "f1"],
+              clustering: ["silhouette", "inertia"],
+            },
+          },
+        ]}
+        values={{ metrics: "accuracy,f1" }}
+        onChange={() => {}}
+        datasets={[]}
+      />,
+    );
+
+    expect(screen.getByText("accuracy")).toBeInTheDocument();
+    expect(screen.getByText("precision")).toBeInTheDocument();
+    expect(screen.getByText("recall")).toBeInTheDocument();
+    expect(screen.getByText("f1")).toBeInTheDocument();
+    expect(screen.queryByText("silhouette")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Options depend on connected block"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows clustering options when the model is a clusterer", () => {
+    const model = mockInputContracts["n3"] as Record<string, { task: string }>
+    model.model.task = "clustering";
+    render(
+      <BlockConfigForm
+        nodeId="n3"
+        fields={[
+          {
+            type: "MultiSelect",
+            id: "metrics",
+            optionsFrom: "$input.model.task",
+            optionsMap: {
+              classification: ["accuracy"],
+              clustering: ["silhouette", "inertia"],
+            },
+          },
+        ]}
+        values={{}}
+        onChange={() => {}}
+        datasets={[]}
+      />,
+    );
+
+    expect(screen.getByText("silhouette")).toBeInTheDocument();
+    expect(screen.getByText("inertia")).toBeInTheDocument();
+    expect(screen.queryByText("accuracy")).not.toBeInTheDocument();
+  });
+
+  it("keeps the placeholder when the model contract is missing", () => {
+    render(
+      <BlockConfigForm
+        nodeId="unconnected"
+        fields={[
+          {
+            type: "MultiSelect",
+            id: "metrics",
+            optionsFrom: "$input.model.task",
+            optionsMap: { classification: ["accuracy"] },
+          },
+        ]}
+        values={{}}
+        onChange={() => {}}
+        datasets={[]}
+      />,
+    );
+
+    expect(
+      screen.getByText("Options depend on connected block"),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps static options for fields without optionsFrom", () => {
+    render(
+      <BlockConfigForm
+        nodeId="n3"
+        fields={[
+          { type: "MultiSelect", id: "tune", options: ["a", "b"] },
+        ]}
+        values={{}}
+        onChange={() => {}}
+        datasets={[]}
+      />,
+    );
+
+    expect(screen.getByText("a")).toBeInTheDocument();
+    expect(screen.getByText("b")).toBeInTheDocument();
+  });
+});

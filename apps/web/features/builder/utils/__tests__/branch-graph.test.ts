@@ -3,6 +3,9 @@ import {
   type BranchGraphEdge,
   type BranchGraphNode,
 } from "../branch-graph"
+import { createComprehensiveDemoGraph } from "../comprehensive-demo"
+import { COMPREHENSIVE_EXECUTOR_KEYS } from "../comprehensive-demo"
+import type { BlockDefinition } from "@training-ml/contracts"
 
 function nodes(ids: string[]): BranchGraphNode[] {
   return ids.map((id) => ({ id }))
@@ -85,10 +88,12 @@ describe("detectBranches", () => {
 
   it("falls back to Graph N when no labels are known", () => {
     const branches = detectBranches(
-      nodes(["split", "rf", "logreg"]),
+      nodes(["split", "rf", "eval_rf", "logreg", "eval_logreg"]),
       edges([
         ["split", "rf"],
         ["split", "logreg"],
+        ["rf", "eval_rf"],
+        ["logreg", "eval_logreg"],
       ])
     )
 
@@ -162,5 +167,94 @@ describe("detectBranches", () => {
     expect(new Set(branches[1].nodeIds)).toEqual(
       new Set(["split", "logreg", "eval_logreg", "save_logreg"])
     )
+  })
+
+  it("detects three branches in the comprehensive demo", () => {
+    const blocks: BlockDefinition[] = COMPREHENSIVE_EXECUTOR_KEYS.map(
+      (key) => ({
+        id: key,
+        version: 1,
+        status: "active",
+        executorKey: key,
+        name: key,
+        categoryId: "cat",
+        ports: { inputs: [], outputs: [] },
+        configSchema: { fields: [] },
+        constraints: { rules: [] },
+        outputTransform: {},
+      })
+    )
+    const graph = createComprehensiveDemoGraph(blocks, "dataset-id", "test")
+    const nodeLabels = Object.fromEntries(
+      graph.nodes.map((node) => [
+        node.id,
+        String((node.data as Record<string, unknown>).blockName ?? node.id),
+      ])
+    )
+    const branches = detectBranches(graph.nodes, graph.edges, nodeLabels)
+
+    expect(branches).toHaveLength(3)
+    const branchCounts = branches.map((branch) => branch.nodeIds.length)
+    expect(branchCounts).toEqual([10, 10, 8])
+    const labels = branches.map((branch) => branch.label)
+    expect(labels).toContain("random_forest → evaluate → save_model")
+    expect(labels).toContain(
+      "logistic_regression → evaluate → save_model"
+    )
+    expect(labels).toContain("svm → evaluate → save_model")
+  })
+
+  it("keeps labels that already differ from the first node", () => {
+    const branches = detectBranches(
+      nodes(["split", "rf", "eval_rf", "logreg", "eval_logreg"]),
+      edges([
+        ["split", "rf"],
+        ["split", "logreg"],
+        ["rf", "eval_rf"],
+        ["logreg", "eval_logreg"],
+      ]),
+      {
+        rf: "Random Forest",
+        eval_rf: "Evaluate",
+        logreg: "Logistic Regression",
+        eval_logreg: "Evaluate",
+      }
+    )
+
+    expect(branches.map((branch) => branch.label)).toEqual([
+      "Random Forest → Evaluate",
+      "Logistic Regression → Evaluate",
+    ])
+  })
+
+  it("recursively splits nested branches", () => {
+    const branches = detectBranches(
+      nodes(["a", "b", "c", "d", "e", "f"]),
+      edges([
+        ["a", "b"],
+        ["a", "c"],
+        ["b", "d"],
+        ["b", "e"],
+        ["d", "f"],
+      ])
+    )
+
+    expect(branches).toHaveLength(3)
+    expect(new Set(branches[0].nodeIds)).toEqual(new Set(["a", "b", "d", "f"]))
+    expect(new Set(branches[1].nodeIds)).toEqual(new Set(["a", "b", "e"]))
+    expect(new Set(branches[2].nodeIds)).toEqual(new Set(["a", "c"]))
+  })
+
+  it("does not split a model-style fan-out to terminal nodes", () => {
+    const branches = detectBranches(
+      nodes(["rf", "eval", "save"]),
+      edges([
+        ["rf", "eval"],
+        ["rf", "save"],
+      ])
+    )
+
+    expect(branches).toHaveLength(1)
+    expect(new Set(branches[0].nodeIds)).toEqual(new Set(["rf", "eval", "save"]))
   })
 })

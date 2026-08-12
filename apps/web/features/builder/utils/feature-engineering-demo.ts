@@ -53,7 +53,7 @@ const configs: Record<
   train_test_split: () => ({ testSize: 0.2, stratify: true }),
   random_forest: () => ({ n_estimators: 50, max_depth: 5 }),
   save_model: () => ({ format: "joblib", name: "feature-engineering-demo" }),
-  evaluate: () => ({ metrics: "accuracy" }),
+  evaluate: () => ({ metrics: "accuracy,f1,confusionMatrix" }),
 }
 
 export function createFeatureEngineeringDemoGraph(

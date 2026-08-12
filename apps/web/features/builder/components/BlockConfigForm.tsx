@@ -285,6 +285,25 @@ function KeyValueMapField({
   )
 }
 
+function resolveOptionsFrom(
+  field: ConfigField,
+  inputContracts: Record<string, Record<string, unknown>>,
+  nodeId: string
+): string[] | undefined {
+  if (field.type !== "MultiSelect") {
+    return (field as { options?: string[] }).options
+  }
+  if (!field.optionsFrom) return field.options
+  const path = field.optionsFrom.replace(/^\$input\./, "")
+  const [portId, prop] = path.split(".")
+  if (!portId || !prop) return undefined
+  const contract = inputContracts[nodeId]?.[portId]
+  if (!contract || typeof contract !== "object") return undefined
+  const value = (contract as Record<string, unknown>)[prop]
+  if (typeof value !== "string") return undefined
+  return field.optionsMap?.[value]
+}
+
 function buildZodSchema(
   fields: ConfigField[]
 ): z.ZodObject<Record<string, z.ZodType<unknown>>> {
@@ -411,6 +430,19 @@ export function BlockConfigForm({
   const { inputContracts, getNodeErrors } = useValidationContext()
   const nodeErrors = getNodeErrors(nodeId)
 
+  const resolvedFields = useMemo(
+    () =>
+      fields.map((field) => ({
+        field,
+        options:
+          field.type === "MultiSelect"
+            ? (resolveOptionsFrom(field, inputContracts, nodeId) ??
+              field.options)
+            : (field as { options?: string[] }).options,
+      })),
+    [fields, inputContracts, nodeId]
+  )
+
   const inputColumns = useMemo(() => {
     const nodeInputs = inputContracts[nodeId] ?? {}
     const all: string[] = []
@@ -441,7 +473,7 @@ export function BlockConfigForm({
       onSubmit={(e) => e.preventDefault()}
       className="mt-2 space-y-2 border-t pt-2"
     >
-      {fields.map((field) => (
+      {resolvedFields.map(({ field, options }) => (
         <Controller
           key={field.id}
           name={field.id}
@@ -530,7 +562,7 @@ export function BlockConfigForm({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {field.options.map((opt) => (
+                    {(options ?? []).map((opt) => (
                       <SelectItem key={opt} value={opt}>
                         {opt}
                       </SelectItem>
@@ -568,8 +600,8 @@ export function BlockConfigForm({
               )}
               {field.type === "MultiSelect" && (
                 <div className="flex flex-col gap-1.5">
-                  {field.options ? (
-                    field.options.map((opt) => {
+                  {options && options.length > 0 ? (
+                    options.map((opt) => {
                       const selected = Array.isArray(controllerField.value)
                         ? controllerField.value.includes(opt)
                         : false

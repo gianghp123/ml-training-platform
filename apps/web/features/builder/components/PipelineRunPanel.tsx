@@ -12,6 +12,8 @@ import {
   Copy,
   Download,
   ListChecks,
+  Maximize2,
+  Minimize2,
   PanelRightClose,
   PanelRightOpen,
   RotateCcw,
@@ -196,7 +198,7 @@ function MetricsView({
     nodeEntries.length > 0 ? nodeEntries : [["Evaluation summary", metrics!]]
 
   return (
-    <div className="space-y-4 overflow-auto p-3">
+    <div className="h-full space-y-4 overflow-auto p-3">
       {listToRender.map(([nodeId, itemMetrics]) => (
         <section key={nodeId} className="space-y-2">
           <div className="flex items-baseline justify-between gap-3 px-1">
@@ -331,10 +333,22 @@ function ConfusionMatrixView({
             Actual classes compared with predicted classes
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <span className="rounded-full bg-success/10 px-2 py-1 text-[9px] font-medium text-success">
-            {formatPercent(accuracy)} accuracy
-          </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="flex items-center gap-2 rounded-lg border px-2.5 py-1.5">
+            <span className="text-[11px] text-muted-foreground">accuracy</span>
+            <span className="h-1 w-12 overflow-hidden rounded-full bg-muted">
+              <span
+                className="block h-full rounded-full bg-success"
+                style={{
+                  width:
+                    accuracy !== null ? Math.round(accuracy) + "%" : "0%",
+                }}
+              />
+            </span>
+            <span className="w-14 text-right font-mono text-xs font-semibold tabular-nums text-success">
+              {formatPercent(accuracy)}
+            </span>
+          </div>
           <Button
             type="button"
             variant="ghost"
@@ -807,6 +821,7 @@ export function PipelineRunPanel({
 }: PipelineRunPanelProps) {
   const hasFinished = state.status === "completed" || state.status === "failed"
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isWide, setIsWide] = useState(false)
   const [selection, setSelection] = useState<{
     runId: string | null
     branchId: string | null
@@ -838,6 +853,12 @@ export function PipelineRunPanel({
     setSelection({ runId: state.runId, branchId })
   }
 
+  const branchError = effectiveBranch
+    ? (filteredLogs.find(
+        (log) => log.level === "error" && log.nodeId !== undefined
+      )?.message ?? null)
+    : state.error
+
   if (isCollapsed) {
     return (
       <aside className="flex h-full w-11 shrink-0 flex-col items-center border-l bg-background">
@@ -856,7 +877,12 @@ export function PipelineRunPanel({
   }
 
   return (
-    <aside className="flex h-full w-[390px] max-w-[42vw] shrink-0 flex-col border-l bg-background">
+    <aside
+      className={cn(
+        "flex h-full shrink-0 flex-col overflow-hidden border-l bg-background",
+        isWide ? "w-[560px] max-w-[64vw]" : "w-[390px] max-w-[42vw]"
+      )}
+    >
       <div className="flex items-center gap-2 border-b px-3 py-2">
         {effectiveBranch && showList === false && branches.length > 1 && (
           <Button
@@ -898,6 +924,20 @@ export function PipelineRunPanel({
             <RotateCcw className="size-3.5" />
           </Button>
         )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setIsWide((wide) => !wide)}
+          title={isWide ? "Shrink panel" : "Expand panel"}
+          aria-label={isWide ? "Shrink panel" : "Expand panel"}
+        >
+          {isWide ? (
+            <Minimize2 className="size-3.5" />
+          ) : (
+            <Maximize2 className="size-3.5" />
+          )}
+        </Button>
         <Button
           type="button"
           variant="ghost"
@@ -945,9 +985,9 @@ export function PipelineRunPanel({
             </span>
           </div>
 
-          {state.error && (
+          {branchError && (
             <div className="border-b border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-              {state.error}
+              {branchError}
             </div>
           )}
 

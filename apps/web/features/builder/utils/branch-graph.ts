@@ -82,7 +82,7 @@ function formatPathLabel(
   orderedIds: string[],
   nodeLabels: Record<string, string>,
   index: number,
-  maxChars = 60
+  maxChars = 100
 ): string {
   const names = orderedIds
     .map((id) => nodeLabels[id])
@@ -96,10 +96,9 @@ function formatPathLabel(
 
 function detectBranchesFromSplit(
   splitId: string,
-  nodeIds: string[],
   outgoing: Map<string, string[]>,
-  order: string[]
-): Array<{ rootId: string; nodeIds: string[]; orderedExclusiveIds: string[] }> {
+  orderIndexMap: Map<string, number>
+): Array<{ rootId: string; exclusiveIds: string[] }> {
   const successors = [...new Set(outgoing.get(splitId) ?? [])]
   const reachable = new Map(
     successors.map((successor) => [
@@ -115,39 +114,93 @@ function detectBranchesFromSplit(
   )
   if (roots.length < 2) return []
 
-  const prefix = new Set(
-    nodeIds.filter(
-      (nodeId) => !reachableFrom(splitId, outgoing).has(nodeId)
-    )
-  )
-  prefix.add(splitId)
-
-  const branches: Array<{
-    rootId: string
-    nodeIds: string[]
-    orderedExclusiveIds: string[]
-  }> = []
+  const branches: Array<{ rootId: string; exclusiveIds: string[] }> = []
   for (const root of roots) {
     const own = reachable.get(root) ?? new Set<string>()
     const otherRoots = roots.filter((other) => other !== root)
-    const exclusive = new Set(
-      [...own].filter(
+    const exclusiveIds = [...own]
+      .filter(
         (node) =>
           !otherRoots.some((other) => reachable.get(other)?.has(node))
       )
-    )
-    if (exclusive.size === 0) continue
+      .sort(
+        (a, b) =>
+          (orderIndexMap.get(a) ?? 0) - (orderIndexMap.get(b) ?? 0)
+      )
+    if (exclusiveIds.length > 0) {
+      branches.push({ rootId: root, exclusiveIds })
+    }
+  }
 
-    const branchNodes = new Set(prefix)
-    for (const node of exclusive) branchNodes.add(node)
-    const orderedExclusiveIds = order.filter((id) => exclusive.has(id))
-    branches.push({
-      rootId: root,
-      nodeIds: [...branchNodes].sort(),
-      orderedExclusiveIds,
-    })
+  if (
+    branches.length > 0 &&
+    branches.every((branch) => (outgoing.get(branch.rootId)?.length ?? 0) === 0)
+  ) {
+    return []
   }
   return branches
+}
+
+interface LeafBranch {
+  splitId: string
+  rootId: string
+  exclusiveIds: string[]
+  nodeIds: string[]
+}
+
+function collectLeafBranches(
+  nodeIds: string[],
+  outgoing: Map<string, string[]>,
+  order: string[],
+  orderIndexMap: Map<string, number>
+): LeafBranch[] {
+  const candidates = order.filter(
+    (nodeId) =>
+      nodeIds.includes(nodeId) && (outgoing.get(nodeId)?.length ?? 0) >= 2
+  )
+  let splitId: string | undefined
+  let branches: Array<{ rootId: string; exclusiveIds: string[] }> = []
+  for (const candidate of candidates) {
+    branches = detectBranchesFromSplit(candidate, outgoing, orderIndexMap)
+    if (branches.length > 0) {
+      splitId = candidate
+      break
+    }
+  }
+  if (!splitId) return []
+
+  const prefix = [
+    ...nodeIds.filter(
+      (nodeId) => !reachableFrom(splitId, outgoing).has(nodeId)
+    ),
+    splitId,
+  ]
+
+  const leaves: LeafBranch[] = []
+  for (const branch of branches) {
+    const subLeaves = collectLeafBranches(
+      branch.exclusiveIds,
+      outgoing,
+      order,
+      orderIndexMap
+    )
+    if (subLeaves.length > 0) {
+      for (const leaf of subLeaves) {
+        leaves.push({
+          ...leaf,
+          nodeIds: [...prefix, ...leaf.nodeIds],
+        })
+      }
+    } else {
+      leaves.push({
+        splitId,
+        rootId: branch.rootId,
+        exclusiveIds: branch.exclusiveIds,
+        nodeIds: [...prefix, ...branch.exclusiveIds],
+      })
+    }
+  }
+  return leaves
 }
 
 export function detectBranches(
@@ -160,10 +213,9 @@ export function detectBranches(
   const outgoing = adjacency(edges)
 
   const order = topologicalOrder(nodeIds, outgoing)
-  const splitId = order.find(
-    (nodeId) => (outgoing.get(nodeId)?.length ?? 0) >= 2
-  )
-  if (!splitId) {
+  const orderIndexMap = new Map(order.map((id, index) => [id, index]))
+  const leaves = collectLeafBranches(nodeIds, outgoing, order, orderIndexMap)
+  if (leaves.length === 0) {
     return [
       {
         id: "__all__",
@@ -174,17 +226,33 @@ export function detectBranches(
     ]
   }
 
-  const branches: Branch[] = []
-  detectBranchesFromSplit(splitId, nodeIds, outgoing, order).forEach(
-    ({ rootId, nodeIds: branchNodeIds, orderedExclusiveIds }, index) => {
-      branches.push({
-        id: `${splitId}:${rootId}`,
-        label: formatPathLabel(orderedExclusiveIds, nodeLabels, index),
-        nodeIds: branchNodeIds,
-        orderedExclusiveIds,
-      })
-    }
+  const commonPrefix = commonPathPrefix(
+    leaves.map((leaf) =>
+      leaf.exclusiveIds.map((id) => nodeLabels[id] ?? id)
+    )
   )
 
-  return branches
+  return leaves.map((leaf, index) => {
+    const exclusiveIds = leaf.exclusiveIds.slice(commonPrefix)
+    return {
+      id: `${leaf.splitId}:${leaf.rootId}`,
+      label: formatPathLabel(exclusiveIds, nodeLabels, index),
+      nodeIds: [...leaf.nodeIds].sort(),
+      orderedExclusiveIds: leaf.exclusiveIds,
+    }
+  })
+}
+
+function commonPathPrefix(paths: string[][]): number {
+  if (paths.length === 0) return 0
+  const minLength = Math.min(...paths.map((path) => path.length))
+  let prefix = 0
+  outer: while (prefix < minLength) {
+    const head = paths[0][prefix]
+    for (const path of paths) {
+      if (path[prefix] !== head) break outer
+    }
+    prefix += 1
+  }
+  return prefix
 }
