@@ -29,6 +29,7 @@ import GroupNode from "./nodes/GroupNode"
 import { BlockPaletteContextMenu } from "./BlockPaletteContextMenu"
 import { WorkflowToolbar } from "./WorkflowToolbar"
 import { PipelineRunPanel } from "./PipelineRunPanel"
+import { SaveWorkflowDialog } from "./SaveWorkflowDialog"
 
 import {
   BuilderContext,
@@ -104,6 +105,20 @@ export function BuilderCanvas({
   const activeDemoId = DEMOS.some((demo) => demo.id === demoId)
     ? demoId
     : getDefaultDemo().id
+
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+
+  const handleRequestSave = useCallback(() => {
+    setSaveDialogOpen(true)
+  }, [])
+
+  const handleConfirmSave = useCallback(
+    (name: string) => {
+      builder.setWorkflowName(name)
+      builder.saveWorkflow(name)
+    },
+    [builder]
+  )
 
   useEffect(() => {
     setNodeRunStatuses(pipelineRun.state.nodeStatuses)
@@ -192,7 +207,21 @@ export function BuilderCanvas({
   )
 
   const executionBranches = useMemo(
-    () => detectBranches(builder.nodes, builder.edges, executionNodeLabels),
+    () =>
+      detectBranches(
+        builder.nodes,
+        builder.edges,
+        executionNodeLabels,
+        Object.fromEntries(
+          builder.nodes.map((node) => [
+            node.id,
+            ((node.data as Record<string, unknown>).config ?? {}) as Record<
+              string,
+              unknown
+            >,
+          ])
+        )
+      ),
     [builder.nodes, builder.edges, executionNodeLabels]
   )
 
@@ -289,10 +318,9 @@ export function BuilderCanvas({
         <WorkflowToolbar
           workflowName={builder.workflowName}
           onWorkflowNameChange={builder.setWorkflowName}
-          onSave={builder.saveWorkflow}
+          onSave={handleRequestSave}
           onRun={handleRun}
-          hasSavedWorkflow={builder.hasSavedWorkflow()}
-          onLoad={builder.loadWorkflow}
+          savedVersion={builder.savedVersion}
           edgeStyle={builder.edgeStyle}
           onEdgeStyleChange={builder.setEdgeStyle}
           isRunning={pipelineRun.isActive}
@@ -416,6 +444,14 @@ export function BuilderCanvas({
           />
         </div>
       </div>
+      <SaveWorkflowDialog
+        key={saveDialogOpen ? "open" : "closed"}
+        open={saveDialogOpen}
+        onOpenChange={setSaveDialogOpen}
+        currentName={builder.workflowName}
+        savedVersion={builder.savedVersion}
+        onConfirm={handleConfirmSave}
+      />
     </ValidationContext.Provider>
   )
 }

@@ -8,39 +8,20 @@ import { Button } from "@/components/ui/button"
 import { Workflow } from "@training-ml/contracts"
 import { ROUTES } from "@/lib/route"
 
-const BASE_TIMESTAMP = 1775000000000;
+function formatDate(value: string | Date): string {
+  const date = value instanceof Date ? value : new Date(value)
+  return Number.isNaN(date.getTime())
+    ? "-"
+    : date.toLocaleDateString("en-US")
+}
 
-const MOCK_WORKFLOWS: Workflow[] = Array.from({ length: 42 }, (_, i) => {
-  const daysAgo = ((i * 7 + 3) % 50) + 1
-  const created = new Date(BASE_TIMESTAMP - daysAgo * 86_400_000)
-  const updated = new Date(created.getTime() + (((i * 3) % daysAgo) + 1) * 86_400_000)
-
-  return {
-    id: `wf_${String(i + 1).padStart(4, "0")}`,
-    name: [
-      "Customer Churn Classifier",
-      "Fraud Detection Pipeline",
-      "Image Classification v2",
-      "Sentiment Analysis Workflow",
-      "Medical Diagnosis Model",
-      "Stock Price Predictor",
-      "Weather Forecasting",
-      "E-Commerce Recommender",
-      "Real Estate Valuation",
-      "Social Media Analyzer",
-      "Traffic Pattern Detection",
-      "Loan Risk Assessment",
-    ][i % 12] + (i >= 12 ? ` (${Math.floor(i / 12) + 1})` : ""),
-    description: "End-to-end ML workflow for training and evaluation.",
-    createdAt: created,
-    updatedAt: updated,
-  }
-})
-
-export function WorkflowTable({ page, pageSize }: { page: number; pageSize: number }) {
-  const start = (page - 1) * pageSize
-  const pagedData = MOCK_WORKFLOWS.slice(start, start + pageSize)
-
+export function WorkflowTable({
+  data,
+  totalItems,
+}: {
+  data: Workflow[]
+  totalItems: number
+}) {
   const columns: Column<Workflow>[] = [
     {
       header: "Workflow",
@@ -64,7 +45,7 @@ export function WorkflowTable({ page, pageSize }: { page: number; pageSize: numb
       header: "Description",
       cell: (row) => (
         <span className="block max-w-md truncate text-xs text-muted-foreground">
-          {row.description}
+          {row.description || "-"}
         </span>
       ),
     },
@@ -75,7 +56,7 @@ export function WorkflowTable({ page, pageSize }: { page: number; pageSize: numb
           className="font-mono text-[11px] text-muted-foreground tabular-nums"
           suppressHydrationWarning
         >
-          {row.createdAt.toLocaleDateString("en-US")}
+          {formatDate(row.createdAt)}
         </span>
       ),
     },
@@ -86,7 +67,7 @@ export function WorkflowTable({ page, pageSize }: { page: number; pageSize: numb
           className="font-mono text-[11px] text-secondary-foreground tabular-nums"
           suppressHydrationWarning
         >
-          {row.updatedAt.toLocaleDateString("en-US")}
+          {formatDate(row.updatedAt)}
         </span>
       ),
     },
@@ -115,8 +96,10 @@ export function WorkflowTable({ page, pageSize }: { page: number; pageSize: numb
   return (
     <DataTable
       columns={columns}
-      data={pagedData}
-      totalItems={MOCK_WORKFLOWS.length}
+      data={data}
+      totalItems={totalItems}
+      emptyTitle="No workflows yet"
+      emptyDescription="Create a workflow from the builder to see it here."
     />
   )
 }

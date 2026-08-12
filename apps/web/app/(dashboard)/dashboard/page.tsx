@@ -1,10 +1,9 @@
-import Link from "next/link"
+export const dynamic = "force-dynamic";
 
-import { PageContainer } from "@/components/layouts/PageContainer"
-import { Button } from "@/components/ui/button"
-import { WorkflowTable } from "@/features/workflow/components/WorkflowTable"
-import { ROUTES } from "@/lib/route"
-import { Plus } from "lucide-react"
+import { PageContainer } from "@/components/layouts/PageContainer";
+import { DraftActions } from "@/features/workflow/components/DraftActions";
+import { WorkflowTable } from "@/features/workflow/components/WorkflowTable";
+import { getWorkflows } from "@/features/workflow/services/workflow.gets";
 
 
 export default async function Home({
@@ -12,26 +11,22 @@ export default async function Home({
 }: {
   searchParams: Promise<{
     page?: string;
+    pageSize?: string;
   }>;
 }) {
   const params = await searchParams;
   const page = Number(params.page) || 1;
-  const pageSize = 10;
+  const pageSize = Number(params.pageSize) || 10;
+
+  const { data, meta } = await getWorkflows(page, pageSize);
 
   return (
     <PageContainer
       title="Workflows"
       description="Build, validate, and operate production-ready machine learning pipelines."
-      actions={
-        <Button asChild size="lg" className="h-9 gap-2 px-3.5 text-[13px]">
-          <Link href={ROUTES.WORKFLOW.CREATE}>
-            <Plus className="size-4" />
-            Create Workflow
-          </Link>
-        </Button>
-      }
+      actions={<DraftActions />}
     >
-      <WorkflowTable page={page} pageSize={pageSize} />
+      <WorkflowTable data={data} totalItems={meta?.total ?? data.length} />
     </PageContainer>
   )
 }

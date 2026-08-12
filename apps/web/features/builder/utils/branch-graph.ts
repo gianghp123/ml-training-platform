@@ -94,6 +94,50 @@ function formatPathLabel(
     : label
 }
 
+function configDiffKeys(
+  entries: Array<Record<string, unknown> | undefined>
+): string[] {
+  const keys = new Set<string>()
+  for (const entry of entries) {
+    if (entry) for (const key of Object.keys(entry)) keys.add(key)
+  }
+  const differing: string[] = []
+  for (const key of keys) {
+    const values = new Set(
+      entries.map((entry) =>
+        entry ? JSON.stringify(entry[key]) : "undefined"
+      )
+    )
+    if (values.size > 1) differing.push(key)
+  }
+  return differing
+}
+
+function annotatedPathLabel(
+  ids: string[],
+  nodeLabels: Record<string, string>,
+  nodeConfigs: Record<string, Record<string, unknown>>,
+  groupPaths: string[][],
+  maxChars = 140
+): string {
+  const parts = ids.map((id, index) => {
+    const name = nodeLabels[id] ?? id
+    const diffKeys = configDiffKeys(
+      groupPaths.map((path) => nodeConfigs[path[index] ?? ""])
+    )
+    if (diffKeys.length === 0) return name
+    const config = nodeConfigs[id] ?? {}
+    const details = diffKeys
+      .map((key) => `${key}=${String(config[key] ?? "")}`)
+      .join(", ")
+    return `${name} (${details})`
+  })
+  const label = parts.join(" → ")
+  return label.length > maxChars
+    ? `${label.slice(0, maxChars - 1)}…`
+    : label
+}
+
 function detectBranchesFromSplit(
   splitId: string,
   outgoing: Map<string, string[]>,
@@ -206,7 +250,8 @@ function collectLeafBranches(
 export function detectBranches(
   nodes: BranchGraphNode[],
   edges: BranchGraphEdge[] = [],
-  nodeLabels: Record<string, string> = {}
+  nodeLabels: Record<string, string> = {},
+  nodeConfigs: Record<string, Record<string, unknown>> = {}
 ): Branch[] {
   const nodeIds = nodes.map((node) => node.id)
   if (nodeIds.length === 0) return []
@@ -231,12 +276,58 @@ export function detectBranches(
       leaf.exclusiveIds.map((id) => nodeLabels[id] ?? id)
     )
   )
+  const baseLabels = leaves.map((leaf) =>
+    leaf.exclusiveIds
+      .slice(commonPrefix)
+      .map((id) => nodeLabels[id] ?? id)
+      .join(" → ")
+  )
+
+  const groups = new Map<string, number[]>()
+  baseLabels.forEach((label, index) => {
+    const group = groups.get(label)
+    if (group) group.push(index)
+    else groups.set(label, [index])
+  })
 
   return leaves.map((leaf, index) => {
-    const exclusiveIds = leaf.exclusiveIds.slice(commonPrefix)
+    const base = baseLabels[index]
+    const group = groups.get(base) ?? [index]
+
+    let label: string
+    if (group.length === 1) {
+      label = formatPathLabel(
+        leaf.exclusiveIds.slice(commonPrefix),
+        nodeLabels,
+        index
+      )
+    } else {
+      const groupPaths = group.map((groupIndex) =>
+        leaves[groupIndex].exclusiveIds
+      )
+      label = annotatedPathLabel(
+        leaf.exclusiveIds,
+        nodeLabels,
+        nodeConfigs,
+        groupPaths
+      )
+      const groupLabels = group.map((groupIndex) =>
+        annotatedPathLabel(
+          leaves[groupIndex].exclusiveIds,
+          nodeLabels,
+          nodeConfigs,
+          groupPaths
+        )
+      )
+      if (new Set(groupLabels).size === 1 && groupLabels.length > 1) {
+        const position = group.indexOf(index)
+        if (position > 0) label = `${label} (${position + 1})`
+      }
+    }
+
     return {
       id: `${leaf.splitId}:${leaf.rootId}`,
-      label: formatPathLabel(exclusiveIds, nodeLabels, index),
+      label,
       nodeIds: [...leaf.nodeIds].sort(),
       orderedExclusiveIds: leaf.exclusiveIds,
     }

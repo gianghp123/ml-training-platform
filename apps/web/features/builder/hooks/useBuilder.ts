@@ -73,9 +73,8 @@ interface UseBuilderReturn {
   setSelectedNodeId: (id: string | null) => void
   workflowName: string
   setWorkflowName: (name: string) => void
-  saveWorkflow: () => void
-  loadWorkflow: () => boolean
-  hasSavedWorkflow: () => boolean
+  saveWorkflow: (name?: string) => void
+  savedVersion: number | null
   palettePosition: XYPosition | null
   setPalettePosition: (pos: XYPosition | null) => void
   edgeStyle: EdgeStyle
@@ -107,9 +106,10 @@ export function useBuilder({
   const [edgeStyle, setEdgeStyle] = useState<EdgeStyle>("bezier")
 
   const {
+    savedVersion,
     saveWorkflow: persist,
+    saveLocal,
     loadWorkflow: load,
-    hasSavedWorkflow: hasSavedCheck,
   } = useWorkflowPersistence()
 
   const {
@@ -117,6 +117,23 @@ export function useBuilder({
     getNodeErrors,
     isValid,
   } = useValidation(nodes, edges, blocks, datasets)
+
+  useEffect(() => {
+    const draft = load()
+    if (draft) {
+      setNodes(draft.nodes)
+      setEdges(draft.edges)
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restore draft once on mount
+      setWorkflowName(draft.name)
+    }
+  }, [load, setNodes, setEdges, setWorkflowName])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      saveLocal(workflowName, nodes, edges)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [workflowName, nodes, edges, saveLocal])
 
   useEffect(() => {
     setEdges((eds) =>
@@ -270,18 +287,12 @@ export function useBuilder({
     [nodes, setNodes, setEdges]
   )
 
-  const saveWorkflow = useCallback(() => {
-    persist(workflowName, nodes, edges)
-  }, [workflowName, nodes, edges, persist])
-
-  const loadWorkflowFn = useCallback((): boolean => {
-    const data = load()
-    if (!data) return false
-    setNodes(data.nodes)
-    setEdges(data.edges)
-    setWorkflowName(data.name)
-    return true
-  }, [load, setNodes, setEdges])
+  const saveWorkflow = useCallback(
+    (name?: string) => {
+      persist(name ?? workflowName, nodes, edges)
+    },
+    [workflowName, nodes, edges, persist]
+  )
 
   const replaceGraph = useCallback(
     (nextNodes: Node[], nextEdges: Edge[]) => {
@@ -326,8 +337,7 @@ export function useBuilder({
     workflowName,
     setWorkflowName,
     saveWorkflow,
-    loadWorkflow: loadWorkflowFn,
-    hasSavedWorkflow: hasSavedCheck,
+    savedVersion,
     palettePosition,
     setPalettePosition,
     edgeStyle,

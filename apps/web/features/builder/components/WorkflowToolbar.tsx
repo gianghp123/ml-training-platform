@@ -23,7 +23,6 @@ import {
 import {
   ChevronDown,
   ChevronLeft,
-  Download,
   FlaskConical,
   Loader2,
   Play,
@@ -39,8 +38,7 @@ interface WorkflowToolbarProps {
   onWorkflowNameChange: (name: string) => void
   onSave: () => void
   onRun: () => void
-  hasSavedWorkflow: boolean
-  onLoad: () => void
+  savedVersion?: number | null
   edgeStyle: string
   onEdgeStyleChange: (style: "smoothstep" | "bezier" | "straight") => void
   isRunning: boolean
@@ -58,8 +56,7 @@ export function WorkflowToolbar({
   onWorkflowNameChange,
   onSave,
   onRun,
-  hasSavedWorkflow,
-  onLoad,
+  savedVersion,
   edgeStyle,
   onEdgeStyleChange,
   isRunning,
@@ -72,14 +69,6 @@ export function WorkflowToolbar({
   onLoadDemo,
 }: WorkflowToolbarProps) {
   const { isValid } = useValidationContext()
-
-  const handleSave = () => {
-    if (!isValid) {
-      console.warn("Cannot save: workflow has validation errors")
-      return
-    }
-    onSave()
-  }
 
   return (
     <div className="flex items-center gap-3 border-b bg-background px-4 py-2">
@@ -184,26 +173,23 @@ export function WorkflowToolbar({
       </Select>
 
       <div className="flex items-center gap-1">
-        {hasSavedWorkflow && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onLoad}
-            disabled={isRunning}
-            title="Load workflow"
-          >
-            <Download className="size-4" />
-          </Button>
-        )}
         <Button
           variant="ghost"
           size="icon-sm"
-          onClick={handleSave}
+          onClick={onSave}
           disabled={isRunning}
           title="Save workflow"
         >
           <Save className="size-4" />
         </Button>
+        {savedVersion != null && (
+          <span
+            className="whitespace-nowrap text-xs text-muted-foreground"
+            title="Last saved server version"
+          >
+            Đã lưu v{savedVersion}
+          </span>
+        )}
         <Button
           variant="default"
           size="sm"

@@ -13,7 +13,10 @@ export class WorkflowService {
   ) { }
 
   async findAll(options: IPaginationOptions) {
-    const { items, meta } = await paginate<Workflow>(this.workflowRepository, options);
+    const query = this.workflowRepository
+      .createQueryBuilder('workflow')
+      .orderBy('workflow.updatedAt', 'DESC');
+    const { items, meta } = await paginate<Workflow>(query, options);
     return {
       data: items,
       meta: {

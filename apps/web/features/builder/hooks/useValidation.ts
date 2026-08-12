@@ -55,13 +55,28 @@ export function useValidation(
 
   const stableGraph = useStableValue(graph, isGraphEqual)
 
-  const result = useMemo(
-    () =>
-      nodes.length === 0
-        ? emptyResult
-        : validateGraph(stableGraph, blocks, resolveColumns),
-    [nodes.length, stableGraph, blocks, resolveColumns]
-  )
+  const result = useMemo(() => {
+    if (nodes.length === 0) return emptyResult
+    try {
+      return validateGraph(stableGraph, blocks, resolveColumns)
+    } catch {
+      return {
+        valid: false,
+        errors: [
+          {
+            nodeId: "",
+            scope: "constraint",
+            fieldId: "graph",
+            code: "GRAPH_CYCLE",
+            severity: "error",
+            message: "Đồ thị chứa chu trình, không thể chạy.",
+          },
+        ],
+        contracts: {},
+        inputContracts: {},
+      }
+    }
+  }, [nodes.length, stableGraph, blocks, resolveColumns])
 
   const errorsByNode = useMemo(() => {
     const map = new Map<string, ValidationError[]>()

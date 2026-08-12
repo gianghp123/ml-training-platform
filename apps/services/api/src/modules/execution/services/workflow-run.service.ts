@@ -152,11 +152,25 @@ export class WorkflowRunService {
     );
 
     const datasetById = new Map(datasets.map((dataset) => [dataset.id, dataset]));
-    const engineResult = validateGraph(
-      request.graph,
-      definitions,
-      (datasetId) => this.resolveDatasetColumns(datasetById.get(datasetId)),
-    );
+    let engineResult: ReturnType<typeof validateGraph>;
+    try {
+      engineResult = validateGraph(
+        request.graph,
+        definitions,
+        (datasetId) => this.resolveDatasetColumns(datasetById.get(datasetId)),
+      );
+    } catch {
+      this.throwValidation([
+        {
+          nodeId: '',
+          scope: 'constraint',
+          fieldId: 'graph',
+          code: 'GRAPH_CYCLE',
+          severity: 'error',
+          message: 'Graph contains a cycle.',
+        },
+      ]);
+    }
     const blockingErrors = engineResult.errors.filter(
       (error) => (error.severity ?? 'error') === 'error',
     );

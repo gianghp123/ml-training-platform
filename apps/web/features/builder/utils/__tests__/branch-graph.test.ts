@@ -204,26 +204,75 @@ describe("detectBranches", () => {
     expect(labels).toContain("svm → evaluate → save_model")
   })
 
-  it("keeps labels that already differ from the first node", () => {
+  it("annotates colliding labels with differing config values", () => {
     const branches = detectBranches(
-      nodes(["split", "rf", "eval_rf", "logreg", "eval_logreg"]),
+      nodes([
+        "split", "na", "ta", "sa", "ma", "ea", "xa",
+        "nb", "tb", "sb", "mb", "eb", "xb",
+      ]),
       edges([
-        ["split", "rf"],
-        ["split", "logreg"],
-        ["rf", "eval_rf"],
-        ["logreg", "eval_logreg"],
+        ["split", "na"], ["na", "ta"], ["ta", "sa"], ["sa", "ma"], ["ma", "ea"], ["ea", "xa"],
+        ["split", "nb"], ["nb", "tb"], ["tb", "sb"], ["sb", "mb"], ["mb", "eb"], ["eb", "xb"],
       ]),
       {
-        rf: "Random Forest",
-        eval_rf: "Evaluate",
-        logreg: "Logistic Regression",
-        eval_logreg: "Evaluate",
+        na: "Normalize", ta: "Target", sa: "Split", ma: "Random Forest", ea: "Evaluate", xa: "Save Model",
+        nb: "Normalize", tb: "Target", sb: "Split", mb: "Random Forest", eb: "Evaluate", xb: "Save Model",
+      },
+      {
+        na: { method: "Standard" },
+        nb: { method: "MinMax" },
+      }
+    )
+
+    expect(branches.map((branch) => branch.label)).toEqual([
+      "Normalize (method=Standard) → Target → Split → Random Forest → Evaluate → Save Model",
+      "Normalize (method=MinMax) → Target → Split → Random Forest → Evaluate → Save Model",
+    ])
+  })
+
+  it("numbers branches that are identical in names and configs", () => {
+    const branches = detectBranches(
+      nodes(["split", "na", "ma", "nb", "mb"]),
+      edges([
+        ["split", "na"], ["na", "ma"],
+        ["split", "nb"], ["nb", "mb"],
+      ]),
+      {
+        na: "Random Forest", ma: "Evaluate",
+        nb: "Random Forest", mb: "Evaluate",
+      },
+      {
+        na: { n_estimators: 100 },
+        nb: { n_estimators: 100 },
       }
     )
 
     expect(branches.map((branch) => branch.label)).toEqual([
       "Random Forest → Evaluate",
-      "Logistic Regression → Evaluate",
+      "Random Forest → Evaluate (2)",
+    ])
+  })
+
+  it("does not annotate when labels already differ", () => {
+    const branches = detectBranches(
+      nodes(["split", "na", "ma", "nb", "mb"]),
+      edges([
+        ["split", "na"], ["na", "ma"],
+        ["split", "nb"], ["nb", "mb"],
+      ]),
+      {
+        na: "Random Forest", ma: "Evaluate",
+        nb: "SVM", mb: "Evaluate",
+      },
+      {
+        na: { method: "Standard" },
+        nb: { method: "MinMax" },
+      }
+    )
+
+    expect(branches.map((branch) => branch.label)).toEqual([
+      "Random Forest → Evaluate",
+      "SVM → Evaluate",
     ])
   })
 

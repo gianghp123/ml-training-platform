@@ -13,7 +13,7 @@ export const UpdateWorkflowSchema = CreateWorkflowSchema.partial();
 export const WorkflowSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  description: z.string(),
+  description: z.string().nullable(),
   createdAt: IsoDateCodec,
   updatedAt: IsoDateCodec,
 });
